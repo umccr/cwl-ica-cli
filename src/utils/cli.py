@@ -81,7 +81,7 @@ Command:
     tool-sync                           Sync a tool's md5sum in ${CWL_ICA_REPO_PATH}/config/tool.yaml
                                         and update definition on ICA
     schema-sync                         Sync a schema in ${CWL_ICA_REPO_PATH}/config/schema.yaml
-    workflow-sync                       Sync a workflows's md5sum in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
+    workflow-sync                       Sync a workflow's md5sum in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
                                         and update definition on ICA
 
 
@@ -139,6 +139,16 @@ Command:
     ################################
     copy-tool-submission-template       Copy a tool submission template for an upcoming tool run
     copy-workflow-submission-template   Copy a workflow submission template for an upcoming workflow run
+
+
+    #################################
+    Typescript Extensions Commands
+    #################################
+    create-typescript-expression-from-template                 Initialise a new typescript expression in the typescript-expressions directory
+    append-typescript-directory-to-cwl-expression-tool         Create a new typescript expression to complement a CWL expression
+    append-typescript-directory-to-cwl-commandline-tool        Create a new typescript expression to complement a CWL tool
+    create-typescript-interface-from-cwl-schema                Create a typescript interface to complement a CWL schema
+    typescript-expression-validate                             Validate a typescript expression and generate a .cwljs file ready for importation by
 
 
     #################################
@@ -540,6 +550,36 @@ def _dispatch():
         create_catalogue_obj = CreateCatalogue(command_argv)
         # Call command
         create_catalogue_obj()
+    elif cmd == "create-typescript-expression-from-template":
+        from subcommands.creators.create_typescript_expression_from_template import CreateTypeScriptExpressionFromTemplate
+        # Initialise command
+        create_typescript_expression_from_template = CreateTypeScriptExpressionFromTemplate(command_argv)
+        # Call Command
+        create_typescript_expression_from_template()
+    elif cmd == "append-typescript-directory-to-cwl-expression-tool":
+        from subcommands.appenders.append_typescript_dir_to_cwl_expression import AppendTypeScriptExpressionDir
+        # Initialise command
+        append_typescript_expression_dir = AppendTypeScriptExpressionDir(command_argv)
+        # Call Command
+        append_typescript_expression_dir()
+    elif cmd == "append-typescript-directory-to-cwl-commandline-tool":
+        from subcommands.appenders.append_typescript_to_tool import AppendTypeScriptToolDir
+        # Initialise command
+        append_typescript_tool_dir = AppendTypeScriptToolDir(command_argv)
+        # Call Command
+        append_typescript_tool_dir()
+    elif cmd == "create-typescript-interface-from-cwl-schema":
+        from subcommands.creators.create_typescript_from_schema import CreateTypeScriptInterfaceFromCWLSchema
+        # Initialise command
+        create_typescript_interface_from_cwl_schema = CreateTypeScriptInterfaceFromCWLSchema(command_argv)
+        # Call Command
+        create_typescript_interface_from_cwl_schema()
+    elif cmd == "typescript-expression-validate":
+        from subcommands.validators.typescript_validate import TypeScriptExpressionDirValidate
+        # Initialise command
+        typescript_expression_dir_validate = TypeScriptExpressionDirValidate(command_argv)
+        # Call Command
+        typescript_expression_dir_validate()
 
     # NotImplemented Error
     else:
