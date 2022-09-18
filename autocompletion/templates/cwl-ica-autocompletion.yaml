@@ -797,7 +797,7 @@ subcommands:
         completion:
           command_string: |
             python - <<EOF
-            __cwl-ica_list_user_names.py
+            __cwl-ica_list_all_workflow_paths.py
             EOF
 
   ##################
