@@ -9,7 +9,7 @@ from classes.command import Command
 from argparse import ArgumentError
 from pathlib import Path
 from utils.errors import CheckArgumentError
-from utils.subprocess_handler import run_subprocess_proc
+from utils.typescript_helpers import run_typescript_validation_script
 
 logger = get_logger()
 
@@ -55,7 +55,7 @@ Example
             self._help(fail=True)
 
     def __call__(self):
-         self.run_typescript_validation_script()
+        run_typescript_validation_script(self.typescript_expression_dir)
 
     def check_args(self):
         """
@@ -74,14 +74,3 @@ Example
             logger.error(f"Could not find directory {self.typescript_expression_dir}")
             raise FileNotFoundError
 
-    def run_typescript_validation_script(self):
-        logger.info("Running validate_typescript_expressions_directory.sh script")
-        run_subprocess_proc(
-            [
-                "validate_typescript_expressions_directory.sh",
-                "--typescript-expressions-dir", f"{self.typescript_expression_dir}",
-                "--cwlify-js-code"
-            ],
-            capture_output=True
-        )
-        logger.info("Validation complete")

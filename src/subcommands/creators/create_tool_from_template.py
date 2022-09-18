@@ -83,14 +83,6 @@ Example
         # Log to user
         logger.info(f"Created empty tool at \"{self.cwl_file_path}\"")
 
-    @staticmethod
-    def get_args(command_argv):
-        """
-        :return:
-        """
-        # Get arguments from commandline
-        return docopt(__class__.__doc__, argv=command_argv, options_first=False)
-
     def check_args(self):
         """
         Check --tool-name, --tool-version and --username are defined

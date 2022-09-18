@@ -23,8 +23,10 @@ from utils.repo import get_user_yaml_path, read_yaml
 from utils.errors import UserNotFoundError, CheckArgumentError, InvalidNameError, InvalidVersionError
 from semantic_version import Version
 import os
-from utils.subprocess_handler import run_subprocess_proc
 from utils.errors import ItemDirectoryNotFoundError
+from utils.typescript_helpers import create_blank_typescript_file, \
+    create_blank_typescript_test_file, \
+    create_typescript_expression_dir
 
 logger = get_logger()
 
@@ -78,6 +80,10 @@ class AppendTypeScriptDir(Command):
         # Create blank file
         logger.info(f"Creating blank typescript file inside the new typescript-expressions directory")
         self.create_blank_typescript_file()
+
+        # Create blank test file
+        logger.info(f"Creating blank test file inside the new typescript-expressions directory")
+        self.create_blank_typescript_test()
 
     # Functions implemented in subclass
     def check_args(self):
@@ -228,26 +234,10 @@ class AppendTypeScriptDir(Command):
         self.name, self.version = self.cwl_file_path.resolve().stem.split("__")
 
     def create_typescript_expression_dir(self):
-        """
-        Create typescript expression directory from path
-        :return:
-        """
-        run_subprocess_proc(
-            [
-                "initialise_typescript_expression_directory.sh",
-                "--typescript-expressions-dir", f"{self.typescript_expression_path}"
-            ],
-            capture_output=True
-        )
+        create_typescript_expression_dir(self.cwl_file_path)
 
     def create_blank_typescript_file(self):
-        """
-        Create blank typescript file
-        :return:
-        """
-        with open(str(self.typescript_expression_path / (self.name + ".ts")), "w") as ts_handler:
-            ts_handler.write(
-                f"// Author: {self.username}\n"
-                f"// For assistance on generation of typescript expressions\n"
-                f"// In CWL, please visit our wiki page at https://github.com/umccr/cwl-ica/wiki/TypeScript\n"
-            )
+        create_blank_typescript_file(self.cwl_file_path, self.username)
+
+    def create_blank_typescript_test(self):
+        create_blank_typescript_test_file(self.cwl_file_path, self.username)

@@ -26,10 +26,13 @@ _verlt() {
 
 # Help function
 print_help(){
-  echo "Usage: initialise_typescript_expression_directory.sh (--typescript-expression-dir expression-path)
-Creates an isolated yarn/ts environment ready to use and create a typescript expression in.
+  echo "
+Usage: initialise_typescript_expression_directory.sh (--typescript-expression-dir expression-path)
+    Creates an isolated yarn/ts environment ready to use and create a typescript expression in.
+
 Required parameters:
          --typescript-expression-dir: Path to place typescript expressions
+         --package-name: Simple place holder for the name attribute in the package.json file
 "
 }
 
@@ -64,8 +67,16 @@ if ! _verlte "${REQUIRED_YARN_VERSION}" "$(yarn --version)"; then
   return 1
 fi
 
+# Check rsync is installed
+if ! type rsync >/dev/null 2>&1; then
+  echo_stderr "rsync not installed, please ensure rsync is installed"
+  exit 1
+fi
+
+
 # Get arguments
 typescript_expression_dir=""
+package_name=""
 # Get args from command line
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -73,7 +84,18 @@ while [ $# -gt 0 ]; do
       typescript_expression_dir="$2"
       shift 1
       ;;
-  esac
+    --package-name)
+      package_name="$2"
+      shift 1
+      ;;
+    -h|--help)
+      print_help
+      exit 0
+      ;;
+    *)
+      print_help
+      exit 1
+    esac
   shift 1
 done
 
@@ -84,8 +106,8 @@ if [[ -z "${typescript_expression_dir}" ]]; then
   exit 1
 fi
 
-# Ensure directory does not exist but parent exists
-if [[ -d "${typescript_expression_dir}" ]]; then
+# Ensure directory does not exist but parent exists or if directory exists it's empty
+if [[ -d "${typescript_expression_dir}" && "$(find "${typescript_expression_dir}" -maxdepth 0 -not -empty -exec echo {} \; | wc -l)" -gt "0" ]]; then
   echo_stderr "Error! Please ensure typescript expression directory '${typescript_expression_dir}' does not exist"
   print_help
   exit 1
@@ -139,11 +161,12 @@ if [[ "${has_cwl_ica_conda_env}" == "1" ]]; then
 fi
 
 echo "Creating typescript expression directory"
-mkdir "${typescript_expression_dir}"
+mkdir -p "${typescript_expression_dir}"
 
-# Run yarn init on the directory
+# Run yarn init in a temp directory
+temp_dir="$(mktemp -d)"
 (
-  cd "${typescript_expression_dir}" && \
+  cd "${temp_dir}" && \
   echo_stderr "Running 'yarn init -2' in '${typescript_expression_dir}'" && \
   yarn init -2 && \
   echo_stderr "Setting yarn version to stable" && \
@@ -158,44 +181,41 @@ mkdir "${typescript_expression_dir}"
     ts-jest \
     jest \
     cwl-ts-auto \
-    @types/jest && \
-  echo_stderr "And then subsequently delete the project so all we're left with is the yarn installation files"
-  rm -rf \
-    ".editorconfig" \
-    ".git/" \
-    "README.md" \
-    ".yarn/cache" \
-    ".yarn/node_modules" \
-    ".yarn/unplugged"
+    @types/jest \
+    @types/node && \
+  yarn install && \
+  echo_stderr "Copying yarn.lock, package.json into typescript expression directory" && \
+  rsync --archive \
+    --include "package.json" \
+    --include "yarn.lock" \
+    --exclude "*" \
+    "${temp_dir}/" \
+    "${typescript_expression_dir}/"
+)
+rm -rf "${temp_dir}"
+
+# Update the package name
+echo_stderr "Update the package name inside package.json"
+(
+  set -e
+  cd "${typescript_expression_dir}"
+  jq --raw-output \
+   --arg name "${package_name}" \
+   '.name = $name' < package.json > package.json.tmp && \
+  mv package.json.tmp package.json
 )
 
 # Initialising typescript project
 echo_stderr "Initialising typescript project in directory"
 (
+  set -e && \
   cd "${typescript_expression_dir}" && \
   {
     echo '{'
     echo '    "compilerOptions": {'
     echo '        "target": "es5",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */'
     echo '        "module": "commonjs",                                /* Specify what module code is generated. */'
-    echo '        "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */'
-    echo '        "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */'
-    echo '        "strict": true,                                      /* Enable all strict type-checking options. */'
-    echo '    }'
-    echo '}'
-  } > tsconfig.json
-)
-
-# Initialising ts-jest
-echo_stderr "Initialising typescript project in directory"
-(
-  cd "${typescript_expression_dir}" && \
-  {
-    echo '{'
-    echo '    "compilerOptions": {'
-    echo '        "target": "es5",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */'
-    echo '        "module": "commonjs",                                /* Specify what module code is generated. */'
-    echo '        "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */'
+    echo '        "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables "allowSyntheticDefaultImports" for type compatibility. */'
     echo '        "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */'
     echo '        "strict": true,                                      /* Enable all strict type-checking options. */'
     echo '    }'
@@ -205,12 +225,14 @@ echo_stderr "Initialising typescript project in directory"
 
 echo_stderr "Initialised ts-jest configuration"
 (
+  set -e && \
   cd "${typescript_expression_dir}" && \
   {
     echo "/** @type {import(\'ts-jest/dist/types\').InitialOptionsTsJest} */"
     echo "module.exports = {"
     echo "  preset: 'ts-jest',"
     echo "  testEnvironment: 'node',"
+    echo "  testRegex: \"(tests/.*|(\\.|/)(test|spec))\\.tsx?$\""
     echo "  collectCoverage: true,"
     echo "  coverageReporters: ["
     echo "    \"text-summary\""
@@ -227,3 +249,7 @@ if [[ "${has_cwl_ica_conda_env}" == "0" ]]; then
     yarn install
   )
 fi
+
+
+# Create the tests directory too
+mkdir -p "${typescript_expression_dir}/tests"

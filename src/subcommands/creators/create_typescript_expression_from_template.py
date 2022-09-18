@@ -10,7 +10,10 @@ from utils.logging import get_logger
 from argparse import ArgumentError
 from utils.repo import get_typescript_expressions_dir
 from utils.errors import CheckArgumentError
-from utils.subprocess_handler import run_subprocess_proc
+from utils.typescript_helpers import create_typescript_expression_dir, \
+    create_blank_typescript_file, \
+    create_blank_typescript_test_file
+
 
 logger = get_logger()
 
@@ -74,7 +77,7 @@ Example
     def __call__(self):
         self.cwl_file_path = self.get_cwl_file_path()
 
-        if self.cwl_file_path.parent.is_dir():
+        if len(list(self.cwl_file_path.parent.glob("*"))) > 0:
             logger.error(f"Directory {self.cwl_file_path.parent} already exists")
             raise FileExistsError
 
@@ -85,8 +88,12 @@ Example
         self.create_blank_typescript_file()
 
         # Log to user
-        logger.info(f"Created empty typescript expression directory at \"{self.cwl_file_path.parent}\""
+        logger.info(f"Created empty typescript expression directory at \"{self.cwl_file_path.parent}\" "
                     f"with a blank typescript file at {self.cwl_file_path}")
+
+        # Create a blank tests under the tests directory
+        logger.info("Creating a blank typescript test in the tests directory")
+        self.create_blank_typescript_test()
 
     def check_args(self):
         """
@@ -124,27 +131,10 @@ Example
         return get_typescript_expressions_dir(create_dir=create_dir)
 
     def create_typescript_expression_dir(self):
-        """
-        Run subprocess on command initialise_typescript_expression_directory.sh
-        With the --typescript-expression-dir argument set to as the parent of the cwl_file_path attribute
-        :return:
-        """
-        run_subprocess_proc(
-            [
-                "initialise_typescript_expression_directory.sh",
-                "--typescript-expression-dir", str(self.cwl_file_path.parent / "typescript-expressions")
-            ],
-            capture_output=True
-        )
+        create_typescript_expression_dir(self.cwl_file_path)
 
     def create_blank_typescript_file(self):
-        """
-        Create blank typescript file
-        :return:
-        """
-        with open(self.cwl_file_path, "w") as ts_handler:
-            ts_handler.write(
-                f"// Author: {self.username}\n"
-                f"// For assistance on generation of typescript expressions\n"
-                f"// In CWL, please visit our wiki page at https://github.com/umccr/cwl-ica/wiki/TypeScript\n"
-            )
+        create_blank_typescript_file(self.cwl_file_path, self.username)
+
+    def create_blank_typescript_test(self):
+        create_blank_typescript_file(self.cwl_file_path, self.username)

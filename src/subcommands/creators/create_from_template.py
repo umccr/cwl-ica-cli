@@ -53,14 +53,6 @@ class CreateFromTemplate(Command):
         # Call the cwl obj which then populates the file
         self.call_cwl_obj()
 
-    # Functions implemented in subclass
-    @staticmethod
-    def get_args(command_argv):
-        """
-        :return:
-        """
-        raise NotImplementedError
-
     def check_args(self):
         """
         Check name, version and username are all defined

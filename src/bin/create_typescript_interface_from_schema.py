@@ -231,9 +231,9 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
 
     for value in sanitised_schema.values():
         if value.get("type") == "File":
-            imported_interfaces["File"] = "cwl-ts-auto"
+            imported_interfaces["FileProperties as IFile"] = "cwl-ts-auto"
         if value.get("type") == "Directory":
-            imported_interfaces["Directory"] = "cwl-ts-auto"
+            imported_interfaces["DirectoryProperties as IDirectory"] = "cwl-ts-auto"
 
     # Add this schema to list of schemas to create
     sanitised_schemas[schema_name] = sanitised_schema

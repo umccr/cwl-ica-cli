@@ -82,14 +82,6 @@ Example
         # Log to user
         logger.info(f"Created empty workflow at \"{self.cwl_file_path}\"")
 
-    @staticmethod
-    def get_args(command_argv):
-        """
-        :return:
-        """
-        # Get arguments from commandline
-        return docopt(__class__.__doc__, argv=command_argv, options_first=False)
-
     def check_args(self):
         """
         Check --workflow-name, --workflow-version and --username are defined
