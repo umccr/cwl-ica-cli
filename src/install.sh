@@ -116,6 +116,16 @@ get_lib_path(){
   fi
 }
 
+get_bin_path(){
+  : '
+  Returns path to bins
+  '
+
+  local conda_env_prefix="$1"
+
+  echo "${conda_env_prefix}/bin"
+}
+
 _verlte() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
@@ -277,7 +287,7 @@ fi
 set +u
 
 yes="false"
-while true; do
+while [ $# -gt 0 ]; do
   case "$1" in
     -y|--yes)
       yes="true"
@@ -288,7 +298,8 @@ while true; do
       exit 0
       ;;
     *)
-      break
+      print_help
+      exit 1
       ;;
   esac
 done
@@ -394,6 +405,11 @@ cp "$(get_this_path)/cwl-ica.py" "${conda_cwl_ica_env_prefix}/bin/cwl-ica"
 # Ensure all the scripts are executable
 chmod +x "${conda_cwl_ica_env_prefix}/bin/cwl-ica"
 
+# Add all the other scripts
+chmod +x "$(get_this_path)/bin/"*
+rsync --archive \
+  "$(get_this_path)/bin/" "$(get_bin_path "${conda_cwl_ica_env_prefix}")/"	
+
 ###########
 # COPY LIBS
 ###########
@@ -425,6 +441,58 @@ mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp" \
   "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py"
 
 ##################################
+# Update npm and yarn
+##################################
+echo_stderr "Handling npm/pnpm/yarn dance"
+# Make sure yarn is not installed in conda
+# 1 for yes, 0 for no
+has_yarn="$( \
+  conda list --name "cwl-ica" --json | \
+  jq --raw-output \
+    '
+      map(
+        select(
+          .name == "yarn"
+        )
+      ) |
+      length
+    ' \
+)"
+
+if [[ ! "${has_yarn}" == "0" ]]; then
+  echo_stderr "Uninstalling yarn from cwl-ica conda repo"
+  echo_stderr "Yarn will be installed through npm and corepack"
+  conda uninstall --name "cwl-ica" "yarn"
+fi
+
+# Then try
+conda run --name cwl-ica \
+  --live-stream \
+  bash << HEREDOC
+set -euo pipefail
+hash -p "${conda_cwl_ica_env_prefix}/bin/npm" "npm"
+hash -p "${conda_cwl_ica_env_prefix}/bin/corepack" "corepack"
+if [[ ! "${conda_cwl_ica_env_prefix}" == "\$(npm prefix -g)" ]]; then
+  echo "Global npm prefix was not '${conda_cwl_ica_env_prefix}'" 1>&2
+  echo "Not continuing update of npm and yarn" 1>&2
+  exit 0
+fi
+
+echo "Updating npm in conda prefix" 1>&2
+npm update -g npm
+echo "Activating corepack" 1>&2
+corepack enable
+echo "Activate stable version of yarn" 1>&2
+corepack prepare yarn@stable --activate
+echo "Installing pnpm for IDE assistance" 1>&2
+if [[ ! -r "${conda_cwl_ica_env_prefix}/bin/pnpm" ]]; then
+  npm install -g pnpm
+else
+  npm update -g pnpm
+fi
+HEREDOC
+
+##################################
 # Add autocompletion to activate.d
 ##################################
 
@@ -450,8 +518,6 @@ if [[ "${user_shell}" == "bash" ]]; then
   echo_stderr "###################"
 
 # ZSH
-
-
 elif [[ "${user_shell}" == "zsh" ]]; then
   rsync --archive "$(get_this_path)/autocompletion/${user_shell}/" \
     "${conda_cwl_ica_env_prefix}/etc/autocompletions/${user_shell}/"

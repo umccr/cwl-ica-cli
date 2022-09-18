@@ -1,27 +1,42 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
-All create-x-from-template classes will inherit this class and thne update their subfunctions as required
+This is the superclass for the three tools
+append_typescript_to_workflow
+append_typescript_to_tool
+append_typescript_to_expression
+
+Where the single premise of the subcommand is to add the directory 'typescript-expressions' to that tool/workflow/expression etc
+
+We also test that yarn is installed and at least v3
+
+Yarn is then stripped entirely as the top directory
 """
+
 
 from classes.command import Command
 from utils.logging import get_logger
 from pathlib import Path
 from string import ascii_letters, digits
-from utils.repo import get_user_yaml_path, read_yaml, get_tools_dir
+from argparse import ArgumentError
+from utils.repo import get_user_yaml_path, read_yaml
 from utils.errors import UserNotFoundError, CheckArgumentError, InvalidNameError, InvalidVersionError
 from semantic_version import Version
 import os
+from utils.errors import ItemDirectoryNotFoundError
+from utils.typescript_helpers import create_blank_typescript_file, \
+    create_blank_typescript_test_file, \
+    create_typescript_expression_dir
 
 logger = get_logger()
 
 
-class CreateFromTemplate(Command):
+class AppendTypeScriptDir(Command):
     """
-    Usage defined in subclass
+    Usage defined in subclasses
     """
 
-    def __init__(self, command_argv, suffix="cwl"):
+    def __init__(self, command_argv, suffix="cwl", item_dir=None, item_type=None):
         # Collect args from doc strings
         super().__init__(command_argv)
 
@@ -29,30 +44,48 @@ class CreateFromTemplate(Command):
         self.name = None
         self.version = None
         self.username = None
-        self.user_obj = None
-        self.cwl_obj = None
         self.cwl_file_path = None
+        self.typescript_expression_path = None
         self.suffix = suffix
+        self.user_obj = None
+        self.item_dir = item_dir
+        self.item_type = item_type
 
-        # Init requirements of subclass
-        # Get args
         # Check length / add 'help' attribute if necessary
         # Check args
+        self.check_args()
+
+        try:
+            self.check_args()
+        except ArgumentError:
+            self._help(fail=True)
 
     def __call__(self):
         # Create directory structure
         self.cwl_file_path = self.get_cwl_file_path()
+        self.typescript_expression_path = self.get_typescript_expression_path()
 
-        if self.cwl_file_path.is_file():
-            logger.error(f"File already exists at \"{self.cwl_file_path}\"")
-            raise CheckArgumentError
+        if not self.cwl_file_path.is_file():
+            logger.error(f"Could not find file at \"{self.cwl_file_path}\"")
+            raise FileNotFoundError
 
-        # Create cwl obj
-        self.create_cwl_obj()
+        if self.typescript_expression_path.is_dir():
+            logger.error(f"typescript-expressions directory '{self.typescript_expression_path}' already exists")
+            raise FileExistsError
 
-        # Call the cwl obj which then populates the file
-        self.call_cwl_obj()
+        # Create typescript expression dir
+        logger.info(f"Creating typescript expression directory to complement '{self.cwl_file_path}'")
+        self.create_typescript_expression_dir()
 
+        # Create blank file
+        logger.info(f"Creating blank typescript file inside the new typescript-expressions directory")
+        self.create_blank_typescript_file()
+
+        # Create blank test file
+        logger.info(f"Creating blank test file inside the new typescript-expressions directory")
+        self.create_blank_typescript_test()
+
+    # Functions implemented in subclass
     def check_args(self):
         """
         Check name, version and username are all defined
@@ -63,13 +96,6 @@ class CreateFromTemplate(Command):
     def get_top_dir(self, create_dir=False):
         """
         Implemented in subclass
-        :return:
-        """
-        raise NotImplementedError
-
-    def create_cwl_obj(self):
-        """
-        Create a cwl obj
         :return:
         """
         raise NotImplementedError
@@ -176,9 +202,9 @@ class CreateFromTemplate(Command):
 
         # Get tool name
         item_path = Path(items_path) / \
-                        Path(self.name) / \
-                        Path(self.version) / \
-                        Path(self.name + "__" + self.version + "." + self.suffix)
+            Path(self.name) / \
+            Path(self.version) / \
+            Path(self.name + "__" + self.version + "." + self.suffix)
 
         # Create tool name path
         if not item_path.parent.is_dir():
@@ -187,10 +213,31 @@ class CreateFromTemplate(Command):
         # Return tool path
         return item_path
 
-    def call_cwl_obj(self):
+    def check_cwl_path(self, cwl_path):
         """
-        create the cwl_obj - used in call
+        Check that the cwl path exists under item_dir
         :return:
         """
-        # Calls the cwl_obj attribute
-        self.cwl_obj()
+        # Check path is relative to item path
+        if not cwl_path.absolute().resolve().relative_to(self.item_dir):
+            logger.error(f"Expected item of type \"{self.item_type}\" to be in \"{self.item_dir}\"")
+            raise ItemDirectoryNotFoundError
+
+    def get_typescript_expression_path(self):
+        return self.cwl_file_path.parent / "typescript-expressions"
+
+    def set_name_and_version_from_file_path(self):
+        """
+        Sets the name and version attributes from the path attribute
+        :return:
+        """
+        self.name, self.version = self.cwl_file_path.resolve().stem.split("__")
+
+    def create_typescript_expression_dir(self):
+        create_typescript_expression_dir(self.cwl_file_path)
+
+    def create_blank_typescript_file(self):
+        create_blank_typescript_file(self.cwl_file_path, self.username)
+
+    def create_blank_typescript_test(self):
+        create_blank_typescript_test_file(self.cwl_file_path, self.username)

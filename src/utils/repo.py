@@ -246,6 +246,23 @@ def get_schemas_dir(create_dir=False):
     return schema_path
 
 
+def get_typescript_expressions_dir(create_dir=False):
+    """
+    returns <CWL_ICA_REPO_PATH>/typescript_expressions
+    :param create_dir:
+    :return:
+    """
+    typescript_expressions_path = Path(get_cwl_ica_repo_path()) / "typescript-expressions"
+
+    if not typescript_expressions_path.is_dir() and not create_dir:
+        logger.error(f"Couldn't find schemas directory at {typescript_expressions_path}")
+        raise CWLICARepoAssetNotFoundError
+    else:
+        typescript_expressions_path.mkdir(parents=True, exist_ok=True)
+
+    return typescript_expressions_path
+
+
 def get_run_yaml_path(non_existent_ok=False):
     config_path = get_configuration_path()
 

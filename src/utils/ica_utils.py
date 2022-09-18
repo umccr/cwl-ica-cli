@@ -131,7 +131,7 @@ def check_token_expiry(expiry_date, warn_on_near_expiry=True):
 
     # Check token hasn't yet expired
     if time_to_expiry.total_seconds() <= 0:
-        logger.error(f"This token has expired, please update your token with cwl-ica update-project ")
+        logger.debug(f"This token has expired, please update your token with cwl-ica update-project ")
         raise InvalidTokenError
     # Raise warning if token is expiring soon
     elif warn_on_near_expiry and time_to_expiry.days < EXPIRY_DAYS_WARNING_TRIGGER:
