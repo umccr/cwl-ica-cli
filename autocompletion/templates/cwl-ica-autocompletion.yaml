@@ -933,6 +933,7 @@ subcommands:
       - name: curl
         summary: |
           Use curl binary over ica binary to launch workflow
+
   ################################
   # Get Run-templates Commands
   ################################
@@ -976,3 +977,93 @@ subcommands:
       - name: curl
         summary: |
           Use curl binary over ica binary to launch workflow
+          
+  #######################
+  # Creation Commands
+  #######################
+  create-typescript-expression-from-template:
+    summary: |
+      Initialise an typescript expression from the typescript expression template
+    options:
+      - name: typescript-expression-name
+        summary: |
+          The name of the typescript-expression
+        type: string
+      - name: typescript-expression-version
+        summary: |
+          Version of the typescript expression
+        type: string
+      - name: username
+        summary: |
+          CWL Creator
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_user_names.py
+            EOF
+  append-typescript-directory-to-cwl-expression-tool:
+    summary: |
+      Append a directory named 'typescript-expressions' to a CWL expression tool
+    options:
+      - name: expression-path
+        summary: |
+          The path to the cwl expression tool
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_expression_paths.py
+            EOF
+  append-typescript-directory-to-cwl-commandline-tool:
+    summary: |
+      Append a directory named 'typescript-expressions' to a CWL commandline tool
+    options:
+      - name: tool-path
+        summary: |
+          The path to the cwl commandline tool
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_tool_paths.py
+            EOF
+  append-typescript-directory-to-cwl-workflow:
+    summary: |
+      Append a directory named 'typescript-expressions' to a cwl workflow
+    options:
+      - name: workflow-path
+        summary: |
+          The path to the cwl workflow
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_workflow_paths.py
+            EOF
+  create-typescript-interface-from-cwl-schema:
+    summary: |
+      Given a cwl schema create a typescript interface in the same directory
+    options:
+      - name: schema-path
+        summary: |
+          The name of the tool
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_schema_paths.py
+            EOF
+  typescript-expression-validate:
+    summary: |
+      Validate a typescript expression and generate a .cwljs file ready for importation
+    options:
+      - name: typescript-expression-dir
+        summary: |
+          The name of the workflow
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_typescript_expression_paths.py
+            EOF

@@ -164,16 +164,46 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
                 _ = field_type.pop(0)
             if len(field_type) == 1:
                 field_type = field_type[0]
+            else:
+                re_sanitised_schemas_ext: List[Dict] = []
+                re_imported_interfaces_ext: Dict = {}
+                re_new_enum_classes_ext: List = []
+                for field_type_item in field_type:
+                    # Multi-type
+                    re_sanitised_schemas: Dict
+                    re_imported_interfaces: Dict
+                    re_new_enum_classes: List
+                    re_sanitised_schemas, re_imported_interfaces, re_new_enum_classes = \
+                        sanitise_schema_types({"fields": [
+                                                {
+                                                    "name": field_name,
+                                                    "label": field_label,
+                                                    "doc": field_description,
+                                                    "type": field_type_item
+                                                }
+                                              ]
+                                              }, schema_path,
+                                              schema_name=field_name)
+                    re_sanitised_schemas_ext.append(re_sanitised_schemas.get(field_name))
+                    re_imported_interfaces_ext.update(re_imported_interfaces)
+                    re_new_enum_classes_ext.extend(re_new_enum_classes)
 
-        # Check if field type is a dict and that its an array
+                # Use a pipe to indicate that this item can be multiple types
+                field_type = \
+                    " | ".join([schema_[field_name].get("type") for schema_ in re_sanitised_schemas_ext])
+                # Then extend interfaces
+                imported_interfaces.update(re_imported_interfaces_ext)
+                new_enum_classes.extend(re_new_enum_classes_ext)
+
+        # Check if field type is a dict and that it is an array
         if isinstance(field_type, Dict) and field_type.get("type", None) is not None \
                 and field_type.get("type") == "array":
             field_type = field_type.get("items")
             field_is_array = True
 
         # Check if field type is an enum
-        if isinstance(field_type, Dict) and field_type.get("type", None) is not None and field_type.get(
-                "type") == "enum":
+        if isinstance(field_type, Dict) and field_type.get("type", None) is not None \
+                and field_type.get("type") == "enum":
             # Collect symbols
             symbols = [
                 Path(symbol).name
@@ -191,8 +221,8 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
             })
 
         # Check if field type is a record (imported only)
-        if isinstance(field_type, Dict) and field_type.get("type", None) is not None and field_type.get(
-                "type") == "record":
+        if isinstance(field_type, Dict) and field_type.get("type", None) is not None and \
+                field_type.get("type") == "record":
 
             # Check if from the same file
             if schema_path.name == Path(field_type.get("name")).parts[0].lstrip("#"):
@@ -217,6 +247,12 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
         if isinstance(field_type, str) and field_type in ["int", "float"]:
             field_type = "number"
 
+        # Check if field type is of type File or Directory and rename to IFile or IDirectory
+        if isinstance(field_type, str) and field_type == "File":
+            field_type = "IFile"
+        if isinstance(field_type, str) and field_type == "Directory":
+            field_type = "IDirectory"
+
         if field_is_array:
             field_type += "[]"
 
@@ -230,9 +266,9 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
         }
 
     for value in sanitised_schema.values():
-        if value.get("type") == "File":
+        if value.get("type") == "IFile":
             imported_interfaces["FileProperties as IFile"] = "cwl-ts-auto"
-        if value.get("type") == "Directory":
+        if value.get("type") == "IDirectory":
             imported_interfaces["DirectoryProperties as IDirectory"] = "cwl-ts-auto"
 
     # Add this schema to list of schemas to create

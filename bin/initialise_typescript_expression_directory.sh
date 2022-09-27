@@ -106,6 +106,17 @@ if [[ -z "${typescript_expression_dir}" ]]; then
   exit 1
 fi
 
+if [[ -z "${package_name}" ]]; then
+  typescript_expression_dir_basename="$(basename "${typescript_expression_dir}")"
+  if [[ ! "${typescript_expression_dir_basename}" == "typescript-expressions" ]]; then
+    package_name="${typescript_expression_dir_basename}"
+  else
+    name="$(basename "$(dirname "$(dirname "${typescript_expression_dir}")")")"
+    version="$(basename "$(dirname "${typescript_expression_dir}")")"
+    package_name="${name}__${version}"
+  fi
+fi
+
 # Ensure directory does not exist but parent exists or if directory exists it's empty
 if [[ -d "${typescript_expression_dir}" && "$(find "${typescript_expression_dir}" -maxdepth 0 -not -empty -exec echo {} \; | wc -l)" -gt "0" ]]; then
   echo_stderr "Error! Please ensure typescript expression directory '${typescript_expression_dir}' does not exist"
@@ -194,6 +205,16 @@ temp_dir="$(mktemp -d)"
 )
 rm -rf "${temp_dir}"
 
+# Initialise the .yarnrc.yml file
+echo_stderr "Initialising the .yarnrc.yml file"
+(
+  set -e && \
+  cd "${typescript_expression_dir}" && \
+  {
+    echo 'nodeLinker: node-modules'
+  } > .yarnrc.yml
+)
+
 # Update the package name
 echo_stderr "Update the package name inside package.json"
 (
@@ -232,7 +253,7 @@ echo_stderr "Initialised ts-jest configuration"
     echo "module.exports = {"
     echo "  preset: 'ts-jest',"
     echo "  testEnvironment: 'node',"
-    echo "  testRegex: \"(tests/.*|(\\.|/)(test|spec))\\.tsx?$\""
+    echo "  testRegex: \"(tests/.*|(\\.|/)(test|spec))\\.(ts|js)x?$\","
     echo "  collectCoverage: true,"
     echo "  coverageReporters: ["
     echo "    \"text-summary\""
@@ -249,7 +270,6 @@ if [[ "${has_cwl_ica_conda_env}" == "0" ]]; then
     yarn install
   )
 fi
-
 
 # Create the tests directory too
 mkdir -p "${typescript_expression_dir}/tests"

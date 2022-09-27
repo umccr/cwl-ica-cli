@@ -7,7 +7,7 @@ ARG CONDA_USER_NAME="cwl_ica_user"
 ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
 
-# Copy over src/ to . for user
+# Copy over source to . for user
 COPY . "/cwl-ica-src-temp/"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
@@ -56,7 +56,11 @@ RUN echo "Adding in package and env paths to conda arc" 1>&2 && \
     conda config --append pkgs_dirs "\$HOME/.conda/pkgs" && \
     conda config --append envs_dirs "\$HOME/.conda/envs" && \
     echo "Installing into a conda env" 1>&2 && \
-    (cd "/home/${CONDA_USER_NAME}" && bash "cwl-ica-src/install.sh" -y )
+    ( \
+      cd "/home/${CONDA_USER_NAME}" && \
+      bash "cwl-ica-src/install.sh" -y && \
+      rm -rf "cwl-ica-src/" \
+    )
 
 # Set environment variables for user
 ENV CONDA_PREFIX="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}"

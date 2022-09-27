@@ -399,13 +399,9 @@ conda_cwl_ica_env_prefix="$(get_conda_env_prefix)"
 ###########
 
 # Copy over to conda env
-echo_stderr "Adding main script to \"${conda_cwl_ica_env_prefix}/bin\""
-cp "$(get_this_path)/cwl-ica.py" "${conda_cwl_ica_env_prefix}/bin/cwl-ica"
+echo_stderr "Adding scripts to \"${conda_cwl_ica_env_prefix}/bin\""
 
-# Ensure all the scripts are executable
-chmod +x "${conda_cwl_ica_env_prefix}/bin/cwl-ica"
-
-# Add all the other scripts
+# Add scripts to bin
 chmod +x "$(get_this_path)/bin/"*
 rsync --archive \
   "$(get_this_path)/bin/" "$(get_bin_path "${conda_cwl_ica_env_prefix}")/"	

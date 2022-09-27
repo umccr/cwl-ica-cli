@@ -44,7 +44,7 @@ def create_typescript_expression_dir(typescript_expression_path: Path):
     """
     command_list = [
         "initialise_typescript_expression_directory.sh",
-        "--typescript-expression-dir", str(typescript_expression_path.parent)
+        "--typescript-expression-dir", str(typescript_expression_path)
     ]
     logger.info(f"Running the following command to initialise the typescript expression directory '{' '.join(command_list)}'")
     return_code, stdout, stderr = run_subprocess_proc(
@@ -74,7 +74,7 @@ def create_blank_typescript_file(typescript_file_path: Path, username: str):
             "// In CWL, please visit our wiki page at https://github.com/umccr/cwl-ica/wiki/TypeScript\n"
             "// Imports\n"
             "\n"
-            "// Backward compatibility with --target es5"
+            "// Backward compatibility with --target es5\n"
             "declare global {\n"
             "    interface Set<T> {\n"
             "    }\n"
@@ -94,13 +94,13 @@ def create_blank_typescript_file(typescript_file_path: Path, username: str):
         )
 
 
-def create_blank_typescript_test_file(typescript_file_path: Path, username: str):
+def create_blank_typescript_test_file(typescript_dir_path: Path, file_prefix: str, username: str):
     """
     Create a blank typescript test file
     :return:
     """
 
-    default_test_path = typescript_file_path.parent / "tests" / (typescript_file_path.stem + ".test.ts")
+    default_test_path = typescript_dir_path / "tests" / (file_prefix + ".test.ts")
 
     with open(default_test_path, "w") as ts_handler:
         ts_handler.write(
@@ -112,7 +112,7 @@ def create_blank_typescript_test_file(typescript_file_path: Path, username: str)
             "\n"
             "// Dummy Test\n"
             "describe('This is a dummy test', function() {\n"
-            "    test('This test always passes', () => {{\n"
+            "    test('This test always passes', () => {\n"
             "        expect(0).toEqual(0)\n"
             "    })\n"
             "})\n"
