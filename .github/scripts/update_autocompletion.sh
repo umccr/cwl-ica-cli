@@ -8,7 +8,7 @@ Wraps around autocompletion to run the appspec completion command from within th
 set -euo pipefail
 
 # Globals
-AUTOCOMPLETION_DIR="src/autocompletion"
+AUTOCOMPLETION_DIR="autocompletion"
 CWL_ICA_NAMEROOT="cwl-ica"
 TEMPLATE_FILE="templates/${CWL_ICA_NAMEROOT}-autocompletion.yaml"
 
