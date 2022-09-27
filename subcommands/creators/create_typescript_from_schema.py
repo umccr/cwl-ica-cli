@@ -74,12 +74,17 @@ Example
 
         # Check defined and assign properties
         schema_path_arg = self.args.get("--schema-path", None)
-        self.check_shlex_arg("--schema-path", schema_path_arg)
-        self.check_conformance("--schema-path", schema_path_arg)
+
+        # Check defined
         if schema_path_arg is None:
             logger.error("--schema-path not defined")
             raise CheckArgumentError
 
+        # Check valid
+        self.check_conformance("--schema-path", schema_path_arg)
+
+        # Assign
+        self.yaml_file_path = Path(schema_path_arg)
         self.name, self.version = get_name_version_tuple_from_cwl_file_path(self.yaml_file_path, items_dir=get_schemas_dir())
 
     def get_typescript_interface_path(self):

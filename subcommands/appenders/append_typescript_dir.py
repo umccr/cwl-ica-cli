@@ -198,8 +198,7 @@ class AppendTypeScriptDir(Command):
         """
 
         # Get directory
-        items_path = self.get_top_dir(create_dir=True)
-
+        items_path = self.item_dir
         # Get tool name
         item_path = Path(items_path) / \
             Path(self.name) / \
@@ -234,10 +233,10 @@ class AppendTypeScriptDir(Command):
         self.name, self.version = self.cwl_file_path.resolve().stem.split("__")
 
     def create_typescript_expression_dir(self):
-        create_typescript_expression_dir(self.cwl_file_path)
+        create_typescript_expression_dir(self.get_typescript_expression_path())
 
     def create_blank_typescript_file(self):
-        create_blank_typescript_file(self.cwl_file_path, self.username)
+        create_blank_typescript_file(self.get_typescript_expression_path() / (self.cwl_file_path.stem + ".ts"), self.username)
 
     def create_blank_typescript_test(self):
-        create_blank_typescript_test_file(self.cwl_file_path, self.username)
+        create_blank_typescript_test_file(self.get_typescript_expression_path(), self.cwl_file_path.stem, self.username)

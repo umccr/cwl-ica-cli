@@ -131,10 +131,10 @@ Example
         return get_typescript_expressions_dir(create_dir=create_dir)
 
     def create_typescript_expression_dir(self):
-        create_typescript_expression_dir(self.cwl_file_path)
+        create_typescript_expression_dir(self.cwl_file_path.parent)
 
     def create_blank_typescript_file(self):
         create_blank_typescript_file(self.cwl_file_path, self.username)
 
     def create_blank_typescript_test(self):
-        create_blank_typescript_file(self.cwl_file_path, self.username)
+        create_blank_typescript_test_file(self.cwl_file_path.parent, self.cwl_file_path.stem, self.username)

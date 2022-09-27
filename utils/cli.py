@@ -147,6 +147,7 @@ Command:
     create-typescript-expression-from-template                 Initialise a new typescript expression in the typescript-expressions directory
     append-typescript-directory-to-cwl-expression-tool         Create a new typescript expression to complement a CWL expression
     append-typescript-directory-to-cwl-commandline-tool        Create a new typescript expression to complement a CWL tool
+    append-typescript-directory-to-cwl-workflow                Create a new typescript expression to complement a CWL workflow
     create-typescript-interface-from-cwl-schema                Create a typescript interface to complement a CWL schema
     typescript-expression-validate                             Validate a typescript expression and generate a .cwljs file ready for importation by
 
@@ -568,6 +569,12 @@ def _dispatch():
         append_typescript_tool_dir = AppendTypeScriptToolDir(command_argv)
         # Call Command
         append_typescript_tool_dir()
+    elif cmd == "append-typescript-directory-to-cwl-workflow":
+        from subcommands.appenders.append_typescript_to_workflow import AppendTypeScriptWorkflowDir
+        # Initialise command
+        append_typescript_workflow_dir = AppendTypeScriptWorkflowDir(command_argv)
+        # Call Command
+        append_typescript_workflow_dir()
     elif cmd == "create-typescript-interface-from-cwl-schema":
         from subcommands.creators.create_typescript_from_schema import CreateTypeScriptInterfaceFromCWLSchema
         # Initialise command
