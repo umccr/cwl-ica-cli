@@ -136,9 +136,10 @@ echo_stderr "Running jest of typescript code"
 (
   set -e
   cd "${typescript_expressions_dir}"
-  echo -e "# Test summary completed at $(date -Iseconds)\n" > "tests/summary.txt"
+  echo -e "# Test started at $(date -Iseconds)\n" > "tests/summary.txt"
   yarn exec jest |& \
   tee --append "tests/summary.txt"
+  echo -e "# Test completed at $(date -Iseconds)\n" >> "tests/summary.txt"
 )
 
 # Step 3 - Convert js code to cwljs code (with sed)
@@ -152,10 +153,10 @@ if [[ "${cwlify_js_code}" == "true" ]]; then
     /*require\("cwl-ts-auto"\)*/d; removes all require lines
     /^Object\.defineProperty\(exports*/d; removes a Object definition property statement at the header
     s%//(.*)%/* \1 */%; converts single line comments (that use the // syntax) to /comment/ syntax
-    s%class_%class%; converts class_ attribute to class, since cwl-ts-auto will use the class_ over class attribute
+    s%class_%class%g; converts class_ attribute to class, since cwl-ts-auto will use the class_ over class attribute
     s%:\ %:%g; converts ": " to ":" since CWL will otherwise interpret ": " as a yaml key
-    s%cwl_ts_auto_1.File_class.FILE%"File"%;  Replaces the File_class enum with just "File"
-    s%cwl_ts_auto_1.Directory_class.%"Directory"%;  Replaces the Directory_class enum with just "Directory"
+    s%cwl_ts_auto_1.File_class.FILE%"File"%g;  Replaces the File_class enum with just "File"
+    s%cwl_ts_auto_1.Directory_class.%"Directory"%g;  Replaces the Directory_class enum with just "Directory"
   '
 
   # Use a while loop to stop shellcheck complaining
@@ -177,10 +178,10 @@ if [[ "${cwlify_js_code}" == "true" ]]; then
         /require("cwl-ts-auto")*/d;
         /^Object\.defineProperty(exports*)*/d;
         s%//(.*)%/* \1 */%;
-        s%class_%class%;
+        s%class_%class%g;
         s%:\ %:%g;
-        s%cwl_ts_auto_1.File_class.FILE%"File"%;
-        s%cwl_ts_auto_1.Directory_class.%"Directory"%;
+        s%cwl_ts_auto_1.File_class.FILE%"File"%g;
+        s%cwl_ts_auto_1.Directory_class.DIRECTORY%"Directory"%g;
       ' "${js_file}" > "${cwljs_file}"
     done < <(find . -maxdepth 1 -name '*.ts' -print0)
   )
@@ -194,5 +195,6 @@ echo_stderr "Deleting yarn junk"
     ".yarn/cache" \
     ".yarn/install-state.gz" \
     ".yarn/node_modules" \
+    "node_modules" \
     ".pnp."*
 )
