@@ -90,7 +90,7 @@ jobs:
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v2
         with:
-          context: src/
+          context: ./
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ github.repository }}:latest

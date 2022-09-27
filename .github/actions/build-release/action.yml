@@ -82,9 +82,16 @@ runs:
           zip
         # Create release dir
         mkdir -p "release-${{ inputs.git_tag }}"
-        # Add src files
+        # Add source files
         rsync --archive \
-          "src/" "release-${{ inputs.git_tag }}/"
+          "--include=autocompletion/***" \
+          "--include=bin/***" \
+          "--include=classes/***" \
+          "--include=subcommands/***" \
+          "--include=utils/***" \
+          "--include=cwl-ica-conda-env.yaml" \
+          "--include=install.sh" \
+          "./" "release-${{ inputs.git_tag }}/"
         # Update version.py for release
         sed -i "s/__VERSION__/${NON_LATEST_CWL_ICA_VERSION}/" \
           "release-${{ inputs.git_tag }}/utils/__version__.py"
