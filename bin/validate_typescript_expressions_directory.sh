@@ -150,7 +150,7 @@ if [[ "${cwlify_js_code}" == "true" ]]; then
   : '
     1d removes the line use strict;
     /^exports\.*/d; removes all exports lines i.e _exports._esModule = true;
-    /*require\("cwl-ts-auto"\)*/d; removes all require lines
+    /^var\ .*\ =\ require(.*)*/d;
     /^Object\.defineProperty\(exports*/d; removes a Object definition property statement at the header
     s%//(.*)%/* \1 */%; converts single line comments (that use the // syntax) to /comment/ syntax
     s%class_%class%g; converts class_ attribute to class, since cwl-ts-auto will use the class_ over class attribute
@@ -175,7 +175,7 @@ if [[ "${cwlify_js_code}" == "true" ]]; then
         --expression '
         1d;
         /^exports\.*/d;
-        /require("cwl-ts-auto")*/d;
+        /^var\ .*\ =\ require(.*)*/d;
         /^Object\.defineProperty(exports*)*/d;
         s%//(.*)%/* \1 */%;
         s%class_%class%g;
