@@ -31,6 +31,9 @@ _cwl-ica() {
 '$'\n''add-maintainer-to-workflow'$'\t''Add a maintainter to a cwl workflow
 '$'\n''add-tool-to-project'$'\t''Add an existing tool to another project
 '$'\n''add-workflow-to-project'$'\t''Add an existing workflow to another project
+'$'\n''append-typescript-directory-to-cwl-commandline-tool'$'\t''Append a directory named '"'"'typescript-expressions'"'"' to a CWL commandline tool
+'$'\n''append-typescript-directory-to-cwl-expression-tool'$'\t''Append a directory named '"'"'typescript-expressions'"'"' to a CWL expression tool
+'$'\n''append-typescript-directory-to-cwl-workflow'$'\t''Append a directory named '"'"'typescript-expressions'"'"' to a cwl workflow
 '$'\n''category-init'$'\t''Initialise a category in \${CWL_ICA_REPO_PATH}/config/category.yaml
 '$'\n''configure-repo'$'\t''One-time command to point to the cwl-ica git repository
 '$'\n''configure-tenant'$'\t''Create mapping of tenancy ids to tenancy names, convenience to save time typing out tenancy names.
@@ -42,6 +45,8 @@ Each project is linked to a tenancy id
 '$'\n''create-schema-from-template'$'\t''Initialise a CWL schema from the cwl schema template
 '$'\n''create-tool-from-template'$'\t''Initialise a CWL tool from the cwl tool template
 '$'\n''create-tool-submission-template'$'\t''Create a ICA input template and bash script for a tool
+'$'\n''create-typescript-expression-from-template'$'\t''Initialise an typescript expression from the typescript expression template
+'$'\n''create-typescript-interface-from-cwl-schema'$'\t''Given a cwl schema create a typescript interface in the same directory
 '$'\n''create-workflow-from-template'$'\t''Initialise a CWL workflow from the cwl workflow template
 '$'\n''create-workflow-submission-template'$'\t''Create a ICA input template and bash script for a workflow
 '$'\n''expression-init'$'\t''Register an expression in \${CWL_ICA_REPO_PATH}/config/expression.yaml
@@ -68,6 +73,7 @@ Each project is linked to a tenancy id
 '$'\n''tool-sync'$'\t''Sync a tool md5sum in \${CWL_ICA_REPO_PATH}/config/tool.yaml
 and update definition on ICA
 '$'\n''tool-validate'$'\t''Validate a CWL tool ready for initialising on ICA
+'$'\n''typescript-expression-validate'$'\t''Validate a typescript expression and generate a .cwljs file ready for importation
 '$'\n''validate-api-key-script'$'\t''Confirm your api-key script works for a given project
 '$'\n''validate-config-yamls'$'\t''Confirm all config yamls are legitimate
 '$'\n''version'$'\t''Print version and exit
@@ -319,6 +325,57 @@ and update definition on ICA
         ;;
         esac
       ;;
+      append-typescript-directory-to-cwl-commandline-tool)
+        OPTIONS+=('--tool-path' 'The path to the cwl commandline tool
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --tool-path)
+            _cwl-ica_append-typescript-directory-to-cwl-commandline-tool_option_tool_path_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      append-typescript-directory-to-cwl-expression-tool)
+        OPTIONS+=('--expression-path' 'The path to the cwl expression tool
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --expression-path)
+            _cwl-ica_append-typescript-directory-to-cwl-expression-tool_option_expression_path_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      append-typescript-directory-to-cwl-workflow)
+        OPTIONS+=('--workflow-path' 'The path to the cwl workflow
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --workflow-path)
+            _cwl-ica_append-typescript-directory-to-cwl-workflow_option_workflow_path_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
       category-init)
         OPTIONS+=('--category-name' 'Name of category
 ' '--category-description' 'Category description
@@ -522,6 +579,7 @@ and update definition on ICA
 ' '--ica-workflow-run-instance-id' 'The workflow run instance id, starts with wfr.
 ' '--access-token' 'The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
 ' '--curl' 'Use curl binary over ica binary to launch tool
+' '--ignore-workflow-id-mismatch' 'Ignore workflow id mismatch, useful for when creating a template for a different context
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
@@ -540,6 +598,48 @@ and update definition on ICA
           --access-token)
           ;;
           --curl)
+          ;;
+          --ignore-workflow-id-mismatch)
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      create-typescript-expression-from-template)
+        OPTIONS+=('--typescript-expression-name' 'The name of the typescript-expression
+' '--typescript-expression-version' 'Version of the typescript expression
+' '--username' 'CWL Creator
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --typescript-expression-name)
+          ;;
+          --typescript-expression-version)
+          ;;
+          --username)
+            _cwl-ica_create-typescript-expression-from-template_option_username_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      create-typescript-interface-from-cwl-schema)
+        OPTIONS+=('--schema-path' 'The name of the tool
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --schema-path)
+            _cwl-ica_create-typescript-interface-from-cwl-schema_option_schema_path_completion
           ;;
 
         esac
@@ -581,6 +681,7 @@ and update definition on ICA
 ' '--ica-workflow-run-instance-id' 'The workflow run instance id, starts with wfr.
 ' '--access-token' 'The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
 ' '--curl' 'Use curl binary over ica binary to launch workflow
+' '--ignore-workflow-id-mismatch' 'Ignore workflow id mismatch, useful for when creating a template for a different context
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
@@ -599,6 +700,8 @@ and update definition on ICA
           --access-token)
           ;;
           --curl)
+          ;;
+          --ignore-workflow-id-mismatch)
           ;;
 
         esac
@@ -1004,6 +1107,23 @@ to workflow names
         case ${MYWORDS[$INDEX-1]} in
           --tool-path)
             _cwl-ica_tool-validate_option_tool_path_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      typescript-expression-validate)
+        OPTIONS+=('--typescript-expression-dir' 'The name of the workflow
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --typescript-expression-dir)
+            _cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion
           ;;
 
         esac
@@ -1739,10 +1859,204 @@ EOF
 _cwl-ica_add-workflow-to-project_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
     local param_project="$(python - <<EOF
+#!/usr/bin/env python
+
+"""
+List all of the project names in the project.yaml file
+"""
+from utils.repo import get_project_yaml_path
+from utils.miscell import read_yaml
+
+# Import yaml and print each project name
+for project in read_yaml(get_project_yaml_path())["projects"]:
+    print(project["project_name"])
+EOF
+)"
+    _cwl-ica_compreply "$param_project"
+}
+_cwl-ica_append-typescript-directory-to-cwl-commandline-tool_option_tool_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_tool_path="$(python - <<EOF
 #!/usr/bin/env python3
 
 """
-List the registered workflow paths
+List the unregistered tool paths
+"""
+
+from utils.repo import get_tool_yaml_path
+from utils.repo import get_tools_dir
+from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+tool_paths = [s_file.relative_to(get_tools_dir())
+              for s_file in get_tools_dir().glob("**/*.cwl")]
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of tools dir = "OneDrive/GitHub/UMCCR/tools/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the tools directory?
+try:
+    _ = current_path_resolved.relative_to(get_tools_dir())
+    in_tools_dir = True
+except ValueError:
+    in_tools_dir = False
+
+if in_tools_dir:
+    current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
+    if current_path_resolved_relative_to_tools_dir == Path("."):
+        for s_path in tool_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in tool_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_tools_dir)):
+                if current_word_value.endswith("/"):
+                    print(Path(current_word_value) / s_path.relative_to(current_path_resolved_relative_to_tools_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_tools_dir))
+
+else:
+    # Now get the tools yaml path relative to the current path
+    try:
+        tools_dir = get_tools_dir().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_tools_dir().absolute()) in str(relpath(get_tools_dir(), current_path_resolved)):
+            # Separate mount point
+            tools_dir = get_tools_dir().absolute()
+        else:
+            tools_dir = Path(relpath(get_tools_dir(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in tool_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / tools_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / tools_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_tool_path"
+}
+_cwl-ica_append-typescript-directory-to-cwl-expression-tool_option_expression_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_expression_path="$(python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List the unregistered expression paths
+"""
+
+from utils.repo import get_expression_yaml_path
+from utils.repo import get_expressions_dir
+from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+expression_paths = [s_file.relative_to(get_expressions_dir())
+                    for s_file in get_expressions_dir().glob("**/*.cwl")]
+
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of expressions dir = "OneDrive/GitHub/UMCCR/expressions/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the expressions directory?
+try:
+    _ = current_path_resolved.relative_to(get_expressions_dir())
+    in_expressions_dir = True
+except ValueError:
+    in_expressions_dir = False
+
+if in_expressions_dir:
+    current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())
+    if current_path_resolved_relative_to_expressions_dir == Path("."):
+        for s_path in expression_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in expression_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_expressions_dir)):
+                if current_word_value.endswith("/"):
+                    print(Path(current_word_value) / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+
+else:
+    # Now get the expressions yaml path relative to the current path
+    try:
+        expressions_dir = get_expressions_dir().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_expressions_dir().absolute()) in str(relpath(get_expressions_dir(), current_path_resolved)):
+            # Separate mount point
+            expressions_dir = get_expressions_dir().absolute()
+        else:
+            expressions_dir = Path(relpath(get_expressions_dir(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in expression_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / expressions_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / expressions_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_expression_path"
+}
+_cwl-ica_append-typescript-directory-to-cwl-workflow_option_workflow_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_workflow_path="$(python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List the unregistered workflow paths
 """
 
 from utils.repo import get_workflow_yaml_path
@@ -1752,9 +2066,8 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                  for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                  for version in workflow["versions"]]
+workflow_paths = [s_file.relative_to(get_workflows_dir())
+                  for s_file in get_workflows_dir().glob("**/*.cwl")]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -1823,7 +2136,7 @@ else:
             print(Path(current_word_value).parent / workflows_dir.joinpath(s_path))
 EOF
 )"
-    _cwl-ica_compreply "$param_project"
+    _cwl-ica_compreply "$param_workflow_path"
 }
 _cwl-ica_copy-tool-submission-template_option_ica_workflow_run_instance_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
@@ -2001,6 +2314,113 @@ for project in read_yaml(get_project_yaml_path())["projects"]:
 EOF
 )"
     _cwl-ica_compreply "$param_project"
+}
+_cwl-ica_create-typescript-expression-from-template_option_username_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_username="$(python - <<EOF
+#!/usr/bin/env python
+
+"""
+List all of the category names in the categories.yaml file
+"""
+from utils.repo import get_user_yaml_path
+from utils.miscell import read_yaml
+
+# Import yaml and print each project name
+for user in read_yaml(get_user_yaml_path())["users"]:
+    print(user["username"])
+EOF
+)"
+    _cwl-ica_compreply "$param_username"
+}
+_cwl-ica_create-typescript-interface-from-cwl-schema_option_schema_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_schema_path="$(python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List the unregistered schema paths
+"""
+
+from utils.repo import get_schema_yaml_path
+from utils.repo import get_schemas_dir
+from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+schema_paths = [s_file.relative_to(get_schemas_dir())
+                    for s_file in get_schemas_dir().glob("**/*.yaml")]
+
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of schemas dir = "OneDrive/GitHub/UMCCR/schemas/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the schemas directory?
+try:
+    _ = current_path_resolved.relative_to(get_schemas_dir())
+    in_schemas_dir = True
+except ValueError:
+    in_schemas_dir = False
+
+if in_schemas_dir:
+    current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
+    if current_path_resolved_relative_to_schemas_dir == Path("."):
+        for s_path in schema_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in schema_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_schemas_dir)):
+                if current_word_value.endswith("/"):
+                    print(Path(current_word_value) / s_path.relative_to(
+                        current_path_resolved_relative_to_schemas_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_schemas_dir))
+
+else:
+    # Now get the schemas yaml path relative to the current path
+    try:
+        schemas_dir = get_schemas_dir().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_schemas_dir().absolute()) in str(relpath(get_schemas_dir(), current_path_resolved)):
+            # Separate mount point
+            schemas_dir = get_schemas_dir().absolute()
+        else:
+            schemas_dir = Path(relpath(get_schemas_dir(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in schema_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / schemas_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / schemas_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_schema_path"
 }
 _cwl-ica_create-workflow-from-template_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
@@ -2399,17 +2819,87 @@ EOF
 _cwl-ica_get-workflow-step-ids_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
     local param_workflow_path="$(python - <<EOF
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
-List all of the category names in the categories.yaml file
+List the unregistered workflow paths
 """
-from utils.repo import get_user_yaml_path
+
+from utils.repo import get_workflow_yaml_path
+from utils.repo import get_workflows_dir
 from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
 
-# Import yaml and print each project name
-for user in read_yaml(get_user_yaml_path())["users"]:
-    print(user["username"])
+workflow_paths = [s_file.relative_to(get_workflows_dir())
+                  for s_file in get_workflows_dir().glob("**/*.cwl")]
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of workflows dir = "OneDrive/GitHub/UMCCR/workflows/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the workflows directory?
+try:
+    _ = current_path_resolved.relative_to(get_workflows_dir())
+    in_workflows_dir = True
+except ValueError:
+    in_workflows_dir = False
+
+if in_workflows_dir:
+    current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
+    if current_path_resolved_relative_to_workflows_dir == Path("."):
+        for s_path in workflow_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in workflow_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_workflows_dir)):
+                if current_word_value.endswith("/"):
+                    print(
+                        Path(current_word_value) / s_path.relative_to(current_path_resolved_relative_to_workflows_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_workflows_dir))
+
+else:
+    # Now get the workflows yaml path relative to the current path
+    try:
+        workflows_dir = get_workflows_dir().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_workflows_dir().absolute()) in str(relpath(get_workflows_dir(), current_path_resolved)):
+            # Separate mount point
+            workflows_dir = get_workflows_dir().absolute()
+        else:
+            workflows_dir = Path(relpath(get_workflows_dir(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in workflow_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / workflows_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / workflows_dir.joinpath(s_path))
 EOF
 )"
     _cwl-ica_compreply "$param_workflow_path"
@@ -3283,6 +3773,106 @@ else:
 EOF
 )"
     _cwl-ica_compreply "$param_tool_path"
+}
+_cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_typescript_expression_dir="$(python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List all the typescript expression paths
+"""
+
+from utils.repo import get_expression_yaml_path
+from utils.repo import get_cwl_ica_repo_path
+from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+typescript_expression_paths = [
+    s_file.parent.relative_to(get_cwl_ica_repo_path())
+    for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
+    # We don't want to pull in the typescript test files
+    if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+    # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+    len(
+        {"tools", "expressions", "typescript-expressions"}.intersection(
+            [
+                s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+            ]
+        )
+    ) > 0
+]
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of expressions dir = "OneDrive/GitHub/UMCCR/expressions/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the expressions directory?
+try:
+    _ = current_path_resolved.relative_to(get_cwl_ica_repo_path())
+    in_repo_dir = True
+except ValueError:
+    in_repo_dir = False
+
+if in_repo_dir:
+    current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_cwl_ica_repo_path())
+    if current_path_resolved_relative_to_expressions_dir == Path("."):
+        for s_path in typescript_expression_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in typescript_expression_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_expressions_dir)):
+                if current_word_value.endswith("/"):
+                    print(Path(current_word_value) / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+
+else:
+    # Now get the expressions yaml path relative to the current path
+    try:
+        expressions_dir = get_cwl_ica_repo_path().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_cwl_ica_repo_path().absolute()) in str(relpath(get_cwl_ica_repo_path(), current_path_resolved)):
+            # Separate mount point
+            expressions_dir = get_cwl_ica_repo_path().absolute()
+        else:
+            expressions_dir = Path(relpath(get_cwl_ica_repo_path(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in typescript_expression_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / expressions_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / expressions_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_typescript_expression_dir"
 }
 _cwl-ica_validate-api-key-script_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
