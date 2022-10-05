@@ -44,7 +44,7 @@ class ProductionProject(Project):
         # Call super class
         super(ProductionProject, self).__init__(project_name, project_id, project_abbr, project_api_key_name, project_description, linked_projects, tenant_id, tools, workflows)
 
-    def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False):
+    def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False) -> bool:
         """
         Takes an ica workflow version object (which, yes will be an item in this in either tools or workflows)
         Gets the new item versions md5sum and the cwl_packed_dict for uploading to ica
@@ -71,6 +71,8 @@ class ProductionProject(Project):
         ica_workflow_version.create_workflow_version(cwl_packed_obj, self.get_project_token(),
                                                      project_id=self.project_id, linked_projects=self.linked_projects)
         _ = ica_workflow_version.get_workflow_version_object(self.get_project_token())
+
+        return True
 
     def add_item_to_project(self, item_key, item_obj: CWL, access_token, categories=None):
         """

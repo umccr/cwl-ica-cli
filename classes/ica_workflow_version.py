@@ -139,7 +139,7 @@ class ICAWorkflowVersion:
         # Update modification time attribute
         self.modification_time = self.get_workflow_version_modification_time()
 
-    def sync_workflow_version(self, workflow_definition, access_token, project_id, linked_projects=None, force=False):
+    def sync_workflow_version(self, workflow_definition, access_token, project_id, linked_projects=None, force=False) -> bool:
         """
         Use libica to update a workflow version through PATCH
         :return:
@@ -155,7 +155,7 @@ class ICAWorkflowVersion:
                 logger.warning(f"Not updating workflow, definition has changed elsewhere: "
                                f"Showing differences in definitions:\n"
                                f"{summarise_differences_of_two_dicts(workflow_definition, json.loads(self.workflow_version_obj.definition))}")
-                return
+                return False
             else:
                 logger.warning("Overriding ICA workflow version definition with --force")
 
@@ -185,6 +185,8 @@ class ICAWorkflowVersion:
 
         # Update modification time attribute
         self.modification_time = self.get_workflow_version_modification_time()
+
+        return True
 
     def get_workflow_version_object(self, access_token):
         """

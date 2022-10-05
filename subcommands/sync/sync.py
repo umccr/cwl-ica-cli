@@ -111,6 +111,9 @@ class Sync(Command):
         logger.info(f"Updating \"{self.item_type}\" yaml.")
         self.write_item_yaml()
 
+        # Intialise boolean
+        at_least_one_sync_complete = False
+
         # Compare item md5sum with the preexisting ica workflow md5sum
         if self.update_projects:  # Only for tools and versions
             logger.info("Updating project definitions on ICA")
@@ -123,7 +126,13 @@ class Sync(Command):
                 # Get workflow version
                 ica_workflow_version = self.get_ica_workflow_version(ica_workflow)
                 # Now sync the item version with the project
-                project.sync_item_version_with_project(ica_workflow_version, self.md5sum, self.cwl_packed_obj, force=self.force)
+                if project.sync_item_version_with_project(ica_workflow_version, self.md5sum, self.cwl_packed_obj, force=self.force):
+                    at_least_one_sync_complete = True
+
+            # Check justification to update project yaml
+            if not at_least_one_sync_complete:
+                logger.info("Not updating project.yaml since no projects were updated")
+                return
 
             # Update project yaml
             logger.info("Updating project yaml")
