@@ -43,6 +43,7 @@ class CWLExpression(CWL):
 
         # Initialise check
         validation_passing = True
+        warning_count = 0
         issue_count = 0
 
         # Check inputs
@@ -63,7 +64,7 @@ class CWLExpression(CWL):
             logger.error(f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\"")
             validation_passing = False
         # Check docs for outputs
-        output_validation_passing, issue_count = self.check_docs(outputs, issue_count)
+        output_validation_passing, warning_count = self.check_docs(outputs, warning_count)
 
         # Check that no 'ids' of inputs and outputs match
         input_ids = [_input.id for _input in inputs]
@@ -123,9 +124,12 @@ class CWLExpression(CWL):
         else:
             self.validate_authorship_attr(self.cwl_packed_obj['https://schema.org/author'])
 
+        if warning_count > 0:
+            logger.warning(f"There were a total of {warning_count} warnings")
         if not validation_passing:
             logger.error(f"There were a total of {issue_count} issues.")
             raise CWLValidationError
+
 
     def create_object(self, user_obj):
         """
