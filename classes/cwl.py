@@ -221,11 +221,11 @@ class CWL:
         # Defined in subclass
         raise NotImplementedError
 
-    def check_docs(self, cwl_attr_list, issue_count):
+    def check_docs(self, cwl_attr_list, warning_count):
         """
         Check labels and docs for inputs, outputs or steps
         :param cwl_attr_list:
-        :param issue_count:
+        :param warning_count:
         :return:
         """
         validation_passing = True
@@ -233,17 +233,17 @@ class CWL:
         for cwl_obj in cwl_attr_list:
             # Check label and doc
             if cwl_obj.label is None:
-                issue_count += 1
-                logger.error(f"Issue {issue_count}: Input \"{cwl_obj.id}\" "
-                             f"does not have a 'label' attribute \"{self.cwl_file_path}\"")
+                warning_count += 1
+                logger.warning(f"Issue {warning_count}: Input \"{cwl_obj.id}\" "
+                               f"does not have a 'label' attribute \"{self.cwl_file_path}\"")
                 validation_passing = False
             if cwl_obj.doc is None:
-                issue_count += 1
-                logger.error(f"Issue {issue_count}: Input \"{cwl_obj.id}\" "
-                             f"does not have a 'doc' attribute \"{self.cwl_file_path}\"")
+                warning_count += 1
+                logger.warning(f"Issue {warning_count}: Input \"{cwl_obj.id}\" "
+                               f"does not have a 'doc' attribute \"{self.cwl_file_path}\"")
                 validation_passing = False
 
-        return validation_passing, issue_count
+        return validation_passing, warning_count
 
     def run_cwltool_pack(self, packed_file: NamedTemporaryFile):
         """
