@@ -892,6 +892,10 @@ subcommands:
       - name: curl
         summary: |
           Use curl binary over ica binary to launch tool
+      - name: ignore-workflow-id-mismatch
+        summary: |
+          Ignore workflow id mismatch, useful for when creating a template for a different context
+
   create-workflow-submission-template:
     summary: |
       Create a ICA input template and bash script for a workflow
@@ -933,6 +937,9 @@ subcommands:
       - name: curl
         summary: |
           Use curl binary over ica binary to launch workflow
+      - name: ignore-workflow-id-mismatch
+        summary: |
+          Ignore workflow id mismatch, useful for when creating a template for a different context
 
   ################################
   # Get Run-templates Commands
