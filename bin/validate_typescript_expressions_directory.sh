@@ -105,11 +105,20 @@ while [ $# -gt 0 ]; do
   shift 1
 done
 
+# Step 0 - Copy everything to a temp directory
+temp_dir="$(dirname "${typescript_expressions_dir}")/.$(basename "${typescript_expressions_dir}")-test-evaluation"
+
+trap 'rm -rf "${temp_dir}"' EXIT
+
+echo_stderr "Copying everything from '${typescript_expressions_dir}/' to '${temp_dir}/'"
+rsync --archive \
+  "${typescript_expressions_dir}/" "${temp_dir}/"
+
 # Step 1 - Run installation through yarn
 echo_stderr "Installing yarn temporarily into '${typescript_expressions_dir}'"
 (
   set -e
-  cd "${typescript_expressions_dir}"
+  cd "${temp_dir}"
   if ! yarn install > yarn_install.log 2>&1; then
     echo_stderr "Yarn installation failed - see logs below"
     cat yarn_install.log 1>&2
@@ -122,25 +131,36 @@ echo_stderr "Installing yarn temporarily into '${typescript_expressions_dir}'"
 echo_stderr "Running transpilation of typescript code"
 (
   set -e
-  cd "${typescript_expressions_dir}"
+  cd "${temp_dir}"
   # Step 1 - Run transpilation through yarn
   echo_stderr "Running transpiliation installation in temp dir"
   yarn exec tsc
 )
 
 
-# Step 2 - Run validation through yarn dlx
+# Step 2 - Run validation through yarn
 echo_stderr "Writing out our test to 'tests/summary.txt'"
 
 echo_stderr "Running jest of typescript code"
 (
   set -e
-  cd "${typescript_expressions_dir}"
+  cd "${temp_dir}"
   echo -e "# Test started at $(date -Iseconds)\n" > "tests/summary.txt"
   yarn exec jest |& \
   tee --append "tests/summary.txt"
   echo -e "# Test completed at $(date -Iseconds)\n" >> "tests/summary.txt"
 )
+
+# Step 2a - Move back relevant files to typescript expression dir
+rsync --archive \
+  --prune-empty-dirs \
+  --include "*.js" \
+  --include "tests/" \
+  --include "tests/*.js" \
+  --include "tests/summary.txt" \
+  --exclude "*" \
+  "${temp_dir}/" \
+  "${typescript_expressions_dir}/"
 
 # Step 3 - Convert js code to cwljs code (with sed)
 if [[ "${cwlify_js_code}" == "true" ]]; then
@@ -186,15 +206,3 @@ if [[ "${cwlify_js_code}" == "true" ]]; then
     done < <(find . -maxdepth 1 -name '*.ts' -print0)
   )
 fi
-
-echo_stderr "Deleting yarn junk"
-(
-  cd "${typescript_expressions_dir}"
-  rm -rf \
-    ".yarn/unplugged" \
-    ".yarn/cache" \
-    ".yarn/install-state.gz" \
-    ".yarn/node_modules" \
-    "node_modules" \
-    ".pnp."*
-)
