@@ -58,7 +58,7 @@ RUN echo "Adding in package and env paths to conda arc" 1>&2 && \
     echo "Installing into a conda env" 1>&2 && \
     ( \
       cd "/home/${CONDA_USER_NAME}" && \
-      bash "cwl-ica-src/install.sh" -y && \
+      bash "cwl-ica-src/install.sh" -y -s && \
       rm -rf "cwl-ica-src/" \
     )
 

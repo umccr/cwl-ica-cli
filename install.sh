@@ -25,6 +25,7 @@ You must have conda (${REQUIRED_CONDA_VERSION}) and jq installed.
 MacOS users, please install greadlink through 'brew install coreutils'
 Optional parameters:
          -y/--yes: Create/Update conda env without asking
+         -s/--skip-yarn-installation: Skip yarn installation
 "
 
 ###########
@@ -287,11 +288,16 @@ fi
 set +u
 
 yes="false"
+skip_yarn_installation="false"
 while [ $# -gt 0 ]; do
   case "$1" in
     -y|--yes)
       yes="true"
       shift 1
+      ;;
+    -s|--skip-yarn-installation)
+      skip_yarn_installation="true"
+      exit 0
       ;;
     -h|--help)
       print_help
@@ -439,32 +445,33 @@ mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp" \
 ##################################
 # Update npm and yarn
 ##################################
-echo_stderr "Handling npm/pnpm/yarn dance"
-# Make sure yarn is not installed in conda
-# 1 for yes, 0 for no
-has_yarn="$( \
-  conda list --name "cwl-ica" --json | \
-  jq --raw-output \
-    '
-      map(
-        select(
-          .name == "yarn"
-        )
-      ) |
-      length
-    ' \
-)"
+if [[ "${skip_yarn_installation}" == "true" ]]; then
+  echo_stderr "Handling npm/pnpm/yarn dance"
+  # Make sure yarn is not installed in conda
+  # 1 for yes, 0 for no
+  has_yarn="$( \
+    conda list --name "cwl-ica" --json | \
+    jq --raw-output \
+      '
+        map(
+          select(
+            .name == "yarn"
+          )
+        ) |
+        length
+      ' \
+  )"
 
-if [[ ! "${has_yarn}" == "0" ]]; then
-  echo_stderr "Uninstalling yarn from cwl-ica conda repo"
-  echo_stderr "Yarn will be installed through npm and corepack"
-  conda uninstall --name "cwl-ica" "yarn"
-fi
+  if [[ ! "${has_yarn}" == "0" ]]; then
+    echo_stderr "Uninstalling yarn from cwl-ica conda repo"
+    echo_stderr "Yarn will be installed through npm and corepack"
+    conda uninstall --name "cwl-ica" "yarn"
+  fi
 
-# Then try
-conda run --name cwl-ica \
-  --live-stream \
-  bash << HEREDOC
+  # Then try
+  conda run --name cwl-ica \
+    --live-stream \
+    bash << HEREDOC
 set -euo pipefail
 hash -p "${conda_cwl_ica_env_prefix}/bin/npm" "npm"
 hash -p "${conda_cwl_ica_env_prefix}/bin/corepack" "corepack"
@@ -487,6 +494,8 @@ else
   npm update -g pnpm
 fi
 HEREDOC
+
+fi
 
 ##################################
 # Add autocompletion to activate.d
