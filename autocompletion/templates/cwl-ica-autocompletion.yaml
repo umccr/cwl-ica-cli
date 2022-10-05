@@ -596,7 +596,7 @@ subcommands:
         completion:
           command_string: |
             python - <<EOF
-            __cwl-ica_list_registered_workflow_paths.py
+            __cwl-ica_list_project_names.py
             EOF
   add-linked-project:
     summary: |
