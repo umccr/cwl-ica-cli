@@ -30,7 +30,7 @@ def get_items_dir_from_cwl_file_path(cwl_file_path: Path) -> Path:
     :param cwl_file_path:
     :return:
     """
-    return Path(list(cwl_file_path.absolute().relative_to(get_cwl_ica_repo_path()).parents)[-2]).absolute()
+    return Path(list(cwl_file_path.absolute().resolve().relative_to(get_cwl_ica_repo_path()).parents)[-2]).absolute()
 
 
 def filter_projects_by_item(projects, item_name, item_type_key):
@@ -234,7 +234,7 @@ def get_name_version_tuple_from_cwl_file_path(cwl_file_path, items_dir):
     :return:
     """
 
-    name_version_path = Path(cwl_file_path).absolute().relative_to(items_dir)
+    name_version_path = Path(cwl_file_path).absolute().resolve().relative_to(items_dir)
 
     name_version_file_split = name_version_path.name.split("__", 1)
 
@@ -305,7 +305,7 @@ def get_markdown_file_from_cwl_path(cwl_path: Path) -> Path:
     :return:
     """
     # Get the relative path
-    relative_cwl_path = cwl_path.absolute().relative_to(get_cwl_ica_repo_path())
+    relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
     return get_cwl_ica_repo_path() / ".github/catalogue/docs" / relative_cwl_path.parent / (relative_cwl_path.stem + ".md")
 
@@ -317,7 +317,7 @@ def get_blob_url_to_markdown_file_from_cwl_path(cwl_path: Path) -> str:
     :return:
     """
     # Get the relative path to CWL_ICA_REPO_PATH and then prefix with catalogue docs path
-    markdown_path = get_markdown_file_from_cwl_path(cwl_path).absolute().relative_to(get_cwl_ica_repo_path())
+    markdown_path = get_markdown_file_from_cwl_path(cwl_path).absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
     return get_blob_url() + "/" + str(markdown_path)
 
@@ -329,7 +329,7 @@ def get_blob_url_from_path(cwl_path: Path) -> str:
     :return:
     """
 
-    relative_cwl_path = cwl_path.absolute().relative_to(get_cwl_ica_repo_path())
+    relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
     return get_blob_url() + "/" + str(relative_cwl_path)
 
@@ -340,7 +340,7 @@ def get_raw_url_from_path(cwl_path: Path) -> str:
     :param cwl_path:
     :return:
     """
-    relative_cwl_path = cwl_path.absolute().relative_to(get_cwl_ica_repo_path())
+    relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
     return get_raw_url() + "/" + str(relative_cwl_path)
 
@@ -352,7 +352,7 @@ def get_graph_path_from_cwl_path(cwl_path: Path) -> Path:
     :return:
     """
     # Get the relative path
-    relative_cwl_path = cwl_path.absolute().relative_to(get_cwl_ica_repo_path())
+    relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
     return get_cwl_ica_repo_path() / ".github/catalogue/images" / relative_cwl_path.parent / (relative_cwl_path.stem + ".svg")
 
