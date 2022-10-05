@@ -69,8 +69,8 @@ def dump_cwl_yaml(data_object, file_handler):
             continue
         # cwltool specific
         elif data_object["class"] == "CommandLineTool" and key in ["hints", "requirements"] and not hints:
-            yaml_dict.yaml_set_comment_before_after_key(key, before="\nILMN Resources Guide: https://support-docs.illumina.com/SW/ICA/Content/SW/ICA/RequestResources.htm\n")
-            hints=True
+            yaml_dict.yaml_set_comment_before_after_key(key, before="\nILMN V1 Resources Guide: https://illumina.gitbook.io/ica-v1/analysis/a-taskexecution#type-and-size\nILMN V2 Resources Guide: https://help.ica.illumina.com/project/p-flow/f-pipelines#compute-types\n")
+            hints = True
         elif data_object["class"] == "CommandLineTool" and key in ["hints", "requirements"] and hints:
             # hints requirements should be all bundled together
             continue
