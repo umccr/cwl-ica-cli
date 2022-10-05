@@ -256,7 +256,7 @@ class Project:
             project_ica_item_version.create_workflow_version(cwl_obj.cwl_packed_obj, access_token,
                                                              project_id=self.project_id, linked_projects=self.linked_projects)
 
-    def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False):
+    def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False) -> bool:
         """
         Takes an ica workflow version object (which, yes will be an item in this in either tools or workflows)
         Gets the new item versions md5sum and the cwl_packed_dict for uploading to ica
@@ -270,10 +270,10 @@ class Project:
         # Now compare the item version and ica workflow version
         if self.compare_item_version_and_ica_workflow_version(ica_workflow_version, md5sum):
             # Update ica workflow
-            ica_workflow_version.sync_workflow_version(cwl_packed_obj, self.get_project_token(),
-                                                       project_id=self.project_id,
-                                                       linked_projects=self.linked_projects,
-                                                       force=force)
+            return ica_workflow_version.sync_workflow_version(cwl_packed_obj, self.get_project_token(),
+                                                              project_id=self.project_id,
+                                                              linked_projects=self.linked_projects,
+                                                              force=force)
 
     # Compare item version and ICA workflow version
     @staticmethod
