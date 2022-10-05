@@ -155,7 +155,7 @@ has_cwl_ica_conda_env="$( \
 # (if they exist!)
 if [[ "${has_cwl_ica_conda_env}" == "1" ]]; then
   CWL_ICA_BIN_PATH="$( \
-    conda activate cwl-ica && \
+    conda run --name "cwl-ica" && \
     sh -c "echo '${CONDA_PREFIX}/bin'" \
   )"
   if [[ -d "${CWL_ICA_BIN_PATH}" ]]; then
@@ -176,6 +176,9 @@ mkdir -p "${typescript_expression_dir}"
 
 # Run yarn init in a temp directory
 temp_dir="$(mktemp -d)"
+
+trap 'rm -rf "${temp_dir}"' EXIT
+
 (
   cd "${temp_dir}" && \
   echo_stderr "Running 'yarn init -2' in '${typescript_expression_dir}'" && \
@@ -204,6 +207,7 @@ temp_dir="$(mktemp -d)"
     "${typescript_expression_dir}/"
 )
 rm -rf "${temp_dir}"
+trap - EXIT
 
 # Initialise the .yarnrc.yml file
 echo_stderr "Initialising the .yarnrc.yml file"
