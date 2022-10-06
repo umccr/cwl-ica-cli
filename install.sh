@@ -297,7 +297,7 @@ while [ $# -gt 0 ]; do
       ;;
     -s|--skip-yarn-installation)
       skip_yarn_installation="true"
-      exit 0
+      shift 1
       ;;
     -h|--help)
       print_help
