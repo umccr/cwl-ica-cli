@@ -12,8 +12,10 @@ from utils.errors import CWLTypeNotFoundError
 from utils.globals import BLOCK_YAML_INDENTATION_LEVEL, YAML_INDENTATION_LEVEL
 import re
 from typing import Dict, List
+from cwl_utils.parser_v1_1 import SecondaryFileSchema
 
 logger = get_logger()
+
 
 def create_input_dict(cwl_inputs: Dict) -> OrderedDict:
     """
@@ -37,9 +39,12 @@ def create_input_dict(cwl_inputs: Dict) -> OrderedDict:
         """
         For each cwl input, append a commented map of the input object
         """
+        # FIXME - secondary items causing issues https://github.com/umccr/cwl-ica-cli/issues/1
         if cwl_input_dict.get("cwl_type", None) is None:
             logger.error("CWL Input object is in the wrong format, no 'cwl_type' found.")
             raise KeyError
+
+
         if isinstance(cwl_input_dict["cwl_type"], list):
             # Deal with multiple types
             # First use type one
@@ -99,7 +104,7 @@ def create_input_dict(cwl_inputs: Dict) -> OrderedDict:
     #    round_trip_dump(OrderedDict({"engineParameters": engine_parameters}), yaml_h)
 
 
-def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, cwl_type:str, is_array:int=0, label:str=None, doc:str=None, optional=False, symbols:List=None, secondary_files:List[str]=None, indentation_level=0) -> OrderedDict:
+def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, cwl_type:str, is_array:int=0, label:str=None, doc:str=None, optional=False, symbols:List=None, secondary_files:List[SecondaryFileSchema]=None, indentation_level=0) -> OrderedDict:
     """
     For an input object, return a commented map based on the input type
     :param optional:
@@ -161,7 +166,16 @@ def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, c
         })
         # Add secondary files if applicable
         if secondary_files is not None:
-            input_dict[input_id]["secondaryFiles"] = secondary_files
+            if not isinstance(secondary_files, List):
+                logger.error(f"Got secondary files but wasn't list object for '{input_id}'")
+                raise TypeError
+            input_dict[input_id]["secondaryFiles"] = [
+                {
+                    "class": "File",
+                    "location": f"gds://path/to/file{secondary_file.pattern}"
+                }
+                for secondary_file in secondary_files
+            ]
 
         # Create a pre comment
         input_dict.yaml_set_comment_before_after_key(key=input_id,
