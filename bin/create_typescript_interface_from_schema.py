@@ -309,7 +309,7 @@ def write_interface_file(schema_dicts: Dict, imported_interfaces: Dict,
         for _enum in enum_classes:
             interface_h.write("export enum %s {\n" % _enum.get("name"))
             for index, symbol in enumerate(_enum.get("symbols")):
-                interface_h.write("\t%s = \"%s\"" % (symbol, symbol))
+                interface_h.write("\t\"%s\" = \"%s\"" % (symbol, symbol))
                 if not index == len(_enum.get("symbols")) - 1:
                     # Add comma
                     interface_h.write(",")
