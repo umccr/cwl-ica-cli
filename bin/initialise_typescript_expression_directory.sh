@@ -220,13 +220,17 @@ echo_stderr "Initialising the .yarnrc.yml file"
 )
 
 # Update the package name
-echo_stderr "Update the package name inside package.json"
+echo_stderr "Update the package name and licensing inside package.json"
 (
   set -e
   cd "${typescript_expression_dir}"
   jq --raw-output \
    --arg name "${package_name}" \
-   '.name = $name' < package.json > package.json.tmp && \
+   --arg license "MIT" \
+   '
+     .name = $name |
+     .license = $license
+   ' < package.json > package.json.tmp && \
   mv package.json.tmp package.json
 )
 
