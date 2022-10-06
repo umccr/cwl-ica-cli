@@ -445,7 +445,7 @@ mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp" \
 ##################################
 # Update npm and yarn
 ##################################
-if [[ "${skip_yarn_installation}" == "true" ]]; then
+if [[ "${skip_yarn_installation}" == "false" ]]; then
   echo_stderr "Handling npm/pnpm/yarn dance"
   # Make sure yarn is not installed in conda
   # 1 for yes, 0 for no
