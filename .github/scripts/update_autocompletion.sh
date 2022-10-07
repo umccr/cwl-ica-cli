@@ -67,6 +67,7 @@ EOF
 
   # Overwrite shebang
   sed -i '1c#!/usr/bin/env bash' "bash/${CWL_ICA_NAMEROOT}.bash"
+  sed -i 's/local prefix=""/local prefix=""\n    local IFS=\$'"'"'\\n'"'"'/' "bash/${CWL_ICA_NAMEROOT}.bash"
 
   # Secondly convert any EOF) to EOF\n) (this also needs to be repeated for zsh)
   sed -i  $'s/EOF)/EOF\\\n)/' "bash/${CWL_ICA_NAMEROOT}.bash"
