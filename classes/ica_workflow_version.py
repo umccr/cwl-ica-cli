@@ -232,7 +232,7 @@ class ICAWorkflowVersion:
         tmp_packed_definition = NamedTemporaryFile()
 
         with open(tmp_packed_definition.name, "w") as tmp_h:
-            json.dump(json.loads(workflow_definition), tmp_h, indent=4)
+            tmp_h.write(json.dumps(json.loads(workflow_definition), indent=2, ensure_ascii=False) + "\n")
 
         with open(tmp_packed_definition.name, "rb") as tmp_h:
             md5sum = md5(tmp_h.read()).hexdigest()
