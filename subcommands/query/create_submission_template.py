@@ -517,9 +517,20 @@ class CreateSubmissionTemplate(Command):
 
                 # Update input item by type
                 if isinstance(input_value, list):
+                    # Slim down directory objects
+                    for item in input_value:
+                        if isinstance(item, dict):
+                            for dir_attr in ["nameroot", "nameext", "size"]:
+                                if dir_attr in item.keys():
+                                    _ = item.pop(dir_attr)
                     # Update input item
                     yaml_obj["input"][input_name] = OrderedList(input_value)
                 else:
+                    # Slim down directory objects
+                    if isinstance(input_value, dict):
+                        for dir_attr in ["nameroot", "nameext", "size"]:
+                            if dir_attr in input_value.keys():
+                                _ = input_value.pop(dir_attr)
                     # Update input item
                     yaml_obj["input"][input_name] = OrderedDict(input_value)
 
