@@ -11,14 +11,14 @@ from utils.logging import get_logger
 from utils.repo import read_yaml, get_workflow_yaml_path, get_workflows_dir
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 from classes.item_workflow import ItemWorkflow
 from classes.item_version_workflow import ItemVersionWorkflow
 from utils.miscell import cwl_id_to_path, get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path
 from utils.errors import CWLItemNotFound, CheckArgumentError
 from classes.cwl_workflow import CWLWorkflow
 
-from pprint import pprint
+import json
 
 logger = get_logger()
 
@@ -72,7 +72,7 @@ Example:
         self.step_ids = self.get_steps_of_cwl_workflow(self.cwl_file_path, self.cwl_obj)
 
         logger.info("Printing the step ids")
-        pprint([str(step_id) for step_id in self.step_ids], indent=4)
+        print(json.dumps(self.step_ids, indent=4))
 
     def check_args(self):
         """
@@ -124,10 +124,10 @@ Example:
         Get the workflow object
         :return:
         """
-        step_ids = []
+        step_ids: List[Dict] = []
 
         for step in cwl_obj.steps:
-            step_run_path = cwl_file_path.parent.absolute().joinpath(step.run).resolve()
+            step_run_path = cwl_file_path.parent.absolute().resolve().joinpath(step.run).resolve()
             step_items_dir = get_items_dir_from_cwl_file_path(step_run_path)
             if step_items_dir.name == 'workflows':
                 logger.info(f"Step {cwl_id_to_path(step.id).name} is a subworkflow, importing")
@@ -142,6 +142,9 @@ Example:
                 step_ids.extend(self.get_steps_of_cwl_workflow(step_run_path, step_cwl_obj,
                                                                path_prefix=Path(path_prefix) / Path(step.run).name))
             else:
-                step_ids.append(path_prefix / cwl_id_to_path(step.id).name)
+                step_ids.append({
+                    "step_path": str(path_prefix / cwl_id_to_path(step.id).name),
+                    "overrides_key": f"#{path_prefix.name}{'/' if not path_prefix.name == '' else ''}{cwl_id_to_path(step.id).name}"
+                })
 
         return step_ids
