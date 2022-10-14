@@ -69,7 +69,7 @@ class CWLWorkflow(CWL):
         if steps is None:
             issue_count += 1
             logger.error(
-                f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\"")
+                f"Issue {issue_count}: Could not read steps section for cwl workflow \"{self.cwl_file_path}\"")
             validation_passing = False
         # Check docs for steps
         self.check_docs(steps, issue_count)

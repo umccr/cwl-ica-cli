@@ -30,7 +30,14 @@ def get_items_dir_from_cwl_file_path(cwl_file_path: Path) -> Path:
     :param cwl_file_path:
     :return:
     """
-    return Path(list(cwl_file_path.absolute().resolve().relative_to(get_cwl_ica_repo_path()).parents)[-2]).absolute()
+    return \
+        get_cwl_ica_repo_path().joinpath(
+            Path(
+                cwl_file_path.absolute().resolve().relative_to(
+                    get_cwl_ica_repo_path()
+                ).parts[0]
+            )
+        )
 
 
 def filter_projects_by_item(projects, item_name, item_type_key):
