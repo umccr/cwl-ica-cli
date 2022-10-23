@@ -4,6 +4,8 @@
 List of globals
 """
 
+from enum import Enum
+
 CWL_ICA_REPO_PATH_ENV_VAR = "CWL_ICA_REPO_PATH"
 ICA_BASE_URL_ENV_VAR = "ICA_BASE_URL"
 EXPIRY_DAYS_WARNING_TRIGGER = 7
@@ -132,3 +134,55 @@ ICA_TES_INSTANCE_SIZES_BY_TYPE = {
         }
     }
 }
+
+ICAV2_COMPUTE_RESOURCE_MAPPINGS = [
+    {
+        "v1": "type: standardHiCpu",
+        "v2": "type: hicpu"
+    },
+    {
+        "v1": "type: standardHiMem",
+        "v2": "type: himem"
+    }
+]
+
+#     '3.8.4': '699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.8.4',
+#     '3.9.5': '079623148045.dkr.ecr.us-east-1.amazonaws.com/cp-prod/b3403184-9116-44d1-b273-0fbe45dac466:latest',
+#     '3.10.4': '079623148045.dkr.ecr.us-east-1.amazonaws.com/cp-prod/084b1d0d-3593-4e02-bac5-419425a4075d:latest',
+#     '4.0.3': '079623148045.dkr.ecr.us-east-1.amazonaws.com/cp-prod/7ecddc68-f08b-4b43-99b6-aee3cbb34524:latest'
+
+ICAV2_CONTAINER_MAPPINGS = [
+    {
+        "v1": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.8.4",
+        "v2": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.8.4"
+    },
+    {
+        "v1": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.9.3",
+        "v2": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.9.3",
+    },
+    {
+        "v1": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.9.3",
+        "v2": "079623148045.dkr.ecr.us-east-1.amazonaws.com/cp-prod/7ecddc68-f08b-4b43-99b6-aee3cbb34524:latest"
+    }
+]
+
+
+PARAMS_XML_FILE_NAME = "params.xml"
+
+BLANK_PARAMS_XML_V2_FILE_CONTENTS = [
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',
+    '<pd:pipeline xmlns:pd="xsd://www.illumina.com/ica/cp/pipelinedefinition" code="" version="1.0">',
+    '    <pd:dataInputs/>',
+    '    <pd:steps/>',
+    '</pd:pipeline>'
+]
+
+ICAV2_DEFAULT_BASE_URL = "https://ica.illumina.com/ica/rest"
+
+
+class ICAv2AnalysisStorageSize(Enum):
+    SMALL = "Small"
+    MEDIUM = "Medium"
+    LARGE = "Large"
+
+ICAV2_DEFAULT_ANALYSIS_STORAGE_SIZE = ICAv2AnalysisStorageSize.SMALL

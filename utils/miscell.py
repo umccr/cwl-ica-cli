@@ -19,7 +19,11 @@ from base64 import b64encode, b64decode
 import zlib
 from deepdiff import DeepDiff
 import json
-from typing import Dict
+from typing import Dict, Any
+from tempfile import TemporaryDirectory
+from string import ascii_letters, digits
+from utils.errors import InvalidNameError
+import re
 
 logger = get_logger()
 
@@ -385,3 +389,34 @@ def summarise_differences_of_two_dicts(dict_1: Dict, dict_2: Dict) -> str:
     diff = DeepDiff(dict_1, dict_2)
 
     return json.dumps(json.loads(diff.to_json()), indent=4)
+
+
+def check_shlex_arg(arg_name, arg_val):
+    """
+    If argument contains characters outside of A-Z, 0-9, -, _, then fail
+    :return:
+    """
+
+    # Removed hyphens from name convention, can be used for the versioning only
+    illegal_chars = set(arg_val).difference(ascii_letters + digits + "-_")
+
+    if not len(illegal_chars) == 0:
+        logger.error("The following illegal characters were found in arg {arg_name}"
+                     "{arg_chars}".format(
+                        arg_name=arg_name,
+                        arg_chars=", ".join(["\"%s\"" % char for char in illegal_chars])
+                     ))
+        raise InvalidNameError
+
+
+def camel_to_snake_case(camel_case: str) -> str:
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', camel_case).lower()
+
+
+def sanitise_dict_keys(input_dict: Dict) -> Dict:
+    output_dict = {}
+    key: str
+    value: Any
+    for key, value in input_dict.items():
+        output_dict[camel_to_snake_case(key)] = value
+    return output_dict
