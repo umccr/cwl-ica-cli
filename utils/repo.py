@@ -327,3 +327,22 @@ def get_cwl_ica_repo_url() -> str:
     """
 
     return os.environ["GITHUB_SERVER_URL"] + "/" + os.environ["GITHUB_REPOSITORY"]
+
+
+def join_run_path_from_caller_path(caller_path: Path, run_path: Path) -> Path:
+    """
+    Join run path from the caller path
+    Say I have a workflow at $PWD/workflow/bclconvert-with-qc-pipeline/4.0.3/bclconvert-with-qc-pipeline__4.0.3.cwl
+    And this workflow calls ../../../expressions/get-file-from-directory/1.0.1/get-file-from-directory__1.0.1.cwl
+    Return the value $PWD/expressions/get-file-from-directory/1.0.1/get-file-from-directory__1.0.1.cwl
+    Another example may be a subworkflow which uses ../../ over ../../../
+    So if $PWD/workflow/bclconvert-with-qc-pipeline/4.0.3/bclconvert-with-qc-pipeline__4.0.3.cwl calls
+    ../../bclconvert-scatter/4.0.3/bclconvert-scatter__4.0.3.cwl, return
+    $PWD/workflows/bclconvert-scatter/4.0.3/bclconvert-scatter__4.0.3.cwl
+    :return:
+    """
+    return caller_path.parent.absolute().resolve().joinpath(
+        run_path
+    ).resolve()
+
+

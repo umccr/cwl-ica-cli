@@ -163,6 +163,13 @@ Command:
     github-actions-create-tool-markdown        Create a markdown help report file for a cwl tool
     github-actions-create-workflow-markdown    Create a markdown help report file for a cwl workflow
     github-actions-create-catalogue            Create the catalogue markdown file
+
+    ##################################
+    V2 Extensions
+    ##################################
+    icav2-zip-workflow                         Zip up a workflow ready to become a pipeline in icav2
+    icav2-deploy-pipeline                      Deploy a zipped workflow to icav2
+    icav2-launch-pipeline-analysis             Launch a workflow in v2
 """
 
 from docopt import docopt
@@ -489,7 +496,6 @@ def _dispatch():
         # Call command
         workflow_runs_obj()
 
-
     elif cmd == "create-tool-submission-template":
         from subcommands.query.create_tool_submission_template import CreateToolSubmissionTemplate
         create_tool_template_obj = CreateToolSubmissionTemplate(command_argv)
@@ -587,6 +593,26 @@ def _dispatch():
         typescript_expression_dir_validate = TypeScriptExpressionDirValidate(command_argv)
         # Call Command
         typescript_expression_dir_validate()
+
+    # V2 add-ons
+    elif cmd == "icav2-zip-workflow":
+        from subcommands.v2.zip_v2_workflow import ZipV2Workflow
+        # Initialise command
+        zip_v2_workflow = ZipV2Workflow(command_argv)
+        # Call Command
+        zip_v2_workflow()
+    elif cmd == "icav2-deploy-pipeline":
+        from subcommands.v2.deploy_to_v2 import DeployV2Workflow
+        # Initialise command
+        deploy_v2_workflow = DeployV2Workflow(command_argv)
+        # Call Command
+        deploy_v2_workflow()
+    elif cmd == "icav2-launch-pipeline-analysis":
+        from subcommands.v2.launch_v2_workflow import LaunchV2Workflow
+        # Initialise command
+        launch_v2_workflow = LaunchV2Workflow(command_argv)
+        # Call Command
+        launch_v2_workflow()
 
     # NotImplemented Error
     else:
