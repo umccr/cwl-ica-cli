@@ -1074,3 +1074,234 @@ subcommands:
             python - <<EOF
             __cwl-ica_list_all_typescript_expression_paths.py
             EOF
+  icav2-zip-workflow:
+    summary: |
+      Zip up a workflow ready to become a pipeline in ICAv2
+    options:
+      - name: workflow-path
+        summary: |
+          The path to the cwl workflow
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_workflow_paths.py
+            EOF
+      - name: output-path
+        summary: Optional, set the output path, otherwise just the working directory
+        type: string
+      - name: force
+        summary: Optional, override existing zip file if one already exists
+  icav2-deploy-pipeline:
+    summary: |
+      Deploy a zipped workflow to ICAv2
+    options:
+      - name: zipped-workflow-path
+        summary: |
+          Required, path to zipped up workflow
+        type: string
+      - name: project-id
+        summary: |
+          Optional, provide the project id (takes precedence over project-name)
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: project-name
+        summary: |
+          Optional, provide the project name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+      - name: analysis-storage-id
+        summary: |
+          Optional, takes precedence over analysis-storage-size
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: analysis-storage-size
+        summary: |
+          Optional, default is set to Small
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+  icav2-launch-pipeline-analysis:
+    summary: |
+      Launch a pipeline analysis in ICAv2
+    options:
+      - name: input-json
+        summary: |
+          Required, input json similar to v1
+        type: string
+        completion:
+          command_string: |-
+            find $PWD -name '*.json'
+      - name: pipeline-id
+        summary: |
+          Optional, id of the pipeline you wish to launch
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: pipeline-code
+        summary: |
+          Optional, code of the pipeline you wish to launch
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .code'
+            fi
+      - name: project-id
+        summary: |
+          Optional, provide the project id, takes precedence over project-name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: project-name
+        summary: |
+          Optional, provide the project name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+      - name: output-parent-folder-id
+        summary: |
+          Optional, the id of the parent folder to write outputs to
+        type: string
+      - name: output-parent-folder-path
+        summary: |
+          Optional, the path to the parent folder to write outputs to (will be created if it doesn't exist)
+        type: string
+        completion:
+          command_string: |-
+              if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+                  project_index="-1";
+                  project_name="";
+                  project_id="";
+                  if [[ "$(basename "${SHELL}")" == "bash" ]]; then
+                      for i in "${!words[@]}"; do
+                         if [[ "${words[$i]}" == "--project-name" ]]; then
+                             project_index="$(expr $i + 1)";
+                             project_name="${words[$project_index]}";
+                         elif [[ "${words[$i]}" == "--project-id" ]]; then
+                             project_index="$(expr $i + 1)";
+                             project_id="${words[$project_index]}";
+                         fi;
+                      done;
+                  elif [[ "$(basename "${SHELL}")" == "zsh" ]]; then
+                      for ((i = 1; i <= $#words; i++)); do
+                         if [[ "${words[$i]}" == "--project-name" ]]; then
+                             project_index="$(expr $i + 1)";
+                             project_name="${words[$project_index]}";
+                         elif [[ "${words[$i]}" == "--project-id" ]]; then
+                             project_index="$(expr $i + 1)";
+                             project_id="${words[$project_index]}";
+                         fi;
+                      done;
+                  fi;
+                if [[ -n "${project_name}" || -n "${project_id}" ]]; then
+                  if [[ -z "${project_id}" ]]; then 
+                    project_id="$(curl --silent --fail --location \
+                                    --request "GET" \
+                                    --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                                    --header "Accept: application/vnd.illumina.v3+json" \
+                                    --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+                                  jq --raw-output \
+                                    --arg "project_name" "${project_name}" \
+                                    '.items[] | select(.name==$project_name) | .id')";
+                  fi;
+                  if [[ "${CURRENT_WORD}" == */ ]]; then
+                    parent_folder="${CURRENT_WORD}";
+                  else
+                    parent_folder="$(dirname "${CURRENT_WORD}")";
+                  fi;
+                  curl --silent --fail --location \
+                    --request "GET" \
+                    --header "Accept: application/vnd.illumina.v3+json" \
+                    --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" \
+                    --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects/${project_id}/data?parentFolderPath=${parent_folder%/}/&filenameMatchMode=EXACT&type=FOLDER" | 
+                  jq --raw-output \
+                    '.items[] | .data.details.path';
+                fi
+              fi
+      - name: analysis-storage-id
+        summary: |
+          Optional, takes precedence over analysis-storage-size
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: analysis-storage-size
+        summary: |
+          Optional, default is set to Small
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+      - name: activation-id
+        summary: |
+          Optional, the activation id used by the pipeline analysis
+        type: string
