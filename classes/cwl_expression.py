@@ -26,7 +26,7 @@ class CWLExpression(CWL):
 
     def __init__(self, cwl_file_path, name, version, create=False, user_obj=None):
         # Call super class
-        super().__init__(cwl_file_path, name, version, cwl_type="tool", create=create, user_obj=user_obj)
+        super().__init__(cwl_file_path, name, version, cwl_type="expression", create=create, user_obj=user_obj)
 
     def validate_object(self):
         """
