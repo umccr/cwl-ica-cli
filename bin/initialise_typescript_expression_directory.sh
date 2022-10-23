@@ -242,7 +242,7 @@ echo_stderr "Initialising typescript project in directory"
   {
     echo '{'
     echo '    "compilerOptions": {'
-    echo '        "target": "es5",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */'
+    echo '        "target": "es5",                                     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */'
     echo '        "module": "commonjs",                                /* Specify what module code is generated. */'
     echo '        "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables "allowSyntheticDefaultImports" for type compatibility. */'
     echo '        "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */'
