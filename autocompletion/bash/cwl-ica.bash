@@ -54,6 +54,9 @@ Each project is linked to a tenancy id
 '$'\n''expression-validate'$'\t''Validate a CWL expression
 '$'\n''get-workflow-step-ids'$'\t''Get the step ids of a CWL workflow
 '$'\n''help'$'\t''Print help and exit
+'$'\n''icav2-deploy-pipeline'$'\t''Deploy a zipped workflow to ICAv2
+'$'\n''icav2-launch-pipeline-analysis'$'\t''Launch a pipeline analysis in ICAv2
+'$'\n''icav2-zip-workflow'$'\t''Zip up a workflow ready to become a pipeline in ICAv2
 '$'\n''list-categories'$'\t''List registered categories
 '$'\n''list-projects'$'\t''List registered projects
 '$'\n''list-tenants'$'\t''List registered tenants
@@ -783,6 +786,110 @@ and update definition on ICA
       help)
         __cwl-ica_handle_options_flags
         __comp_current_options true || return # no subcmds, no params/opts
+      ;;
+      icav2-deploy-pipeline)
+        OPTIONS+=('--zipped-workflow-path' 'Required, path to zipped up workflow
+' '--project-id' 'Optional, provide the project id (takes precedence over project-name)
+' '--project-name' 'Optional, provide the project name
+' '--analysis-storage-id' 'Optional, takes precedence over analysis-storage-size
+' '--analysis-storage-size' 'Optional, default is set to Small
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --zipped-workflow-path)
+          ;;
+          --project-id)
+            _cwl-ica_icav2-deploy-pipeline_option_project_id_completion
+          ;;
+          --project-name)
+            _cwl-ica_icav2-deploy-pipeline_option_project_name_completion
+          ;;
+          --analysis-storage-id)
+            _cwl-ica_icav2-deploy-pipeline_option_analysis_storage_id_completion
+          ;;
+          --analysis-storage-size)
+            _cwl-ica_icav2-deploy-pipeline_option_analysis_storage_size_completion
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      icav2-launch-pipeline-analysis)
+        OPTIONS+=('--input-json' 'Required, input json similar to v1
+' '--pipeline-id' 'Optional, id of the pipeline you wish to launch
+' '--pipeline-code' 'Optional, code of the pipeline you wish to launch
+' '--project-id' 'Optional, provide the project id, takes precedence over project-name
+' '--project-name' 'Optional, provide the project name
+' '--output-parent-folder-id' 'Optional, the id of the parent folder to write outputs to
+' '--output-parent-folder-path' 'Optional, the path to the parent folder to write outputs to (will be created if it doesn'"\\'"'t exist)
+' '--analysis-storage-id' 'Optional, takes precedence over analysis-storage-size
+' '--analysis-storage-size' 'Optional, default is set to Small
+' '--activation-id' 'Optional, the activation id used by the pipeline analysis
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --input-json)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion
+          ;;
+          --pipeline-id)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion
+          ;;
+          --pipeline-code)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_code_completion
+          ;;
+          --project-id)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_project_id_completion
+          ;;
+          --project-name)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_project_name_completion
+          ;;
+          --output-parent-folder-id)
+          ;;
+          --output-parent-folder-path)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_output_parent_folder_path_completion
+          ;;
+          --analysis-storage-id)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_id_completion
+          ;;
+          --analysis-storage-size)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion
+          ;;
+          --activation-id)
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
+      icav2-zip-workflow)
+        OPTIONS+=('--workflow-path' 'The path to the cwl workflow
+' '--output-path' 'Optional, set the output path, otherwise just the working directory' '--force' 'Optional, override existing zip file if one already exists')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --workflow-path)
+            _cwl-ica_icav2-zip-workflow_option_workflow_path_completion
+          ;;
+          --output-path)
+          ;;
+          --force)
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
       ;;
       list-categories)
         __cwl-ica_handle_options_flags
@@ -2818,6 +2925,263 @@ EOF
     _cwl-ica_compreply "$param_expression_path"
 }
 _cwl-ica_get-workflow-step-ids_option_workflow_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_workflow_path="$(python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List the unregistered workflow paths
+"""
+
+from utils.repo import get_workflow_yaml_path
+from utils.repo import get_workflows_dir
+from utils.miscell import read_yaml
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+workflow_paths = [s_file.relative_to(get_workflows_dir())
+                  for s_file in get_workflows_dir().glob("**/*.cwl")]
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of workflows dir = "OneDrive/GitHub/UMCCR/workflows/contig/" -> current path resolved
+if current_word_value is not None:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+else:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+
+# Is the current_path_resolved a subpath of the workflows directory?
+try:
+    _ = current_path_resolved.relative_to(get_workflows_dir())
+    in_workflows_dir = True
+except ValueError:
+    in_workflows_dir = False
+
+if in_workflows_dir:
+    current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
+    if current_path_resolved_relative_to_workflows_dir == Path("."):
+        for s_path in workflow_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in workflow_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_workflows_dir)):
+                if current_word_value.endswith("/"):
+                    print(
+                        Path(current_word_value) / s_path.relative_to(current_path_resolved_relative_to_workflows_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_workflows_dir))
+
+else:
+    # Now get the workflows yaml path relative to the current path
+    try:
+        workflows_dir = get_workflows_dir().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_workflows_dir().absolute()) in str(relpath(get_workflows_dir(), current_path_resolved)):
+            # Separate mount point
+            workflows_dir = get_workflows_dir().absolute()
+        else:
+            workflows_dir = Path(relpath(get_workflows_dir(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in workflow_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / workflows_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / workflows_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_workflow_path"
+}
+_cwl-ica_icav2-deploy-pipeline_option_project_id_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi)"
+    _cwl-ica_compreply "$param_project_id"
+}
+_cwl-ica_icav2-deploy-pipeline_option_project_name_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi)"
+    _cwl-ica_compreply "$param_project_name"
+}
+_cwl-ica_icav2-deploy-pipeline_option_analysis_storage_id_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_analysis_storage_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi)"
+    _cwl-ica_compreply "$param_analysis_storage_id"
+}
+_cwl-ica_icav2-deploy-pipeline_option_analysis_storage_size_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_analysis_storage_size="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi)"
+    _cwl-ica_compreply "$param_analysis_storage_size"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_input_json="$(find $PWD -name '*.json')"
+    _cwl-ica_compreply "$param_input_json"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_pipeline_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi)"
+    _cwl-ica_compreply "$param_pipeline_id"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_code_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_pipeline_code="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .code'
+fi)"
+    _cwl-ica_compreply "$param_pipeline_code"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_project_id_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi)"
+    _cwl-ica_compreply "$param_project_id"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_project_name_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi)"
+    _cwl-ica_compreply "$param_project_name"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_output_parent_folder_path_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_output_parent_folder_path="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    project_index="-1";
+    project_name="";
+    project_id="";
+    if [[ "$(basename "${SHELL}")" == "bash" ]]; then
+        for i in "${!words[@]}"; do
+           if [[ "${words[$i]}" == "--project-name" ]]; then
+               project_index="$(expr $i + 1)";
+               project_name="${words[$project_index]}";
+           elif [[ "${words[$i]}" == "--project-id" ]]; then
+               project_index="$(expr $i + 1)";
+               project_id="${words[$project_index]}";
+           fi;
+        done;
+    elif [[ "$(basename "${SHELL}")" == "zsh" ]]; then
+        for ((i = 1; i <= $#words; i++)); do
+           if [[ "${words[$i]}" == "--project-name" ]]; then
+               project_index="$(expr $i + 1)";
+               project_name="${words[$project_index]}";
+           elif [[ "${words[$i]}" == "--project-id" ]]; then
+               project_index="$(expr $i + 1)";
+               project_id="${words[$project_index]}";
+           fi;
+        done;
+    fi;
+  if [[ -n "${project_name}" || -n "${project_id}" ]]; then
+    if [[ -z "${project_id}" ]]; then
+      project_id="$(curl --silent --fail --location \
+                      --request "GET" \
+                      --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                      --header "Accept: application/vnd.illumina.v3+json" \
+                      --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+                    jq --raw-output \
+                      --arg "project_name" "${project_name}" \
+                      '.items[] | select(.name==$project_name) | .id')";
+    fi;
+    if [[ "${CURRENT_WORD}" == */ ]]; then
+      parent_folder="${CURRENT_WORD}";
+    else
+      parent_folder="$(dirname "${CURRENT_WORD}")";
+    fi;
+    curl --silent --fail --location \
+      --request "GET" \
+      --header "Accept: application/vnd.illumina.v3+json" \
+      --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" \
+      --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects/${project_id}/data?parentFolderPath=${parent_folder%/}/&filenameMatchMode=EXACT&type=FOLDER" |
+    jq --raw-output \
+      '.items[] | .data.details.path';
+  fi
+fi)"
+    _cwl-ica_compreply "$param_output_parent_folder_path"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_id_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_analysis_storage_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi)"
+    _cwl-ica_compreply "$param_analysis_storage_id"
+}
+_cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_analysis_storage_size="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi)"
+    _cwl-ica_compreply "$param_analysis_storage_size"
+}
+_cwl-ica_icav2-zip-workflow_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
     local param_workflow_path="$(python - <<EOF
 #!/usr/bin/env python3
