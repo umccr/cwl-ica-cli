@@ -49,19 +49,19 @@ class LaunchV2Workflow(Command):
                                                      [--activation-id=<activation_id>]
 
 Description:
-    Launch a workflow on icav2 specifying a project context, and pipeline code.
+    Launch an analysis on icav2 specifying a project context, and pipeline code.
 
     Your input json should contain the following keys:
-      * name | user_reference | userReference  (the name of the workflow run)
+      * name | user_reference | userReference  (the name of the pipeline analysis run)
       * input | inputs (the CWL input json dict)
       * engine_parameters | engineParameters:
         * Which comprises the following keys:
           * output_parent_folder_id | outputParentFolderId (Optional, can also be specified on cli)
           * output_parent_folder_path | outputParentFolderPath (Optional, can also be specified on cli, will be created if it doesn't exist)
           * tags (Optional, a dictionary of lists with the following keys)
-            * technical_tags | technicalTags  (Optional array of technical tags to attach to this workflow)
-            * user_tags | userTags (Optional array of user tags to attach to this workflow)
-            * reference_tags | referenceTags (Optional array of reference tags to attach to this workflow)
+            * technical_tags | technicalTags  (Optional array of technical tags to attach to this pipeline analysis)
+            * user_tags | userTags (Optional array of user tags to attach to this pipeline analysis)
+            * reference_tags | referenceTags (Optional array of reference tags to attach to this pipeline analysis)
           * analysis_storage_id | analysisStorageId (Optional, can also be specified on cli or inferred by cwl-ica)
           * analysis_storage_size | analysisStorageSize (Optional, can also be specified on cli or inferred by cwl-ica)
           * activation_id | activationId (Optional, can also be specified on cli or inferred by cwl-ica)
@@ -79,8 +79,8 @@ Options:
     --pipeline-id=<pipeline_id>                              Optional, id of the pipeline you wish to launch
     --pipeline-code=<pipeline_code>                          Optional, name of the pipeline you wish to launch
                                                              Must specify one (and only one of) --pipeline-id and --pipeline-code
-    --project-id=<project_id>                                Optional, id of project context you wish to launch the workflow.
-    --project-name=<project_name>                            Optional, name of the project context you wish to launch the workflow.
+    --project-id=<project_id>                                Optional, id of project context you wish to launch the pipeline analysis.
+    --project-name=<project_name>                            Optional, name of the project context you wish to launch the pipeline analysis.
                                                              Must specify one (and only one of) --project-name and --project-id
     --output-parent-folder-id=<output_parent_folder_id>      Optional, the id of the parent folder to write outputs to
     --output-parent-folder-path=<output_parent_folder_path>  Optional, the path to the parent folder to write outputs to (will be created if it doesn't exist)
@@ -88,7 +88,7 @@ Options:
     --analysis-storage-id=<analysis_storage_id>              Optional, analysis storage id, overrides default analysis storage size
     --analysis-storage-size=<analysis_storage_size>          Optional, analysis storage size, one of Small, Medium, Large
                                                              Cannot specify both --analysis-storage-id AND --analysis-storage-size
-    --activation-id=<activation_id>                          Optional, the activation id used by the workflow
+    --activation-id=<activation_id>                          Optional, the activation id used by the pipeline analysis
 
 Environment:
     ICAV2_ACCESS_TOKEN
