@@ -116,6 +116,9 @@ class CWLWorkflow(CWL):
         for output_id in output_ids:
             self.check_id_conformance("outputs", Path(output_id).name)
 
+        # Check output source for outputs
+        self.check_output_sources()
+
         # Run cwltool --validate
         self.run_cwltool_validate(self.cwl_file_path)
 
@@ -221,3 +224,8 @@ class CWLWorkflow(CWL):
         with open(self.cwl_file_path, 'w') as cwl_h:
             dump_yaml(write_obj, cwl_h)
 
+    def check_output_sources(self):
+        # Ensure workflow outputs have output
+        for output in self.cwl_obj.outputs:
+            if not hasattr(output, "outputSource") or output.outputSource is None:
+                logger.warning(f"Couldn't find output source for output {output.id}")
