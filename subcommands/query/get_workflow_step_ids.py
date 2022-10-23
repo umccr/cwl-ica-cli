@@ -129,7 +129,7 @@ Example:
         for step in cwl_obj.steps:
             step_run_path = cwl_file_path.parent.absolute().resolve().joinpath(step.run).resolve()
             step_items_dir = get_items_dir_from_cwl_file_path(step_run_path)
-            if step_items_dir.name == 'workflows':
+            if step_items_dir.name == "workflows":
                 logger.info(f"Step {cwl_id_to_path(step.id).name} is a subworkflow, importing")
                 # Step is a subworkflow
                 # Get name / version of subworkflow

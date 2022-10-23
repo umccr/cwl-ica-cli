@@ -67,7 +67,7 @@ class Validate(Command):
         :return:
         """
 
-        name_version_path = Path(self.cwl_file_path).absolute().relative_to(items_dir)
+        name_version_path = Path(self.cwl_file_path).absolute().resolve().relative_to(items_dir)
 
         name_version_file_split = name_version_path.name.split("__", 1)
 
