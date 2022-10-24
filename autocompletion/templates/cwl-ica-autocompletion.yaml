@@ -1305,3 +1305,88 @@ subcommands:
         summary: |
           Optional, the activation id used by the pipeline analysis
         type: string
+  icav2-list-analysis-steps:
+    summary: |
+      List steps of an analysis
+    options:
+      - name: project-id
+        summary: |
+          Optional, provide the project id, takes precedence over project-name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: project-name
+        summary: |
+          Optional, provide the project name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+      - name: analysis-id
+        summary: |
+          Required, the analysis id you wish to list logs of
+        type: string
+      - name: show-technical-steps
+        summary: |
+          Also list technical steps
+  icav2-get-analysis-step-logs:
+    summary: |
+      Launch a pipeline analysis in ICAv2
+    options:
+      - name: project-id
+        summary: |
+          Optional, provide the project id, takes precedence over project-name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .id'
+            fi
+      - name: project-name
+        summary: |
+          Optional, provide the project name
+        type: string
+        completion:
+          command_string: |-
+            if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+              curl --silent --fail --location --request "GET" \
+                   --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+                   --header 'Accept: application/vnd.illumina.v3+json' \
+                   --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+              jq --raw-output '.items[] | .name'
+            fi
+      - name: analysis-id
+        summary: |
+          Required, the analysis id you wish to list logs of
+        type: string
+      - name: step-name
+        summary: |
+          The name of the step
+        type: string
+      - name: stdout
+        summary: |
+          Get the stdout of a step
+      - name: stderr
+        summary: |
+          Get the stderr of a step
+      - name: output-path
+        summary: |
+          Write output to file
+        type: string

@@ -49,7 +49,9 @@ Each project is linked to a tenancy id
 " get-workflow-step-ids\:"Get the step ids of a CWL workflow
 " help\:"Print help and exit
 " icav2-deploy-pipeline\:"Deploy a zipped workflow to ICAv2
+" icav2-get-analysis-step-logs\:"Launch a pipeline analysis in ICAv2
 " icav2-launch-pipeline-analysis\:"Launch a pipeline analysis in ICAv2
+" icav2-list-analysis-steps\:"List steps of an analysis
 " icav2-zip-workflow\:"Zip up a workflow ready to become a pipeline in ICAv2
 " list-categories\:"List registered categories
 " list-projects\:"List registered projects
@@ -674,6 +676,31 @@ and update definition on ICA
 
 
             ;;
+            icav2-get-analysis-step-logs)
+
+                # ---- Command: icav2-get-analysis-step-logs
+                _arguments -s -C \
+                    '1: :->cmd1' \
+                    '--help[Show command help]' \
+                    '-h[Show command help]' \
+                    '--project-id[Optional, provide the project id, takes precedence over project-name
+]:project-id:_cwl-ica_icav2-get-analysis-step-logs_option_project_id_completion' \
+                    '--project-name[Optional, provide the project name
+]:project-name:_cwl-ica_icav2-get-analysis-step-logs_option_project_name_completion' \
+                    '--analysis-id[Required, the analysis id you wish to list logs of
+]:analysis-id' \
+                    '--step-name[The name of the step
+]:step-name' \
+                    '--stdout[Get the stdout of a step
+]:stdout' \
+                    '--stderr[Get the stderr of a step
+]:stderr' \
+                    '--output-path[Write output to file
+]:output-path' \
+                    && ret=0
+
+
+            ;;
             icav2-launch-pipeline-analysis)
 
                 # ---- Command: icav2-launch-pipeline-analysis
@@ -701,6 +728,25 @@ and update definition on ICA
 ]:analysis-storage-size:_cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion' \
                     '--activation-id[Optional, the activation id used by the pipeline analysis
 ]:activation-id' \
+                    && ret=0
+
+
+            ;;
+            icav2-list-analysis-steps)
+
+                # ---- Command: icav2-list-analysis-steps
+                _arguments -s -C \
+                    '1: :->cmd1' \
+                    '--help[Show command help]' \
+                    '-h[Show command help]' \
+                    '--project-id[Optional, provide the project id, takes precedence over project-name
+]:project-id:_cwl-ica_icav2-list-analysis-steps_option_project_id_completion' \
+                    '--project-name[Optional, provide the project name
+]:project-name:_cwl-ica_icav2-list-analysis-steps_option_project_name_completion' \
+                    '--analysis-id[Required, the analysis id you wish to list logs of
+]:analysis-id' \
+                    '--show-technical-steps[Also list technical steps
+]:show-technical-steps' \
                     && ret=0
 
 
@@ -2827,6 +2873,30 @@ _cwl-ica_icav2-deploy-pipeline_option_analysis_storage_size_completion() {
 fi ) )
     compadd -X "analysis_storage_size:" $__dynamic_completion
 }
+_cwl-ica_icav2-get-analysis-step-logs_option_project_id_completion() {
+    local __dynamic_completion
+    local CURRENT_WORD="$words[CURRENT]"
+    IFS=$'\n' __dynamic_completion=( $( if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi ) )
+    compadd -X "project_id:" $__dynamic_completion
+}
+_cwl-ica_icav2-get-analysis-step-logs_option_project_name_completion() {
+    local __dynamic_completion
+    local CURRENT_WORD="$words[CURRENT]"
+    IFS=$'\n' __dynamic_completion=( $( if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi ) )
+    compadd -X "project_name:" $__dynamic_completion
+}
 _cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion() {
     local __dynamic_completion
     local CURRENT_WORD="$words[CURRENT]"
@@ -2959,6 +3029,30 @@ _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion(
   jq --raw-output '.items[] | .name'
 fi ) )
     compadd -X "analysis_storage_size:" $__dynamic_completion
+}
+_cwl-ica_icav2-list-analysis-steps_option_project_id_completion() {
+    local __dynamic_completion
+    local CURRENT_WORD="$words[CURRENT]"
+    IFS=$'\n' __dynamic_completion=( $( if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .id'
+fi ) )
+    compadd -X "project_id:" $__dynamic_completion
+}
+_cwl-ica_icav2-list-analysis-steps_option_project_name_completion() {
+    local __dynamic_completion
+    local CURRENT_WORD="$words[CURRENT]"
+    IFS=$'\n' __dynamic_completion=( $( if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+  curl --silent --fail --location --request "GET" \
+       --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
+       --header 'Accept: application/vnd.illumina.v3+json' \
+       --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
+  jq --raw-output '.items[] | .name'
+fi ) )
+    compadd -X "project_name:" $__dynamic_completion
 }
 _cwl-ica_icav2-zip-workflow_option_workflow_path_completion() {
     local __dynamic_completion
