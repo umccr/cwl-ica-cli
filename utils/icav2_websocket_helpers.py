@@ -13,7 +13,7 @@ logger = get_logger()
 def write_websocket_to_file(url: str, output_file: Path):
     ws = websocket.WebSocket()
     try:
-        ws.connect(url, timeout=30)
+        ws.connect(url, timeout=3)
     except WebSocketBadStatusException:
         logger.error(f"Couldn't connect to websocket url {url}, try again in a few moments"
                      f"Websocket has likely closed and log is being written to a file")
