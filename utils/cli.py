@@ -170,6 +170,8 @@ Command:
     icav2-zip-workflow                         Zip up a workflow ready to become a pipeline in icav2
     icav2-deploy-pipeline                      Deploy a zipped workflow to icav2
     icav2-launch-pipeline-analysis             Launch a workflow in v2
+    icav2-list-analysis-steps                  List steps of an icav2 analysis
+    icav2-get-analysis-step-logs               Get logs (stdout or stderr) of an analysis step
 """
 
 from docopt import docopt
@@ -613,7 +615,18 @@ def _dispatch():
         launch_v2_workflow = LaunchV2Workflow(command_argv)
         # Call Command
         launch_v2_workflow()
-
+    elif cmd == "icav2-list-analysis-steps":
+        from subcommands.v2.list_v2_analysis_steps import ICAv2ListAnalysisSteps
+        # Initialise command
+        list_icav2_analysis_steps = ICAv2ListAnalysisSteps(command_argv)
+        # Call Command
+        list_icav2_analysis_steps()
+    elif cmd == "icav2-get-analysis-step-logs":
+        from subcommands.v2.get_v2_step_logs import GetICAv2AnalysisStepLogs
+        # Initialise command
+        get_icav2_analysis_step_logs = GetICAv2AnalysisStepLogs(command_argv)
+        # Call Command
+        get_icav2_analysis_step_logs()
     # NotImplemented Error
     else:
         print(__doc__)
