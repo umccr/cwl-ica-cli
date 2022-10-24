@@ -630,7 +630,7 @@ def write_analysis_step_logs(step_logs: AnalysisStepLogs, project_id: str, log_n
     else:
         if hasattr(step_logs, "std_err_stream") and step_logs.std_err_stream is not None:
             is_stream = True
-            log_stream = step_logs.std_out_stream
+            log_stream = step_logs.std_err_stream
         else:
             log_data_id: str = step_logs.std_err_data.id
     if is_stream:
