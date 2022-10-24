@@ -91,6 +91,7 @@ runs:
           "--include=utils/***" \
           "--include=cwl-ica-conda-env.yaml" \
           "--include=install.sh" \
+          "--exclude=*" \
           "./" "release-${{ inputs.git_tag }}/"
         # Update version.py for release
         sed -i "s/__VERSION__/${NON_LATEST_CWL_ICA_VERSION}/" \
