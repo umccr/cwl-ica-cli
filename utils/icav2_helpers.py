@@ -5,8 +5,14 @@ Use libica v2 where possible.
 
 Otherwise run command manually through curl
 """
+import tempfile
+import requests
+
 from libica.openapi.v2.api.project_analysis_api import ProjectAnalysisApi
 from libica.openapi.v2.model.analysis import Analysis
+from libica.openapi.v2.model.analysis_step import AnalysisStep
+from libica.openapi.v2.model.analysis_step_list import AnalysisStepList
+from libica.openapi.v2.model.analysis_step_logs import AnalysisStepLogs
 from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 from libica.openapi.v2.model.create_data import CreateData
 from libica.openapi.v2.model.pipeline import Pipeline
@@ -238,6 +244,13 @@ def create_download_url(project_id: str, data_id: str, configuration: Configurat
         raise ValueError
 
     return json.loads(command_stdout).get("url")
+
+
+def write_icav2_file_contents(project_id: str, data_id, output_path: Path, configuration: Configuration):
+    download_url = create_download_url(project_id, data_id, configuration)
+    r = requests.get(download_url)
+    with open(output_path, "wb") as f_h:
+        f_h.write(r.content)
 
 
 def get_files_from_directory_id_non_recursively(project_id: str, data_id: str, configuration: Configuration) -> Dict:
@@ -556,3 +569,81 @@ def launch_workflow(
             raise ValueError("Exception when calling ProjectAnalysisApi->create_cwl_analysis: %s\n" % e)
 
     return api_response.id, api_response.user_reference
+
+
+def get_workflow_steps(project_id: str, analysis_id: str, configuration: Configuration) -> List[AnalysisStep]:
+    # Enter a context with an instance of the API client
+    with libica.openapi.v2.ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = ProjectAnalysisApi(api_client)
+
+        # example passing only required values which don't have defaults set
+        try:
+            # Retrieve the individual steps of an analysis.
+            api_response: AnalysisStepList = api_instance.get_analysis_steps(
+                project_id,
+                analysis_id
+            )
+        except libica.openapi.v2.ApiException as e:
+            raise ValueError("Exception when calling ProjectAnalysisApi->get_analysis_steps: %s\n" % e)
+
+    return api_response.items
+
+
+def filter_analysis_steps(workflow_steps: List[AnalysisStep], show_technical_steps=False) -> List[Dict]:
+    # Filter steps
+    workflow_steps_filtered: List[Dict] = []
+    for workflow_step in workflow_steps:
+        # Skip technical steps if required
+        if workflow_step.technical and not show_technical_steps:
+            continue
+
+        workflow_step_dict = {
+            "name": workflow_step.name.split("#", 1)[-1],
+            "status": workflow_step.status
+        }
+
+        for date_item in ["queue_date", "start_date", "end_date"]:
+            if hasattr(workflow_step, date_item) and getattr(workflow_step, date_item) is not None:
+                date_obj: datetime = getattr(workflow_step, date_item)
+                workflow_step_dict[date_item] = date_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        workflow_steps_filtered.append(
+            workflow_step_dict
+        )
+
+    return workflow_steps_filtered
+
+
+def write_analysis_step_logs(step_logs: AnalysisStepLogs, project_id: str, log_name: str, output_path: Path, configuration: Configuration, is_cwltool_log=False):
+    # Check if we're getting our log from a stream
+    is_stream = False
+    log_stream = None
+    log_data_id = ""
+
+    if log_name == "stdout":
+        if hasattr(step_logs, "std_out_stream") and step_logs.std_out_stream is not None:
+            is_stream = True
+            log_stream = step_logs.std_out_stream
+        else:
+            log_data_id: str = step_logs.std_out_data.id
+    else:
+        if hasattr(step_logs, "std_err_stream") and step_logs.std_err_stream is not None:
+            is_stream = True
+            log_stream = step_logs.std_out_stream
+        else:
+            log_data_id: str = step_logs.std_err_data.id
+    if is_stream:
+        from utils.icav2_websocket_helpers import write_websocket_to_file, convert_html_to_text
+        if is_cwltool_log:
+            temp_html_obj = tempfile.NamedTemporaryFile()
+            write_websocket_to_file(log_stream,
+                                    output_file=Path(temp_html_obj.name))
+            convert_html_to_text(Path(temp_html_obj.name), output_path)
+        else:
+            write_websocket_to_file(log_stream,
+                                    output_file=output_path)
+    else:
+        write_icav2_file_contents(project_id, log_data_id, output_path, configuration)
+
+
