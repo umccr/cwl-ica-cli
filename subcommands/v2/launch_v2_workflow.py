@@ -41,7 +41,7 @@ logger = get_logger()
 class LaunchV2Workflow(Command):
     """Usage:
     cwl-ica [options] icav2-launch-pipeline-analysis help
-    cwl-ica [options] icav2-launch-pipeline-analysis (--input-json=<input-json-path>)
+    cwl-ica [options] icav2-launch-pipeline-analysis (--launch-json=<input-json-path>)
                                                      (--pipeline-code=<pipeline_code> | --pipeline-id=<pipeline_id>)
                                                      (--project-name=<project_name> | --project-id=<project_id>)
                                                      [--output-parent-folder-path=<output_parent_folder_path> | --output-parent-folder-id=<output_parent_folder_id>]
@@ -75,7 +75,7 @@ Description:
     These will then be mounted into your analysis at runtime.
 
 Options:
-    --input-json=<input_json>                                Required, input json similar to v1
+    --launch-json=<launch_json>                                Required, input json similar to v1
     --pipeline-id=<pipeline_id>                              Optional, id of the pipeline you wish to launch
     --pipeline-code=<pipeline_code>                          Optional, name of the pipeline you wish to launch
                                                              Must specify one (and only one of) --pipeline-id and --pipeline-code
@@ -94,7 +94,7 @@ Environment:
     ICAV2_ACCESS_TOKEN
 
 Example:
-    cwl-ica icav2-launch-pipeline-analysis --input-json /path/to/input.json --pipeline-code bclconvert_with_qc_pipeline__4_0_3 --project-name playground_v2
+    cwl-ica icav2-launch-pipeline-analysis --launch-json /path/to/input.json --pipeline-code bclconvert_with_qc_pipeline__4_0_3 --project-name playground_v2
     """
 
     def __init__(self, command_argv):
@@ -103,7 +103,7 @@ Example:
         super(LaunchV2Workflow, self).__init__(command_argv)
 
         # Initialise parameters
-        self.input_json_path: Optional[Path] = None
+        self.launch_json_path: Optional[Path] = None
         self.input_launch_json: Optional[ICAv2LaunchJson] = None
         self.pipeline_id: Optional[str] = None
         self.pipeline_code: Optional[str] = None
@@ -130,12 +130,12 @@ Example:
         # Check defined and assign properties
         # Get input json
         logger.info("Checking input args")
-        self.input_json_path = Path(self.args.get("--input-json", None))
-        if self.input_json_path is None:
-            logger.error("--input-json not defined")
+        self.launch_json_path = Path(self.args.get("--launch-json", None))
+        if self.launch_json_path is None:
+            logger.error("--launch-json not defined")
             raise CheckArgumentError
-        if not self.input_json_path.is_file():
-            logger.error(f"--input-json parameter {self.input_json_path} not found")
+        if not self.launch_json_path.is_file():
+            logger.error(f"--launch-json parameter {self.launch_json_path} not found")
             raise FileNotFoundError
 
         # Get pipeline id
@@ -218,7 +218,7 @@ Example:
 
     def import_json_dict(self):
         # Import json object
-        with open(self.input_json_path, "r") as json_h:
+        with open(self.launch_json_path, "r") as json_h:
             self.input_launch_json = ICAv2LaunchJson.from_dict(json.load(json_h))
             if self.output_parent_folder_id is not None:
                 self.input_launch_json.update_engine_parameter(
