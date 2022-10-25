@@ -621,18 +621,35 @@ def write_analysis_step_logs(step_logs: AnalysisStepLogs, project_id: str, log_n
     log_stream = None
     log_data_id = ""
 
+    non_empty_log_attrs = []
+    # Check attributes of log obj
+    for attr in dir(step_logs):
+        if attr.startswith('_'):
+            continue
+        if getattr(step_logs, attr) is None:
+            continue
+        non_empty_log_attrs.append(attr)
+
     if log_name == "stdout":
         if hasattr(step_logs, "std_out_stream") and step_logs.std_out_stream is not None:
             is_stream = True
             log_stream = step_logs.std_out_stream
-        else:
+        elif hasattr(step_logs, "std_out_data") and step_logs.std_out_data is not None:
             log_data_id: str = step_logs.std_out_data.id
+        else:
+            logger.error("Could not get either file output or stream of logs")
+            logger.error(f"The available attributes were {', '.join(non_empty_log_attrs)}")
+            raise AttributeError
     else:
         if hasattr(step_logs, "std_err_stream") and step_logs.std_err_stream is not None:
             is_stream = True
             log_stream = step_logs.std_err_stream
-        else:
+        elif hasattr(step_logs, "std_err_data") and step_logs.std_err_data is not None:
             log_data_id: str = step_logs.std_err_data.id
+        else:
+            logger.error("Could not get either file output or stream of logs")
+            logger.error(f"The available attributes were {', '.join(non_empty_log_attrs)}")
+            raise AttributeError
     if is_stream:
         from utils.icav2_websocket_helpers import write_websocket_to_file, convert_html_to_text
         if is_cwltool_log:
