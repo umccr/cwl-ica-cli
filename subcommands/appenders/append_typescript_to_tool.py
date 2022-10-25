@@ -19,6 +19,7 @@ class AppendTypeScriptToolDir(AppendTypeScriptDir):
     """Usage:
     cwl-ica [options] append-typescript-directory-to-cwl-commandline-tool help
     cwl-ica [options] append-typescript-directory-to-cwl-commandline-tool (--tool-path /path/to/tool.cwl)
+                                                                          [--xtrace]
 
 
 Description:
@@ -27,6 +28,7 @@ Description:
 
 Options:
     --tool-path=<the tool path>                         Required, the path to the cwl tool
+    --xtrace                                            Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
     cwl-ica append-typescript-directory-to-cwl-commandline-tool --tool-path "tools/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
@@ -72,3 +74,5 @@ Example:
 
         # Get the name and version attributes
         self.set_name_and_version_from_file_path()
+
+        self.set_xtrace_arg()

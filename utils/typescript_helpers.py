@@ -11,15 +11,20 @@ from utils.subprocess_handler import run_subprocess_proc
 logger = get_logger()
 
 
-def run_typescript_validation_script(typescript_expression_dir: Path):
+def run_typescript_validation_script(typescript_expression_dir: Path, xtrace: bool=False):
         logger.info("Running validate_typescript_expressions_directory.sh script")
+        command_prefix = ["bash"]
         command_list = [
             "validate_typescript_expressions_directory.sh",
             "--typescript-expressions-dir", f"{typescript_expression_dir}",
             "--cwlify-js-code"
         ]
+
+        if xtrace:
+            command_prefix.append("-oxtrace")
+
         returncode, stdout, stderr = run_subprocess_proc(
-            command_list,
+            command_prefix + command_list,
             capture_output=True
         )
 
@@ -36,19 +41,27 @@ def run_typescript_validation_script(typescript_expression_dir: Path):
             logger.info(f"stderr was '{stderr}'")
 
 
-def create_typescript_expression_dir(typescript_expression_path: Path):
+def create_typescript_expression_dir(typescript_expression_path: Path, xtrace=False):
     """
     Run subprocess on command initialise_typescript_expression_directory.sh
     With the --typescript-expression-dir argument set to as the parent of the cwl_file_path attribute
     :return:
     """
+    command_prefix = [
+        "bash"
+    ]
+
     command_list = [
         "initialise_typescript_expression_directory.sh",
         "--typescript-expression-dir", str(typescript_expression_path)
     ]
+
+    if xtrace:
+        command_prefix.append("-oxtrace")
+
     logger.info(f"Running the following command to initialise the typescript expression directory '{' '.join(command_list)}'")
     return_code, stdout, stderr = run_subprocess_proc(
-        command_list,
+        command_prefix + command_list,
         capture_output=True
     )
 

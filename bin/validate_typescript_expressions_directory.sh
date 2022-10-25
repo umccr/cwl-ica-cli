@@ -14,6 +14,21 @@ _verlt() {
   [ "$1" = "$2" ] && return 1 || verlte "$1" "$2"
 }
 
+# Set date binary
+if [[ "${OSTYPE}" == "darwin"* ]]; then
+  date_bin="gdate"
+else
+  date_bin="date"
+fi
+
+# Set tee binary
+if [[ "${OSTYPE}" == "darwin"* ]]; then
+  tee_bin="gtee"
+else
+  tee_bin="tee"
+fi
+
+
 # Handy functions
 echo_stderr(){
   : '
@@ -105,6 +120,46 @@ while [ $# -gt 0 ]; do
   shift 1
 done
 
+# Check if we have the conda env
+# value of "0" for no and "1" for yes
+has_cwl_ica_conda_env="$( \
+  if ! type conda; then
+    echo "0"; \
+  else
+    conda env list --json | \
+    jq --raw-output \
+      '
+        .envs |
+        map(
+          select(
+            split("/")[-1] |
+            test("^cwl-ica$")
+          )
+        ) |
+        length
+      '; \
+  fi \
+)"
+
+# Step -1 - Hash the right yarn
+if [[ "${has_cwl_ica_conda_env}" == "1" ]]; then
+  CWL_ICA_BIN_PATH="$( \
+    conda run --name "cwl-ica" && \
+    sh -c "echo '${CONDA_PREFIX}/bin'" \
+  )"
+  if [[ -d "${CWL_ICA_BIN_PATH}" ]]; then
+    # Hash yarn
+    if [[ -r "${CWL_ICA_BIN_PATH}/yarn" ]]; then
+      hash -p "${CWL_ICA_BIN_PATH}/yarn" "yarn"
+    fi
+
+    # Hash node
+    if [[ -r "${CWL_ICA_BIN_PATH}/node" ]]; then
+      hash -p "${CWL_ICA_BIN_PATH}/node" "node"
+    fi
+  fi
+fi
+
 # Step 0 - Copy everything to a temp directory
 temp_dir="$(dirname "${typescript_expressions_dir}")/.$(basename "${typescript_expressions_dir}")-test-evaluation"
 
@@ -115,7 +170,7 @@ rsync --archive \
   "${typescript_expressions_dir}/" "${temp_dir}/"
 
 # Step 1 - Run installation through yarn
-echo_stderr "Installing yarn temporarily into '${typescript_expressions_dir}'"
+echo_stderr "Installing yarn into '${temp_dir}'"
 (
   set -e
   cd "${temp_dir}"
@@ -145,10 +200,10 @@ echo_stderr "Running jest of typescript code"
 (
   set -e
   cd "${temp_dir}"
-  echo -e "# Test started at $(date -Iseconds)\n" > "tests/summary.txt"
+  echo -e "# Test started at $("${date_bin}" -Iseconds)\n" > "tests/summary.txt"
   yarn exec jest |& \
-  tee --append "tests/summary.txt"
-  echo -e "# Test completed at $(date -Iseconds)\n" >> "tests/summary.txt"
+  "${tee_bin}" --append "tests/summary.txt"
+  echo -e "# Test completed at $("${date_bin}" -Iseconds)\n" >> "tests/summary.txt"
 )
 
 # Step 2a - Move back relevant files to typescript expression dir

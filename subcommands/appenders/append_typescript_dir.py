@@ -28,6 +28,8 @@ from utils.typescript_helpers import create_blank_typescript_file, \
     create_blank_typescript_test_file, \
     create_typescript_expression_dir
 
+from typing import Optional
+
 logger = get_logger()
 
 
@@ -50,6 +52,8 @@ class AppendTypeScriptDir(Command):
         self.user_obj = None
         self.item_dir = item_dir
         self.item_type = item_type
+
+        self.xtrace: Optional[bool] = None
 
         # Check length / add 'help' attribute if necessary
         # Check args
@@ -222,6 +226,9 @@ class AppendTypeScriptDir(Command):
             logger.error(f"Expected item of type \"{self.item_type}\" to be in \"{self.item_dir}\"")
             raise ItemDirectoryNotFoundError
 
+    def set_xtrace_arg(self):
+        self.xtrace = self.args.get("--xtrace", False)
+
     def get_typescript_expression_path(self):
         return self.cwl_file_path.parent / "typescript-expressions"
 
@@ -233,7 +240,7 @@ class AppendTypeScriptDir(Command):
         self.name, self.version = self.cwl_file_path.resolve().stem.split("__")
 
     def create_typescript_expression_dir(self):
-        create_typescript_expression_dir(self.get_typescript_expression_path())
+        create_typescript_expression_dir(self.get_typescript_expression_path(), self.xtrace)
 
     def create_blank_typescript_file(self):
         create_blank_typescript_file(self.get_typescript_expression_path() / (self.cwl_file_path.stem + ".ts"), self.username)

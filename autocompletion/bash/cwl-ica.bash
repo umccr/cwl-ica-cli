@@ -332,11 +332,14 @@ and update definition on ICA
       ;;
       append-typescript-directory-to-cwl-commandline-tool)
         OPTIONS+=('--tool-path' 'The path to the cwl commandline tool
+' '--xtrace' 'Set xtrace on the initialise_typescript_expression_directory shell script
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
           --tool-path)
             _cwl-ica_append-typescript-directory-to-cwl-commandline-tool_option_tool_path_completion
+          ;;
+          --xtrace)
           ;;
 
         esac
@@ -349,11 +352,14 @@ and update definition on ICA
       ;;
       append-typescript-directory-to-cwl-expression-tool)
         OPTIONS+=('--expression-path' 'The path to the cwl expression tool
+' '--xtrace' 'Set xtrace on the initialise_typescript_expression_directory script
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
           --expression-path)
             _cwl-ica_append-typescript-directory-to-cwl-expression-tool_option_expression_path_completion
+          ;;
+          --xtrace)
           ;;
 
         esac
@@ -366,11 +372,14 @@ and update definition on ICA
       ;;
       append-typescript-directory-to-cwl-workflow)
         OPTIONS+=('--workflow-path' 'The path to the cwl workflow
+' '--xtrace' 'Set xtrace on the initialise_typescript_expression_directory shell script
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
           --workflow-path)
             _cwl-ica_append-typescript-directory-to-cwl-workflow_option_workflow_path_completion
+          ;;
+          --xtrace)
           ;;
 
         esac
@@ -1291,11 +1300,14 @@ to workflow names
       ;;
       typescript-expression-validate)
         OPTIONS+=('--typescript-expression-dir' 'The name of the workflow
+' '--xtrace' 'Set xtrace on the validate_typescript_expressions_directory shell script
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
           --typescript-expression-dir)
             _cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion
+          ;;
+          --xtrace)
           ;;
 
         esac
