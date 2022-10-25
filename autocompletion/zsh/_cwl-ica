@@ -714,8 +714,8 @@ and update definition on ICA
                     '1: :->cmd1' \
                     '--help[Show command help]' \
                     '-h[Show command help]' \
-                    '--input-json[Required, input json similar to v1
-]:input-json:_cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion' \
+                    '--launch-json[Required, launch json similar to v1
+]:launch-json:_cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion' \
                     '--pipeline-id[Optional, id of the pipeline you wish to launch
 ]:pipeline-id:_cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion' \
                     '--pipeline-code[Optional, code of the pipeline you wish to launch
@@ -2905,11 +2905,11 @@ _cwl-ica_icav2-get-analysis-step-logs_option_project_name_completion() {
 fi ) )
     compadd -X "project_name:" $__dynamic_completion
 }
-_cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion() {
+_cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion() {
     local __dynamic_completion
     local CURRENT_WORD="$words[CURRENT]"
     IFS=$'\n' __dynamic_completion=( $( find $PWD -name '*.json' ) )
-    compadd -X "input_json:" $__dynamic_completion
+    compadd -X "launch_json:" $__dynamic_completion
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion() {
     local __dynamic_completion

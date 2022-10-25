@@ -867,7 +867,7 @@ and update definition on ICA
         esac
       ;;
       icav2-launch-pipeline-analysis)
-        OPTIONS+=('--input-json' 'Required, input json similar to v1
+        OPTIONS+=('--launch-json' 'Required, launch json similar to v1
 ' '--pipeline-id' 'Optional, id of the pipeline you wish to launch
 ' '--pipeline-code' 'Optional, code of the pipeline you wish to launch
 ' '--project-id' 'Optional, provide the project id, takes precedence over project-name
@@ -880,8 +880,8 @@ and update definition on ICA
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
-          --input-json)
-            _cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion
+          --launch-json)
+            _cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion
           ;;
           --pipeline-id)
             _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion
@@ -3155,10 +3155,10 @@ _cwl-ica_icav2-get-analysis-step-logs_option_project_name_completion() {
 fi)"
     _cwl-ica_compreply "$param_project_name"
 }
-_cwl-ica_icav2-launch-pipeline-analysis_option_input_json_completion() {
+_cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_input_json="$(find $PWD -name '*.json')"
-    _cwl-ica_compreply "$param_input_json"
+    local param_launch_json="$(find $PWD -name '*.json')"
+    _cwl-ica_compreply "$param_launch_json"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
