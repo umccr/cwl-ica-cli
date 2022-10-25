@@ -34,6 +34,7 @@ from utils.miscell import get_name_version_tuple_from_cwl_file_path
 from utils.cwl_workflow_helper_utils import get_step_mappings, collect_objects_recursively
 from utils.cwl_schema_helper_utils import get_schemas
 from utils.cwl_schema_helper_utils import get_schema_mappings
+from utils.subprocess_handler import run_subprocess_proc
 
 logger = get_logger()
 
@@ -134,6 +135,10 @@ Example:
             logger.info(f"Output file {self.output_zip_file} currently exists and will be overwritten")
 
     def __call__(self):
+        logger.info("Validating workflow before copying over files")
+        self.cwl_workflow_obj.validate_object()
+
+        logger.info("Zipping up workflow")
         self.zip_workflow()
 
     def get_step_mappings(self) -> List[Dict]:
@@ -154,6 +159,7 @@ Example:
 
         # And we want to make sure it doesn't already exist
         output_tempdir.mkdir(exist_ok=False)
+        logger.info(f"Transferring files over into {output_tempdir}")
 
         # Copy over the workflow objects
         for cwl_item, cwl_file_list in all_workflow_objects.items():
@@ -202,6 +208,22 @@ Example:
                         if container_mapping.get("v1") in line_strip:
                             line_strip = line_strip.replace(container_mapping.get("v1"), container_mapping.get("v2"))
                     print(line_strip)
+
+        # Revalidate directory with cwltool --validate
+        logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")
+        proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
+            [
+                "cwltool", "--validate", str(output_tempdir / "workflow.cwl")
+            ],
+            cwd=str(output_tempdir),
+            capture_output=True
+        )
+
+        if not proc_returncode == 0:
+            logger.error(f"cwltool --validate resulted in an error after 'zipping' of workflow "
+                         f"please run cwltool --debug --validate {str(output_tempdir / 'workflow.cwl')} to investigate further"
+                         f"leaving {str(output_tempdir)} as is")
+            raise ChildProcessError
 
         # Place the blank params xml in the output temp directory
         with open(output_tempdir / PARAMS_XML_FILE_NAME, "w") as params_h:
