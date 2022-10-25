@@ -186,6 +186,10 @@ Example:
             )
         )[0].logs
 
+        if len(log_obj.to_dict()) == 0:
+            logger.error(f"Could not collect logs for step {matching_workflow_step.get('name')}")
+            raise AttributeError
+
         return log_obj
 
     def print_logs(self, log_obj: AnalysisStepLogs):
