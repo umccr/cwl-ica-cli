@@ -6,6 +6,7 @@ set -euo pipefail
 # Globals
 REQUIRED_NODE_VERSION="16.10"
 REQUIRED_YARN_VERSION="1.22"
+STABLE_YARN_VERSION="3.2.3"
 
 # Handy functions
 echo_stderr(){
@@ -184,7 +185,7 @@ trap 'rm -rf "${temp_dir}"' EXIT
   echo_stderr "Running 'yarn init -2' in '${typescript_expression_dir}'" && \
   yarn init -2 && \
   echo_stderr "Setting yarn version to stable" && \
-  yarn set version stable && \
+  yarn set version "${STABLE_YARN_VERSION}" && \
   echo_stderr "Running an installation test" && \
   yarn install && \
   echo_stderr "Checking the new version of yarn, should be >3" && \
