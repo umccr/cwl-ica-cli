@@ -24,7 +24,11 @@ from classes.command import Command
 from utils.logging import get_logger
 from pathlib import Path
 from argparse import ArgumentError
-from utils.globals import ICAV2_COMPUTE_RESOURCE_MAPPINGS, ICAV2_CONTAINER_MAPPINGS, PARAMS_XML_FILE_NAME, \
+from utils.globals import \
+    ICAV2_COMPUTE_RESOURCE_MAPPINGS, \
+    ICAV2_CONTAINER_MAPPINGS, \
+    ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, \
+    PARAMS_XML_FILE_NAME, \
     BLANK_PARAMS_XML_V2_FILE_CONTENTS
 from utils.errors import CheckArgumentError
 from typing import Optional, List, Dict
@@ -191,16 +195,38 @@ Example:
             if not path_item.is_file():
                 continue
 
-            # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
             with FileInput(path_item, inplace=True) as _input:
                 for line in _input:
+                    # Strip line then reprint it
+                    # Which also conveniently converts any windows line endings into standard unix line endings
                     line_strip = line.rstrip()
+
+                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
                     for resource_mapping in ICAV2_COMPUTE_RESOURCE_MAPPINGS:
                         if resource_mapping.get("v1") in line_strip:
-                            line_strip = line_strip.replace(resource_mapping.get("v1"), resource_mapping.get("v2"))
+                            line_strip = line_strip.replace(
+                                resource_mapping.get("v1"),
+                                resource_mapping.get("v2")
+                            )
+
+                    # Deal with https://github.com/umccr-illumina/dragen/issues/48
                     for container_mapping in ICAV2_CONTAINER_MAPPINGS:
                         if container_mapping.get("v1") in line_strip:
-                            line_strip = line_strip.replace(container_mapping.get("v1"), container_mapping.get("v2"))
+                            line_strip = line_strip.replace(
+                                container_mapping.get("v1"),
+                                container_mapping.get("v2")
+                            )
+
+                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/21
+                    # / also related https://github.com/umccr-illumina/ica_v2/issues/47
+                    if path_item.suffix == ".cwljs":
+                        if ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v1") in line_strip:
+                            line_strip = line_strip.replace(
+                                ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v1"),
+                                ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v2")
+                            )
+
+                    # Print line back to file
                     print(line_strip)
 
         # Place the blank params xml in the output temp directory

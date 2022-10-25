@@ -1156,9 +1156,9 @@ subcommands:
     summary: |
       Launch a pipeline analysis in ICAv2
     options:
-      - name: input-json
+      - name: launch-json
         summary: |
-          Required, input json similar to v1
+          Required, launch json similar to v1
         type: string
         completion:
           command_string: |-
