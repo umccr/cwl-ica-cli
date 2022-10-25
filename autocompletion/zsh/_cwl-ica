@@ -314,6 +314,8 @@ and update definition on ICA
                     '-h[Show command help]' \
                     '--tool-path[The path to the cwl commandline tool
 ]:tool-path:_cwl-ica_append-typescript-directory-to-cwl-commandline-tool_option_tool_path_completion' \
+                    '--xtrace[Set xtrace on the initialise_typescript_expression_directory shell script
+]:xtrace' \
                     && ret=0
 
 
@@ -327,6 +329,8 @@ and update definition on ICA
                     '-h[Show command help]' \
                     '--expression-path[The path to the cwl expression tool
 ]:expression-path:_cwl-ica_append-typescript-directory-to-cwl-expression-tool_option_expression_path_completion' \
+                    '--xtrace[Set xtrace on the initialise_typescript_expression_directory script
+]:xtrace' \
                     && ret=0
 
 
@@ -340,6 +344,8 @@ and update definition on ICA
                     '-h[Show command help]' \
                     '--workflow-path[The path to the cwl workflow
 ]:workflow-path:_cwl-ica_append-typescript-directory-to-cwl-workflow_option_workflow_path_completion' \
+                    '--xtrace[Set xtrace on the initialise_typescript_expression_directory shell script
+]:xtrace' \
                     && ret=0
 
 
@@ -1043,6 +1049,8 @@ to workflow names
                     '-h[Show command help]' \
                     '--typescript-expression-dir[The name of the workflow
 ]:typescript-expression-dir:_cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion' \
+                    '--xtrace[Set xtrace on the validate_typescript_expressions_directory shell script
+]:xtrace' \
                     && ret=0
 
 
