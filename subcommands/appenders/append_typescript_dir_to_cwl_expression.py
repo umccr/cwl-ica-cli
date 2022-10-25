@@ -20,6 +20,7 @@ class AppendTypeScriptExpressionDir(AppendTypeScriptDir):
     """Usage:
     cwl-ica [options] append-typescript-directory-to-cwl-expression-tool help
     cwl-ica [options] append-typescript-directory-to-cwl-expression-tool (--expression-path /path/to/expression.cwl)
+                                                                         [--xtrace]
 
 
 Description:
@@ -28,6 +29,7 @@ Description:
 
 Options:
     --expression-path=<the expression path>                         Required, the path to the cwl expression
+    --xtrace                                                        Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
     cwl-ica append-typescript-directory-to-cwl-expression-tool --expression-path "expressions/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
@@ -74,3 +76,4 @@ Example:
         # Get the name and version attributes
         self.set_name_and_version_from_file_path()
 
+        self.set_xtrace_arg()

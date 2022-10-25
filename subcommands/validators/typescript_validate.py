@@ -10,6 +10,7 @@ from argparse import ArgumentError
 from pathlib import Path
 from utils.errors import CheckArgumentError
 from utils.typescript_helpers import run_typescript_validation_script
+from typing import Optional
 
 logger = get_logger()
 
@@ -18,6 +19,7 @@ class TypeScriptExpressionDirValidate(Command):
     """Usage:
     cwl-ica typescript-expression-validate help
     cwl-ica typescript-expression-validate (--typescript-expression-dir="<path_to_typescript_expression_dir>")
+                                           [--xtrace]
 
 Description:
     Transpile the TypeScript expressions inside the directory and run all tests.
@@ -25,6 +27,7 @@ Description:
 
 Options:
     --typescript-expression-dir=<typescript-expression-dir>  Required, the path to the cwl typescript expression directory
+    --xtrace                                                 Optional, set xtrace on the validate_typescript_expressions_directory shell script
 
 Example
     cwl-ica typescript-expression-validate --typescript-expression-dir /path/to/tool/typescript-expressions
@@ -39,7 +42,8 @@ Example
         # Collect args from doc strings
         super().__init__(command_argv)
 
-        self.typescript_expression_dir = None
+        self.typescript_expression_dir: Optional[Path] = None
+        self.xtrace: Optional[bool] = None
 
         # Check help
         self.check_length(command_argv)
@@ -55,7 +59,7 @@ Example
             self._help(fail=True)
 
     def __call__(self):
-        run_typescript_validation_script(self.typescript_expression_dir)
+        run_typescript_validation_script(self.typescript_expression_dir, self.xtrace)
 
     def check_args(self):
         """
@@ -72,5 +76,15 @@ Example
 
         if not self.typescript_expression_dir.is_dir():
             logger.error(f"Could not find directory {self.typescript_expression_dir}")
+            raise NotADirectoryError
+
+        # Check tsconfig.json exists in directory
+        if not (self.typescript_expression_dir / "tsconfig.json").is_file():
+            logger.error("Could not find tsconfig.json inside this directory, "
+                         "are you sure this is a typescript expression directory?")
             raise FileNotFoundError
+
+        self.xtrace = self.args.get("--xtrace", False)
+
+
 

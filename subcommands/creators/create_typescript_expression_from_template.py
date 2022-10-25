@@ -13,7 +13,7 @@ from utils.errors import CheckArgumentError
 from utils.typescript_helpers import create_typescript_expression_dir, \
     create_blank_typescript_file, \
     create_blank_typescript_test_file
-
+from typing import Optional
 
 logger = get_logger()
 
@@ -24,6 +24,7 @@ class CreateTypeScriptExpressionFromTemplate(CreateFromTemplate):
     cwl-ica create-typescript-expression-from-template (--typescript-expression-name="<name_of_typescript_expression>")
                                                        (--typescript-expression-version="<typescript_expression_version>")
                                                        [--username="<your_name>"]
+                                                       [--xtrace]
 
 
 Description:
@@ -46,6 +47,7 @@ Options:
     --typescript-expression-name=<typescript_expression_name>            Required, the name of the typescript-expression
     --typescript-expression-version=<typescript_expression_version>      Required, the version of the typescript-expression
     --username=<username>                                                Optional, the username of the creator / maintainer
+    --xtrace                                                             Optional, set xtrace on the initialise_typescript_expression_directory shell script
 
 EnvironmentVariables:
     CWL_ICA_DEFAULT_USER                                                 Saves having to use --username
@@ -60,6 +62,8 @@ Example
 
         # Collect arguments
         self.args: dict = self.get_args(command_argv)
+
+        self.xtrace: Optional[bool] = None
 
         # Check help
         self.check_length(command_argv)
@@ -123,6 +127,9 @@ Example
         self.set_user_arg()
         self.set_user_obj()
 
+        # Set xtrace
+        self.xtrace = self.args.get("--xtrace", False)
+
     def get_top_dir(self, create_dir=True):
         """
         Returns <CWL_ICA_REPO_PATH>/typescript-expressions
@@ -131,7 +138,7 @@ Example
         return get_typescript_expressions_dir(create_dir=create_dir)
 
     def create_typescript_expression_dir(self):
-        create_typescript_expression_dir(self.cwl_file_path.parent)
+        create_typescript_expression_dir(self.cwl_file_path.parent, xtrace=self.xtrace)
 
     def create_blank_typescript_file(self):
         create_blank_typescript_file(self.cwl_file_path, self.username)

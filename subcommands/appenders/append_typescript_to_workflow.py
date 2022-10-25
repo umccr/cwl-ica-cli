@@ -17,14 +17,14 @@ class AppendTypeScriptWorkflowDir(AppendTypeScriptDir):
     """Usage:
     cwl-ica [options] append-typescript-directory-to-cwl-workflow help
     cwl-ica [options] append-typescript-directory-to-cwl-workflow (--workflow-path /path/to/workflow.cwl)
-
+                                                                  [--xtrace]
 
 Description:
     Create a directory adjacent to the workflow cwl path that handles js in typescript.
 
-
 Options:
     --workflow-path=<the workflow path>                         Required, the path to the cwl workflow
+    --xtrace                                                    Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
     cwl-ica append-typescript-directory-to-cwl-workflow --workflow-path "workflows/bclconvert/4.0.3/bclconvert__4.0.3.cwl"
@@ -70,3 +70,5 @@ Example:
 
         # Get the name and version attributes
         self.set_name_and_version_from_file_path()
+
+        self.set_xtrace_arg()
