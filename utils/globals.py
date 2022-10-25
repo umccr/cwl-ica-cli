@@ -166,6 +166,10 @@ ICAV2_CONTAINER_MAPPINGS = [
     }
 ]
 
+ICAV2_DRAGEN_TEMPSPACE_MAPPINGS = {
+    "v1": "/ephemeral",
+    "v2": "/scratch"
+}
 
 PARAMS_XML_FILE_NAME = "params.xml"
 
