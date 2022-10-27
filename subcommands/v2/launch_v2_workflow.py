@@ -22,7 +22,7 @@ from utils.icav2_helpers import get_project_id_from_project_name, \
     get_analysis_storage_id_from_analysis_storage_size, \
     get_pipeline_id_from_pipeline_code, get_data_obj_from_project_id_and_path, \
     create_data_obj_from_project_id_and_path, \
-    launch_workflow
+    launch_workflow, recursively_build_open_api_body_from_libica_item
 
 from classes.command import Command
 from classes.icav2_launch_json import ICAv2LaunchJson
@@ -47,6 +47,7 @@ class LaunchV2Workflow(Command):
                                                      [--output-parent-folder-path=<output_parent_folder_path> | --output-parent-folder-id=<output_parent_folder_id>]
                                                      [--analysis-storage-size=<analysis_storage_size> | --analysis-storage-id=<analysis_storage_id>]
                                                      [--activation-id=<activation_id>]
+                                                     [--create-cwl-analysis-json-output-path=<output_path>]
 
 Description:
     Launch an analysis on icav2 specifying a project context, and pipeline code.
@@ -89,6 +90,8 @@ Options:
     --analysis-storage-size=<analysis_storage_size>          Optional, analysis storage size, one of Small, Medium, Large
                                                              Cannot specify both --analysis-storage-id AND --analysis-storage-size
     --activation-id=<activation_id>                          Optional, the activation id used by the pipeline analysis
+    --create-cwl-analysis-json-output-path=<output_path>     Optional, Path to output a json file that contains the body for a create cwl analysis (https://ica.illumina.com/ica/api/swagger/index.html#/Project%20Analysis/createCwlAnalysis)
+
 
 Environment:
     ICAV2_ACCESS_TOKEN
@@ -96,7 +99,7 @@ Environment:
 Example:
     cwl-ica icav2-launch-pipeline-analysis --launch-json /path/to/input.json --pipeline-code bclconvert_with_qc_pipeline__4_0_3 --project-name playground_v2
     """
-
+    
     def __init__(self, command_argv):
 
         # Collect args from doc strings
@@ -114,6 +117,7 @@ Example:
         self.analysis_storage_id: Optional[str] = None
         self.analysis_storage_size: Optional[str] = None
         self.activation_id: Optional[str] = None
+        self.create_cwl_analysis_json_output_path: Optional[Path] = None
 
         # Check if help has been called
         if self.args["help"]:
@@ -213,6 +217,19 @@ Example:
         # Check activation id
         self.activation_id = self.args.get("--activation-id", None)
 
+        # Check if create_cwl_analysis_json_output_path is setl
+        self.create_cwl_analysis_json_output_path = Path(self.args.get("--create-cwl-analysis-json-output-path", None))
+        # If it is specified, ensure parent exists and ensure file itself does not exist
+        if self.create_cwl_analysis_json_output_path is not None:
+            if not self.create_cwl_analysis_json_output_path.parent.is_dir():
+                logger.error(f"Please ensure the parent directory to {self.create_cwl_analysis_json_output_path} exists")
+                raise CheckArgumentError
+            if self.create_cwl_analysis_json_output_path.is_dir():
+                self.create_cwl_analysis_json_output_path = self.create_cwl_analysis_json_output_path / "createcwlanalysis.json"
+            if self.create_cwl_analysis_json_output_path.is_file():
+                logger.error(f"Output path to {self.create_cwl_analysis_json_output_path} already exists, please delete")
+                raise CheckArgumentError
+
         # CLI is good, now import json
         self.import_json_dict()
 
@@ -253,6 +270,12 @@ Example:
         cwl_analysis: CreateCwlAnalysis = self.input_launch_json(
             self.pipeline_id
         )
+
+        if self.create_cwl_analysis_json_output_path is not None:
+            logger.info(f"Dumping payload to {self.create_cwl_analysis_json_output_path}")
+            with open(self.create_cwl_analysis_json_output_path, "w") as create_analysis_h:
+                create_analysis_h.write(json.dumps(recursively_build_open_api_body_from_libica_item(cwl_analysis), indent=2))
+                create_analysis_h.write("\n")
 
         # Launch workflow
         logger.info("Launching analysis")
