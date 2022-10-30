@@ -11,11 +11,16 @@ from classes.cwl_expression import CWLExpression
 from cwl_utils.parser_v1_1 import Workflow, WorkflowStep
 from typing import Optional, Dict, List
 from pathlib import Path
+
+from utils.globals import ICAV2_MAX_STEP_CHARACTERS
 from utils.miscell import get_items_dir_from_cwl_file_path
 from utils.cwl_helper_utils import get_include_items
 from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to_schema_list_recursively
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
 from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path
+from utils.logging import get_logger
+
+logger = get_logger()
 
 
 def get_step_mappings(steps: List[WorkflowStep], workflow_path: Path) -> List[Dict]:
@@ -89,4 +94,13 @@ def collect_objects_recursively(cwl_item, workflow_items: Optional[Dict] = None)
 
     return workflow_items
 
+
+def check_workflow_step_lengths(cwl_workflow: Workflow):
+    for step in cwl_workflow.steps:
+        step_name = step.id.split("#", 1)[-1].rsplit("/", 1)[-1]
+
+        if len(step_name) > ICAV2_MAX_STEP_CHARACTERS:
+            logger.warning(
+                f"Step name '{step_name}' is greater than {ICAV2_MAX_STEP_CHARACTERS} characters"
+            )
 
