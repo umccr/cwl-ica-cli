@@ -143,7 +143,7 @@ Example:
         self.cwl_workflow_obj.validate_object()
 
         logger.info("Ensuring workflow does not have steps with names greater than 21 characters")
-        check_workflow_step_lengths(self.cwl_workflow_obj.cwl_obj)
+        check_workflow_step_lengths(self.cwl_workflow_obj.cwl_obj, self.cwl_file_path)
 
         logger.info("Zipping up workflow")
         self.zip_workflow()
@@ -240,7 +240,6 @@ Example:
 
         # Find steps in workflow.cwl and workflows/ (subworkflows)
         logger.info("Finding steps names with lengths greater than 23 characters")
-        #workflow_list = [Path(output_tempdir / "workflow.cwl")]
         workflow_list = []
         workflow_dir = Path(output_tempdir / "workflows")
         if workflow_dir.is_dir():
@@ -251,8 +250,7 @@ Example:
             cwl_repo_workflow_path = Path(get_cwl_ica_repo_path()) / workflow_item.relative_to(output_tempdir)
             workflow_name, workflow_version = get_name_version_tuple_from_cwl_file_path(cwl_repo_workflow_path, get_workflows_dir())
             workflow_object = CWLWorkflow(workflow_name, workflow_version, cwl_repo_workflow_path)
-            check_workflow_step_lengths(workflow_object.cwl_obj)
-
+            check_workflow_step_lengths(workflow_object.cwl_obj, self.cwl_file_path)
 
         # Revalidate directory with cwltool --validate
         logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")

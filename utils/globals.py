@@ -181,7 +181,7 @@ BLANK_PARAMS_XML_V2_FILE_CONTENTS = [
     '</pd:pipeline>'
 ]
 
-ICAV2_MAX_STEP_CHARACTERS = 21
+ICAV2_MAX_STEP_CHARACTERS = 23
 
 ICAV2_DEFAULT_BASE_URL = "https://ica.illumina.com/ica/rest"
 
