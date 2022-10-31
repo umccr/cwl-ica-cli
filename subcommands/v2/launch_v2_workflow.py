@@ -14,6 +14,7 @@ Converts icav2:// reference schemas to local paths and adds fil.id / fol.id to d
 
 Then launches the workflow in the specific icav2 project context
 """
+import os
 
 from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 
@@ -43,7 +44,7 @@ class LaunchV2Workflow(Command):
     cwl-ica [options] icav2-launch-pipeline-analysis help
     cwl-ica [options] icav2-launch-pipeline-analysis (--launch-json=<input-json-path>)
                                                      (--pipeline-code=<pipeline_code> | --pipeline-id=<pipeline_id>)
-                                                     (--project-name=<project_name> | --project-id=<project_id>)
+                                                     [--project-name=<project_name> | --project-id=<project_id>]
                                                      [--output-parent-folder-path=<output_parent_folder_path> | --output-parent-folder-id=<output_parent_folder_id>]
                                                      [--analysis-storage-size=<analysis_storage_size> | --analysis-storage-id=<analysis_storage_id>]
                                                      [--activation-id=<activation_id>]
@@ -82,7 +83,7 @@ Options:
                                                              Must specify one (and only one of) --pipeline-id and --pipeline-code
     --project-id=<project_id>                                Optional, id of project context you wish to launch the pipeline analysis.
     --project-name=<project_name>                            Optional, name of the project context you wish to launch the pipeline analysis.
-                                                             Must specify one (and only one of) --project-name and --project-id
+                                                             Must specify one (and only one of) --project-name and --project-id OR env var ICAV2_PROJECT_ID must be set
     --output-parent-folder-id=<output_parent_folder_id>      Optional, the id of the parent folder to write outputs to
     --output-parent-folder-path=<output_parent_folder_path>  Optional, the path to the parent folder to write outputs to (will be created if it doesn't exist)
                                                              Cannot specify both --output-parent-folder-id AND --output-parent-folder-path
@@ -94,7 +95,10 @@ Options:
 
 
 Environment:
-    ICAV2_ACCESS_TOKEN
+    ICAV2_ACCESS_TOKEN (required)
+    ICAV2_BASE_URL (optional, defaults to ica.illumina.com)
+    ICAV2_PROJECT_ID (optional)
+
 
 Example:
     cwl-ica icav2-launch-pipeline-analysis --launch-json /path/to/input.json --pipeline-code bclconvert_with_qc_pipeline__4_0_3 --project-name playground_v2
@@ -164,8 +168,12 @@ Example:
                 logger.error(f"Got --project-id parameter as {self.project_id} but is not in project-id format")
                 raise CheckArgumentError
         if self.project_id is None and self.project_name is None:
-            logger.error("Must set one of --project-id or --project-name")
-            raise CheckArgumentError
+            logger.info("Neither --project-id nor --project-name is specified")
+            if os.environ.get("ICAV2_PROJECT_ID", None) is not None:
+                self.project_id = os.environ.get("ICAV2_PROJECT_ID")
+            else:
+                logger.error("Must set one of --project-id or --project-name or set ICAV2_PROJECT_ID env var")
+                raise CheckArgumentError
         if self.project_id is None and self.project_name is not None:
             self.project_id = get_project_id_from_project_name(self.project_name, get_icav2_configuration())
 
