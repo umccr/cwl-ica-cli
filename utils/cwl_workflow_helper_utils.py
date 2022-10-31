@@ -11,11 +11,16 @@ from classes.cwl_expression import CWLExpression
 from cwl_utils.parser_v1_1 import Workflow, WorkflowStep
 from typing import Optional, Dict, List
 from pathlib import Path
+
+from utils.globals import ICAV2_MAX_STEP_CHARACTERS
 from utils.miscell import get_items_dir_from_cwl_file_path
 from utils.cwl_helper_utils import get_include_items
 from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to_schema_list_recursively
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
-from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path
+from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path, get_tools_dir
+from utils.logging import get_logger
+
+logger = get_logger()
 
 
 def get_step_mappings(steps: List[WorkflowStep], workflow_path: Path) -> List[Dict]:
@@ -88,5 +93,21 @@ def collect_objects_recursively(cwl_item, workflow_items: Optional[Dict] = None)
     workflow_items["schemas"] = add_additional_schemas_to_schema_list_recursively(workflow_items["schemas"])
 
     return workflow_items
+
+
+def check_workflow_step_lengths(cwl_workflow: Workflow, cwl_file_path: Path):
+    for step in cwl_workflow.steps:
+        step_name = step.id.split("#", 1)[-1].rsplit("/", 1)[-1]
+
+        # Skip if step.run is not a tool
+        try:
+            get_name_version_tuple_from_cwl_file_path(cwl_file_path.absolute().parent.joinpath(Path(step.run)).absolute().resolve(), get_tools_dir())
+        except ValueError:
+            continue
+
+        if len(step_name) > ICAV2_MAX_STEP_CHARACTERS:
+            logger.warning(
+                f"Step name '{step_name}' is greater than {ICAV2_MAX_STEP_CHARACTERS} characters"
+            )
 
 
