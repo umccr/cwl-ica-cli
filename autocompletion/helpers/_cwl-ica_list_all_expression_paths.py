@@ -11,10 +11,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [s_file.relative_to(get_expressions_dir())
-                    for s_file in get_expressions_dir().glob("**/*.cwl")]
-
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -43,6 +39,17 @@ try:
     in_expressions_dir = True
 except ValueError:
     in_expressions_dir = False
+
+if not current_word_value == "" and in_expressions_dir:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in get_expressions_dir().glob("**/*.cwl")
+    ]
 
 if in_expressions_dir:
     current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())

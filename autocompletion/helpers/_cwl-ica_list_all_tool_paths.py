@@ -11,9 +11,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [s_file.relative_to(get_tools_dir())
-              for s_file in get_tools_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -31,10 +28,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the tools directory?
 try:
@@ -42,6 +39,17 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())

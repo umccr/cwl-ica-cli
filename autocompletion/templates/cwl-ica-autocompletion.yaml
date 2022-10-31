@@ -1174,7 +1174,15 @@ subcommands:
         type: string
         completion:
           command_string: |-
-            find $PWD -name '*.json'
+            find "${CURRENT_WORD-.}"* -maxdepth 0 -type d & (
+              if [[ -d "${CURRENT_WORD-.}" ]]; then 
+                find "${CURRENT_WORD-.}" -maxdepth 1 -type f -name '*.json'; 
+              elif [[ -n "${CURRENT_WORD-}" && -d "$(dirname "${CURRENT_WORD}")" ]]; then
+                find "$(dirname "${CURRENT_WORD}")" -maxdepth 1 -type f -name '*.json'
+              else
+                find "." -maxdepth 1 -type f -name '*.json'
+              fi
+            ) & wait
       - name: pipeline-id
         summary: |
           Optional, id of the pipeline you wish to launch

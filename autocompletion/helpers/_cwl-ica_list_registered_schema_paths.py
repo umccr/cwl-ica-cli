@@ -11,15 +11,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-schema_paths = [Path(schema["path"]) / Path(version["path"])
-                for schema in read_yaml(get_schema_yaml_path())["schemas"]
-                for version in schema["versions"]]
+schema_paths = [
+    Path(schema["path"]) / Path(version["path"])
+    for schema in read_yaml(get_schema_yaml_path())["schemas"]
+    for version in schema["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -32,7 +34,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()

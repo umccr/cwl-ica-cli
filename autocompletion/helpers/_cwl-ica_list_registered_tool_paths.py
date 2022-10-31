@@ -11,9 +11,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [Path(tool["path"]) / Path(version["path"])
-              for tool in read_yaml(get_tool_yaml_path())["tools"]
-              for version in tool["versions"]]
+tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":

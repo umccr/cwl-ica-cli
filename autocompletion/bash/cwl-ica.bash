@@ -1544,10 +1544,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [s_file.relative_to(get_expressions_dir())
-                    for s_file in get_expressions_dir().glob("**/*.cwl")]
-
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -1576,6 +1572,17 @@ try:
     in_expressions_dir = True
 except ValueError:
     in_expressions_dir = False
+
+if not current_word_value == "" and in_expressions_dir:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in get_expressions_dir().glob("**/*.cwl")
+    ]
 
 if in_expressions_dir:
     current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())
@@ -1651,9 +1658,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [s_file.relative_to(get_tools_dir())
-              for s_file in get_tools_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -1671,10 +1675,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the tools directory?
 try:
@@ -1682,6 +1686,17 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
@@ -1756,9 +1771,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -1776,10 +1788,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -1787,6 +1799,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -1862,9 +1885,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [Path(tool["path"]) / Path(version["path"])
-              for tool in read_yaml(get_tool_yaml_path())["tools"]
-              for version in tool["versions"]]
+tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -1968,9 +1993,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                  for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                  for version in workflow["versions"]]
+workflow_paths = [
+    Path(workflow["path"]) / Path(version["path"])
+    for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
+    for version in workflow["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2075,9 +2102,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [s_file.relative_to(get_tools_dir())
-              for s_file in get_tools_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -2095,10 +2119,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the tools directory?
 try:
@@ -2106,6 +2130,17 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
@@ -2162,10 +2197,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [s_file.relative_to(get_expressions_dir())
-                    for s_file in get_expressions_dir().glob("**/*.cwl")]
-
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -2194,6 +2225,17 @@ try:
     in_expressions_dir = True
 except ValueError:
     in_expressions_dir = False
+
+if not current_word_value == "" and in_expressions_dir:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    expression_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in get_expressions_dir().glob("**/*.cwl")
+    ]
 
 if in_expressions_dir:
     current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())
@@ -2251,9 +2293,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -2271,10 +2310,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -2282,6 +2321,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -2411,9 +2461,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [s_file.relative_to(get_tools_dir())
-              for s_file in get_tools_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -2431,10 +2478,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the tools directory?
 try:
@@ -2442,6 +2489,17 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
@@ -2534,12 +2592,8 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-schema_paths = [s_file.relative_to(get_schemas_dir())
-                    for s_file in get_schemas_dir().glob("**/*.yaml")]
-
-
 # Get the current word value
-if not "${CURRENT_WORD}" == "":
+if not "${CURRENT_WORD-}" == "":
     current_word_value = "${CURRENT_WORD}"
 else:
     current_word_value = None
@@ -2555,7 +2609,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -2566,6 +2619,17 @@ try:
     in_schemas_dir = True
 except ValueError:
     in_schemas_dir = False
+
+if not current_word_value == "" and in_schemas_dir:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in current_path_resolved.glob("**/*.yaml")
+    ]
+else:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in get_schemas_dir().glob("**/*.yaml")
+    ]
 
 if in_schemas_dir:
     current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
@@ -2641,9 +2705,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -2661,10 +2722,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -2672,6 +2733,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -2747,16 +2819,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_expressions_dir())
-             for s_file in get_expressions_dir().glob("**/*.cwl")]
-
-registered_expression_paths = [Path(expression["path"]) / Path(version["path"])
-                               for expression in read_yaml(get_expression_yaml_path())["expressions"]
-                               for version in expression["versions"]]
-
-expression_paths = [a_path
-                    for a_path in all_paths
-                    if a_path not in registered_expression_paths]
+registered_expression_paths = [
+    Path(expression["path"]) / Path(version["path"])
+    for expression in read_yaml(get_expression_yaml_path())["expressions"]
+    for version in expression["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2775,7 +2842,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -2786,6 +2852,23 @@ try:
     in_expressions_dir = True
 except ValueError:
     in_expressions_dir = False
+
+if not current_word_value == "" and in_expressions_dir:
+    all_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in get_expressions_dir().glob("**/*.cwl")
+    ]
+
+expression_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_expression_paths
+]
 
 if in_expressions_dir:
     current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())
@@ -2843,15 +2926,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [Path(expression["path"]) / Path(version["path"])
-                    for expression in read_yaml(get_expression_yaml_path())["expressions"]
-                    for version in expression["versions"]]
+expression_paths = [
+    Path(expression["path"]) / Path(version["path"])
+    for expression in read_yaml(get_expression_yaml_path())["expressions"]
+    for version in expression["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -2930,15 +3015,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [Path(expression["path"]) / Path(version["path"])
-                    for expression in read_yaml(get_expression_yaml_path())["expressions"]
-                    for version in expression["versions"]]
+expression_paths = [
+    Path(expression["path"]) / Path(version["path"])
+    for expression in read_yaml(get_expression_yaml_path())["expressions"]
+    for version in expression["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -3017,9 +3104,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -3037,10 +3121,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -3048,6 +3132,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -3157,7 +3252,15 @@ fi)"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_launch_json="$(find $PWD -name '*.json')"
+    local param_launch_json="$(find "${CURRENT_WORD-.}"* -maxdepth 0 -type d & (
+  if [[ -d "${CURRENT_WORD-.}" ]]; then
+    find "${CURRENT_WORD-.}" -maxdepth 1 -type f -name '*.json';
+  elif [[ -n "${CURRENT_WORD-}" && -d "$(dirname "${CURRENT_WORD}")" ]]; then
+    find "$(dirname "${CURRENT_WORD}")" -maxdepth 1 -type f -name '*.json'
+  else
+    find "." -maxdepth 1 -type f -name '*.json'
+  fi
+) & wait)"
     _cwl-ica_compreply "$param_launch_json"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion() {
@@ -3318,9 +3421,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -3338,10 +3438,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -3349,6 +3449,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -3420,9 +3531,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [Path(tool["path"]) / Path(version["path"])
-              for tool in read_yaml(get_tool_yaml_path())["tools"]
-              for version in tool["versions"]]
+tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -3602,24 +3715,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_schemas_dir())
-             for s_file in get_schemas_dir().glob("**/*.yaml")]
-
-registered_schema_paths = [Path(schema["path"]) / Path(version["path"])
-                           for schema in read_yaml(get_schema_yaml_path())["schemas"]
-                           for version in schema["versions"]]
-
-schema_paths = [a_path
-                for a_path in all_paths
-                if a_path not in registered_schema_paths]
-
+registered_schema_paths = [
+    Path(schema["path"]) / Path(version["path"])
+    for schema in read_yaml(get_schema_yaml_path())["schemas"]
+    for version in schema["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
-
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -3632,10 +3738,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the schemas directory?
 try:
@@ -3643,6 +3749,22 @@ try:
     in_schemas_dir = True
 except ValueError:
     in_schemas_dir = False
+
+if not current_word_value == "" and in_schemas_dir:
+    all_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in current_path_resolved.glob("**/*.yaml")]
+else:
+    all_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in get_schemas_dir().glob("**/*.yaml")
+    ]
+
+schema_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_schema_paths
+]
 
 if in_schemas_dir:
     current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
@@ -3698,15 +3820,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-schema_paths = [Path(schema["path"]) / Path(version["path"])
-                for schema in read_yaml(get_schema_yaml_path())["schemas"]
-                for version in schema["versions"]]
+schema_paths = [
+    Path(schema["path"]) / Path(version["path"])
+    for schema in read_yaml(get_schema_yaml_path())["schemas"]
+    for version in schema["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -3719,7 +3843,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -3785,12 +3908,8 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-schema_paths = [s_file.relative_to(get_schemas_dir())
-                    for s_file in get_schemas_dir().glob("**/*.yaml")]
-
-
 # Get the current word value
-if not "${CURRENT_WORD}" == "":
+if not "${CURRENT_WORD-}" == "":
     current_word_value = "${CURRENT_WORD}"
 else:
     current_word_value = None
@@ -3806,7 +3925,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -3817,6 +3935,17 @@ try:
     in_schemas_dir = True
 except ValueError:
     in_schemas_dir = False
+
+if not current_word_value == "" and in_schemas_dir:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in current_path_resolved.glob("**/*.yaml")
+    ]
+else:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in get_schemas_dir().glob("**/*.yaml")
+    ]
 
 if in_schemas_dir:
     current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
@@ -3924,16 +4053,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_tools_dir())
-             for s_file in get_tools_dir().glob("**/*.cwl")]
-
-registered_tool_paths = [Path(tool["path"]) / Path(version["path"])
-                         for tool in read_yaml(get_tool_yaml_path())["tools"]
-                         for version in tool["versions"]]
-
-tool_paths = [a_path
-              for a_path in all_paths
-              if a_path not in registered_tool_paths]
+registered_tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -3952,7 +4076,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -3963,6 +4086,23 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    all_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
+
+tool_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_tool_paths
+]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
@@ -4069,9 +4209,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [Path(tool["path"]) / Path(version["path"])
-              for tool in read_yaml(get_tool_yaml_path())["tools"]
-              for version in tool["versions"]]
+tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -4189,9 +4331,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-tool_paths = [s_file.relative_to(get_tools_dir())
-              for s_file in get_tools_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -4209,10 +4348,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the tools directory?
 try:
@@ -4220,6 +4359,17 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    tool_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())
@@ -4276,26 +4426,49 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-typescript_expression_paths = [
-    s_file.parent.relative_to(get_cwl_ica_repo_path())
-    for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
-    # We don't want to pull in the typescript test files
-    if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
-    # We also want to make sure it's under the tools, expressions or typescript-expressions directories
-    len(
-        {"tools", "expressions", "typescript-expressions"}.intersection(
-            [
-                s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
-            ]
-        )
-    ) > 0
-]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
 else:
     current_word_value = None
+
+if current_word_value is None:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+        # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+        len(
+            {"tools", "expressions", "typescript-expressions"}.intersection(
+                [
+                    s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                ]
+            )
+        ) > 0
+    ]
+else:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in current_path_resolved.glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+           # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+           len(
+               {"tools", "expressions", "typescript-expressions"}.intersection(
+                   [
+                       s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                   ]
+               )
+           ) > 0
+    ]
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -4303,15 +4476,6 @@ else:
 # 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
 # 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
 # 4. Subfolder of expressions dir = "OneDrive/GitHub/UMCCR/expressions/contig/" -> current path resolved
-if current_word_value is not None:
-    if current_word_value.endswith("/"):
-        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
-    else:
-        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
-else:
-    current_word_value = ""
-    current_path_resolved = Path(getcwd()).absolute()
 
 # Is the current_path_resolved a subpath of the expressions directory?
 try:
@@ -4394,16 +4558,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_workflows_dir())
-             for s_file in get_workflows_dir().glob("**/*.cwl")]
-
-registered_workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                             for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                             for version in workflow["versions"]]
-
-workflow_paths = [a_path
-                  for a_path in all_paths
-                  if a_path not in registered_workflow_paths]
+registered_workflow_paths = [
+    Path(workflow["path"]) / Path(version["path"])
+    for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
+    for version in workflow["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -4422,7 +4581,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -4433,6 +4591,23 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    all_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
+
+workflow_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_workflow_paths
+]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())
@@ -4540,9 +4715,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                  for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                  for version in workflow["versions"]]
+workflow_paths = [
+    Path(workflow["path"]) / Path(version["path"])
+    for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
+    for version in workflow["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -4661,9 +4838,6 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [s_file.relative_to(get_workflows_dir())
-                  for s_file in get_workflows_dir().glob("**/*.cwl")]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
@@ -4681,10 +4855,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the workflows directory?
 try:
@@ -4692,6 +4866,17 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    workflow_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())

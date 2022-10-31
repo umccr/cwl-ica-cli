@@ -11,24 +11,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_schemas_dir())
-             for s_file in get_schemas_dir().glob("**/*.yaml")]
-
-registered_schema_paths = [Path(schema["path"]) / Path(version["path"])
-                           for schema in read_yaml(get_schema_yaml_path())["schemas"]
-                           for version in schema["versions"]]
-
-schema_paths = [a_path
-                for a_path in all_paths
-                if a_path not in registered_schema_paths]
-
+registered_schema_paths = [
+    Path(schema["path"]) / Path(version["path"])
+    for schema in read_yaml(get_schema_yaml_path())["schemas"]
+    for version in schema["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
-
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -41,10 +34,10 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
+
 
 # Is the current_path_resolved a subpath of the schemas directory?
 try:
@@ -52,6 +45,22 @@ try:
     in_schemas_dir = True
 except ValueError:
     in_schemas_dir = False
+
+if not current_word_value == "" and in_schemas_dir:
+    all_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in current_path_resolved.glob("**/*.yaml")]
+else:
+    all_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in get_schemas_dir().glob("**/*.yaml")
+    ]
+
+schema_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_schema_paths
+]
 
 if in_schemas_dir:
     current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
