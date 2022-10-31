@@ -128,8 +128,8 @@ class CWL:
                 schema_import_path = (Path(self.cwl_file_path).parent / Path(schema_relative_imports_path)).resolve()
 
                 # Log this
-                logger.info(f"Manually adding in \"{schema_relative_imports_path}\" into namespaces before "
-                            f"we import the cwl object")
+                logger.debug(f"Manually adding in \"{schema_relative_imports_path}\" into namespaces before "
+                             f"we import the cwl object")
 
                 # Import schema
                 from classes.cwl_schema import CWLSchema
