@@ -21,14 +21,15 @@ def run_typescript_validation_script(typescript_expression_dir: Path, xtrace: bo
         ]
 
         if xtrace:
-            command_prefix.append("-oxtrace")
+            command_prefix.extend(["-o", "xtrace"])
 
         returncode, stdout, stderr = run_subprocess_proc(
             command_prefix + command_list,
-            capture_output=True
+            capture_output=not xtrace
         )
 
-        print(stdout, stderr)
+        if not xtrace:
+            print(stdout, stderr)
 
         if not returncode == 0:
             logger.error(f"validation of typescript expression failed with returncode '{returncode}'\n"
@@ -57,17 +58,18 @@ def create_typescript_expression_dir(typescript_expression_path: Path, xtrace=Fa
     ]
 
     if xtrace:
-        command_prefix.append("-oxtrace")
+        command_prefix.extend(["-o", "xtrace"])
 
     logger.info(f"Running the following command to initialise the typescript expression directory '{' '.join(command_list)}'")
     return_code, stdout, stderr = run_subprocess_proc(
         command_prefix + command_list,
-        capture_output=True
+        capture_output=not xtrace
     )
 
     if not return_code == 0:
-        logger.error(f"Error initialising typescript expression directory!, return code was {return_code} "
-                     f"Stdout was '{stdout}', stderr was '{stderr}'")
+        logger.error(f"Error initialising typescript expression directory!, return code was {return_code} ")
+        if not xtrace:
+            logger.error(f"Stdout was '{stdout}', stderr was '{stderr}'")
         raise AssertionError
     else:
         logger.info("initialise typescript expression directory command finished successfully")
