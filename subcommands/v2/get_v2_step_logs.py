@@ -7,27 +7,21 @@ This is entirely the wrong spot for this, but the code was already all here!
 
 """
 import tempfile
-import sys
+import os
 
 from libica.openapi.v2.model.analysis_step_logs import AnalysisStepLogs
 from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 
 from utils.icav2_helpers import get_project_id_from_project_name, \
     get_icav2_configuration, is_project_id_format, \
-    get_analysis_storage_id_from_analysis_storage_size, \
-    get_pipeline_id_from_pipeline_code, get_data_obj_from_project_id_and_path, \
-    create_data_obj_from_project_id_and_path, \
-    launch_workflow, get_workflow_steps, filter_analysis_steps, write_analysis_step_logs
+    get_workflow_steps, filter_analysis_steps, write_analysis_step_logs
 
 from classes.command import Command
-from classes.icav2_launch_json import ICAv2LaunchJson
 from utils.logging import get_logger
 from pathlib import Path
 from argparse import ArgumentError
-from utils.globals import ICAv2AnalysisStorageSize
 from utils.errors import CheckArgumentError
 from typing import Optional, Dict, List
-import json
 
 
 logger = get_logger()
@@ -36,10 +30,10 @@ logger = get_logger()
 class GetICAv2AnalysisStepLogs(Command):
     """Usage:
     cwl-ica [options] icav2-get-analysis-step-logs help
-    cwl-ica [options] icav2-get-analysis-step-logs (--project-name=<project_name> | --project-id=<project_id>)
-                                                   (--analysis-id=<analysis_id>)
+    cwl-ica [options] icav2-get-analysis-step-logs (--analysis-id=<analysis_id>)
                                                    (--step-name=<step_name>)
                                                    (--stdout | --stderr)
+                                                   [--project-name=<project_name> | --project-id=<project_id>]
                                                    [--output-path=<output_file>]
 
 Description:
@@ -48,18 +42,21 @@ Description:
     You can also use 'cwltool' as the step-name parameter to print the cwltool debug logs.
 
 Options:
-    --project-id=<project_id>                                Optional, id of project context you wish to launch the pipeline analysis.
-    --project-name=<project_name>                            Optional, name of the project context you wish to launch the pipeline analysis.
-                                                             Must specify one (and only one of) --project-name and --project-id
     --analysis-id=<analysis_id>                              Required, the analysis id you wish to list logs of
     --step-name=<step_name>                                  Required, the name of the step, use 'cwltool' to get the cwltool debug logs (maps to technical step id pipeline_runner.0)
     --stdout                                                 Optional, get the stdout of a step
     --stderr                                                 Optional, get the stderr of a step
                                                              Must specify one (and only one of) --stdout and --stderr
+    --project-id=<project_id>                                Optional, id of project context you wish to launch the pipeline analysis.
+    --project-name=<project_name>                            Optional, name of the project context you wish to launch the pipeline analysis.
+                                                             Must specify one (and only one of) --project-name and --project-id  or set ICAV2_PROJECT_ID env var
     --output-path=<output_file>                              Write output to file, otherwise written to stdout / console
 
 Environment:
-    ICAV2_ACCESS_TOKEN
+    ICAV2_ACCESS_TOKEN (required)
+    ICAV2_BASE_URL (optional, defaults to ica.illumina.com)
+    ICAV2_PROJECT_ID (optional)
+
 
 Example:
     cwl-ica icav2-get-analysis-step-logs --project-name playground_v2 --analysis-id abcd12345 --step-name cwltool --stderr --output-path cwltool-debug-logs.txt
@@ -99,8 +96,11 @@ Example:
                 logger.error(f"Got --project-id parameter as {self.project_id} but is not in project-id format")
                 raise CheckArgumentError
         if self.project_id is None and self.project_name is None:
-            logger.error("Must set one of --project-id or --project-name")
-            raise CheckArgumentError
+            if os.environ.get("ICAV2_PROJECT_ID", None) is not None:
+                self.project_id = os.environ.get("ICAV2_PROJECT_ID")
+            else:
+                logger.error("Must set one of --project-id or --project-name or set ICAV2_PROJECT_ID env var")
+                raise CheckArgumentError
         if self.project_id is None and self.project_name is not None:
             self.project_id = get_project_id_from_project_name(self.project_name, get_icav2_configuration())
 

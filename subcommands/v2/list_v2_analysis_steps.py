@@ -27,7 +27,7 @@ from utils.globals import ICAv2AnalysisStorageSize
 from utils.errors import CheckArgumentError
 from typing import Optional, Dict, List
 import json
-
+import os
 
 logger = get_logger()
 
@@ -35,21 +35,25 @@ logger = get_logger()
 class ICAv2ListAnalysisSteps(Command):
     """Usage:
     cwl-ica [options] icav2-list-analysis-steps help
-    cwl-ica [options] icav2-list-analysis-steps (--project-name=<project_name> | --project-id=<project_id>)
-                                                (--analysis-id=<analysis-id>)
+    cwl-ica [options] icav2-list-analysis-steps (--analysis-id=<analysis-id>)
+                                                [--project-name=<project_name> | --project-id=<project_id>]
                                                 [--show-technical-steps]
 
 Description:
     List analysis steps 
 
 Options:
+    --analysis-id=<analysis_id>                              Required, the id of the analysis
     --project-id=<project_id>                                Optional, id of project context you wish to launch the pipeline analysis.
     --project-name=<project_name>                            Optional, name of the project context you wish to launch the pipeline analysis.
-    --analysis-id=<analysis_id>                              Required, the id of the analysis
+                                                             Must set one of (and only one of) --project-id or --project-name or set ICAV2_PROJECT_ID env var
     --show-technical-steps                                   Also list technical steps
 
 Environment:
-    ICAV2_ACCESS_TOKEN
+    ICAV2_ACCESS_TOKEN (required)
+    ICAV2_BASE_URL (optional, defaults to ica.illumina.com)
+    ICAV2_PROJECT_ID (optional)
+
 
 Example:
     cwl-ica icav2-list-analysis-steps --project-name playground_v2 --analysis-id abcd123456
@@ -86,8 +90,11 @@ Example:
                 logger.error(f"Got --project-id parameter as {self.project_id} but is not in project-id format")
                 raise CheckArgumentError
         if self.project_id is None and self.project_name is None:
-            logger.error("Must set one of --project-id or --project-name")
-            raise CheckArgumentError
+            if os.environ.get("ICAV2_PROJECT_ID", None) is not None:
+                self.project_id = os.environ.get("ICAV2_PROJECT_ID")
+            else:
+                logger.error("Must set one of --project-id or --project-name or set ICAV2_PROJECT_ID env var")
+                raise CheckArgumentError
         if self.project_id is None and self.project_name is not None:
             self.project_id = get_project_id_from_project_name(self.project_name, get_icav2_configuration())
 
