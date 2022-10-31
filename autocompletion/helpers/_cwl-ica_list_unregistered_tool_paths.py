@@ -11,16 +11,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_tools_dir())
-             for s_file in get_tools_dir().glob("**/*.cwl")]
-
-registered_tool_paths = [Path(tool["path"]) / Path(version["path"])
-                         for tool in read_yaml(get_tool_yaml_path())["tools"]
-                         for version in tool["versions"]]
-
-tool_paths = [a_path
-              for a_path in all_paths
-              if a_path not in registered_tool_paths]
+registered_tool_paths = [
+    Path(tool["path"]) / Path(version["path"])
+    for tool in read_yaml(get_tool_yaml_path())["tools"]
+    for version in tool["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -39,7 +34,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -50,6 +44,23 @@ try:
     in_tools_dir = True
 except ValueError:
     in_tools_dir = False
+
+if not current_word_value == "" and in_tools_dir:
+    all_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_tools_dir())
+        for s_file in get_tools_dir().glob("**/*.cwl")
+    ]
+
+tool_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_tool_paths
+]
 
 if in_tools_dir:
     current_path_resolved_relative_to_tools_dir = current_path_resolved.relative_to(get_tools_dir())

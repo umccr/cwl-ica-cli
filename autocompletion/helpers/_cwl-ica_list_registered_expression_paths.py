@@ -11,15 +11,17 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-expression_paths = [Path(expression["path"]) / Path(version["path"])
-                    for expression in read_yaml(get_expression_yaml_path())["expressions"]
-                    for version in expression["versions"]]
+expression_paths = [
+    Path(expression["path"]) / Path(version["path"])
+    for expression in read_yaml(get_expression_yaml_path())["expressions"]
+    for version in expression["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
-    current_word_value="${CURRENT_WORD}"
+    current_word_value = "${CURRENT_WORD}"
 else:
-    current_word_value=None
+    current_word_value = None
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"

@@ -11,16 +11,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_expressions_dir())
-             for s_file in get_expressions_dir().glob("**/*.cwl")]
-
-registered_expression_paths = [Path(expression["path"]) / Path(version["path"])
-                               for expression in read_yaml(get_expression_yaml_path())["expressions"]
-                               for version in expression["versions"]]
-
-expression_paths = [a_path
-                    for a_path in all_paths
-                    if a_path not in registered_expression_paths]
+registered_expression_paths = [
+    Path(expression["path"]) / Path(version["path"])
+    for expression in read_yaml(get_expression_yaml_path())["expressions"]
+    for version in expression["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -39,7 +34,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -50,6 +44,23 @@ try:
     in_expressions_dir = True
 except ValueError:
     in_expressions_dir = False
+
+if not current_word_value == "" and in_expressions_dir:
+    all_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_expressions_dir())
+        for s_file in get_expressions_dir().glob("**/*.cwl")
+    ]
+
+expression_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_expression_paths
+]
 
 if in_expressions_dir:
     current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_expressions_dir())

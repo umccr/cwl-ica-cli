@@ -11,9 +11,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                  for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                  for version in workflow["versions"]]
+workflow_paths = [
+    Path(workflow["path"]) / Path(version["path"])
+    for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
+    for version in workflow["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":

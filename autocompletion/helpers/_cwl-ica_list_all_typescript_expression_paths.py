@@ -11,26 +11,49 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-typescript_expression_paths = [
-    s_file.parent.relative_to(get_cwl_ica_repo_path())
-    for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
-    # We don't want to pull in the typescript test files
-    if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
-    # We also want to make sure it's under the tools, expressions or typescript-expressions directories
-    len(
-        {"tools", "expressions", "typescript-expressions"}.intersection(
-            [
-                s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
-            ]
-        )
-    ) > 0
-]
-
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
     current_word_value = "${CURRENT_WORD}"
 else:
     current_word_value = None
+
+if current_word_value is None:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+        # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+        len(
+            {"tools", "expressions", "typescript-expressions"}.intersection(
+                [
+                    s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                ]
+            )
+        ) > 0
+    ]
+else:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in current_path_resolved.glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+           # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+           len(
+               {"tools", "expressions", "typescript-expressions"}.intersection(
+                   [
+                       s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                   ]
+               )
+           ) > 0
+    ]
 
 # Resolve the current path
 # If getcwd() is "/c/Users/awluc"
@@ -38,15 +61,6 @@ else:
 # 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
 # 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
 # 4. Subfolder of expressions dir = "OneDrive/GitHub/UMCCR/expressions/contig/" -> current path resolved
-if current_word_value is not None:
-    if current_word_value.endswith("/"):
-        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
-    else:
-        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
-else:
-    current_word_value = ""
-    current_path_resolved = Path(getcwd()).absolute()
 
 # Is the current_path_resolved a subpath of the expressions directory?
 try:

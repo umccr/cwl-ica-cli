@@ -11,16 +11,11 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-all_paths = [s_file.relative_to(get_workflows_dir())
-             for s_file in get_workflows_dir().glob("**/*.cwl")]
-
-registered_workflow_paths = [Path(workflow["path"]) / Path(version["path"])
-                             for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
-                             for version in workflow["versions"]]
-
-workflow_paths = [a_path
-                  for a_path in all_paths
-                  if a_path not in registered_workflow_paths]
+registered_workflow_paths = [
+    Path(workflow["path"]) / Path(version["path"])
+    for workflow in read_yaml(get_workflow_yaml_path())["workflows"]
+    for version in workflow["versions"]
+]
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -39,7 +34,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -50,6 +44,23 @@ try:
     in_workflows_dir = True
 except ValueError:
     in_workflows_dir = False
+
+if not current_word_value == "" and in_workflows_dir:
+    all_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in current_path_resolved.glob("**/*.cwl")
+    ]
+else:
+    all_paths = [
+        s_file.relative_to(get_workflows_dir())
+        for s_file in get_workflows_dir().glob("**/*.cwl")
+    ]
+
+workflow_paths = [
+    a_path
+    for a_path in all_paths
+    if a_path not in registered_workflow_paths
+]
 
 if in_workflows_dir:
     current_path_resolved_relative_to_workflows_dir = current_path_resolved.relative_to(get_workflows_dir())

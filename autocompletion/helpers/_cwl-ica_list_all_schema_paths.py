@@ -11,12 +11,8 @@ from pathlib import Path
 from os import getcwd
 from os.path import relpath
 
-schema_paths = [s_file.relative_to(get_schemas_dir())
-                    for s_file in get_schemas_dir().glob("**/*.yaml")]
-
-
 # Get the current word value
-if not "${CURRENT_WORD}" == "":
+if not "${CURRENT_WORD-}" == "":
     current_word_value = "${CURRENT_WORD}"
 else:
     current_word_value = None
@@ -32,7 +28,6 @@ if current_word_value is not None:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
     else:
         current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
-
 else:
     current_word_value = ""
     current_path_resolved = Path(getcwd()).absolute()
@@ -43,6 +38,17 @@ try:
     in_schemas_dir = True
 except ValueError:
     in_schemas_dir = False
+
+if not current_word_value == "" and in_schemas_dir:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in current_path_resolved.glob("**/*.yaml")
+    ]
+else:
+    schema_paths = [
+        s_file.relative_to(get_schemas_dir())
+        for s_file in get_schemas_dir().glob("**/*.yaml")
+    ]
 
 if in_schemas_dir:
     current_path_resolved_relative_to_schemas_dir = current_path_resolved.relative_to(get_schemas_dir())
