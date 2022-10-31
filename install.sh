@@ -15,6 +15,8 @@ set -euo pipefail
 ###########
 CWL_ICA_CONDA_ENV_NAME="cwl-ica"
 REQUIRED_CONDA_VERSION="4.9.0"
+STABLE_YARN_VERSION="3.2.3"
+
 
 ##########
 # GET HELP
@@ -485,8 +487,8 @@ echo "Updating npm in conda prefix" 1>&2
 npm update -g npm
 echo "Activating corepack" 1>&2
 corepack enable
-echo "Activate stable version of yarn" 1>&2
-corepack prepare yarn@stable --activate
+echo "Activate stable version of yarn '${STABLE_YARN_VERSION}'" 1>&2
+corepack prepare "yarn@${STABLE_YARN_VERSION}" --activate
 echo "Installing pnpm for IDE assistance" 1>&2
 if [[ ! -r "${conda_cwl_ica_env_prefix}/bin/pnpm" ]]; then
   npm install -g pnpm
