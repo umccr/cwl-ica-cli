@@ -34,7 +34,7 @@ from classes.cwl_schema import CWLSchema
 from utils.project import get_project_object_from_project_name
 from typing import Dict
 import re
-from utils.miscell import get_name_version_tuple_from_cwl_file_path
+from utils.miscell import get_name_version_tuple_from_cwl_file_path, strip_trailing_slash_from_url
 from classes.ica_workflow import ICAWorkflow
 from classes.item import Item
 from classes.item_version import ItemVersion
@@ -84,6 +84,13 @@ class CreateSubmissionTemplate(Command):
         self.ica_workflow_version_name = None  # type: Optional[str]
         self.ica_workflow_run_id = None  # type: Optional[str]
         self.ignore_workflow_id_mismatch = False  # type: bool
+
+        # Engine parameters
+        self.gds_prefix = None  # type: Optional[str]
+        self.gds_work_prefix = None  # type: Optional[str]
+        self.gds_work_directory = None  # type: Optional[str]
+        self.gds_output_prefix = None  # type: Optional[str]
+        self.gds_output_directory = None  # type: Optional[str]
 
         # Check help
         self.check_length(command_argv)
@@ -226,6 +233,46 @@ class CreateSubmissionTemplate(Command):
         else:
             logger.error(f"Could not find {self.item_name}/{self.item_version} in {self.item_type}.yaml")
             raise ItemNotFoundError
+
+        # Get workDirectory, outputDirectory
+        if self.args.get("--gds-output-directory", None) is not None and self.args.get("--gds-output-prefix", None) is not None:
+            logger.error("Please specify one and only one of --gds-output-directory and --gds-output-prefix")
+            raise CheckArgumentError
+        if self.args.get("--gds-work-directory", None) is not None and self.args.get("--gds-work-prefix", None) is not None:
+            logger.error("Please specify one and only one of --gds-work-directory and --gds-work-prefix")
+            raise CheckArgumentError
+
+        # Get gds work directory
+        if self.args.get("--gds-work-directory", None) is not None:
+            self.gds_work_directory = strip_trailing_slash_from_url(self.args.get("--gds-work-directory"))
+        elif self.args.get("--gds-work-prefix", None) is not None:
+            self.gds_work_prefix = strip_trailing_slash_from_url(self.args.get("--gds-work-prefix"))
+            self.gds_work_directory = self.gds_work_prefix + "/__DATE_STR__"
+
+        # Get gds output directory
+        if self.args.get("--gds-output-directory", None) is not None:
+            self.gds_output_directory = strip_trailing_slash_from_url(self.args.get("--gds-output-directory"))
+        elif self.args.get("--gds-output-prefix", None) is not None:
+            self.gds_output_prefix = strip_trailing_slash_from_url(self.args.get("--gds-output-prefix"))
+            self.gds_output_directory = self.gds_output_prefix + "/__DATE_STR__"
+
+        # Check if --prefix has been set to clean anything else up not set
+        if self.gds_work_directory is None:
+            # Get gds-prefix
+            if self.args.get("--gds-prefix", None) is None:
+                logger.error("Could not get engine parameter work directory,\n"
+                             "Please specify one of --gds-prefix, --gds-work-prefix or --gds-work-directory")
+                raise CheckArgumentError
+            self.gds_prefix = strip_trailing_slash_from_url(self.args.get("--gds-prefix"))
+            self.gds_work_directory = self.gds_prefix + "/work/__DATE_STR__"
+        if self.gds_output_directory is None:
+            # Get gds-prefix
+            if self.args.get("--gds-prefix", None) is None:
+                logger.error("Could not get engine parameter output directory,\n"
+                             "Please specify one of --gds-prefix, --gds-output-prefix or --gds-output-directory")
+                raise CheckArgumentError
+            self.gds_prefix = strip_trailing_slash_from_url(self.args.get("--gds-prefix"))
+            self.gds_output_directory = self.gds_prefix + "/output/__DATE_STR__"
 
         # Get inputs from object
         self.cwl_inputs = self.get_cwl_inputs_from_object()
@@ -402,17 +449,20 @@ class CreateSubmissionTemplate(Command):
         self.input_template_object["name"] = self.launch_name
 
         # Add the comment above the name input - indent is zero since we're at the top key
-        self.input_template_object.yaml_set_comment_before_after_key(key="name",
-                                                                     before="Name of the workflow run",
-                                                                     indent=0)
+        self.input_template_object.yaml_set_comment_before_after_key(
+            key="name",
+            before="Name of the workflow run",
+            indent=0
+        )
+
     def set_default_engine_parameters_as_commented_map(self):
         """
         Return engine parameters as a commented map
         So we can add in comments
         """
         self.input_template_object["engineParameters"]: OrderedDict = OrderedDict({
-            "workDirectory": None,
-            "outputDirectory": None
+            "workDirectory": self.gds_work_directory,
+            "outputDirectory": self.gds_output_directory
         })
 
         # Add keys to each
@@ -637,10 +687,10 @@ class CreateSubmissionTemplate(Command):
             #shell_h.write(f"# Use this script to launch the input json '{self.output_json_path.name}'\n\n")
 
             # Check yq is present
-            shell_h.write(f"# Check yq and {launch_binary} is in path\n")
-            shell_h.write(f"echo 'Checking yq and {launch_binary} are installed' 1>&2\n")
-            shell_h.write(f"if ! type yq {launch_binary} >/dev/null 1>&2; then\n")
-            shell_h.write(f"    echo \"Error: Please ensure install 'yq' and '{launch_binary}' before continuing\"\n")
+            shell_h.write(f"# Check jq, yq and {launch_binary} is in path\n")
+            shell_h.write(f"echo 'Checking jq, yq and {launch_binary} are installed' 1>&2\n")
+            shell_h.write(f"if ! type jq, yq {launch_binary} >/dev/null 1>&2; then\n")
+            shell_h.write(f"    echo \"Error: Please ensure you've installed 'jq', 'yq' and '{launch_binary}' before continuing\"\n")
             shell_h.write("fi\n\n")
 
 
@@ -673,8 +723,18 @@ class CreateSubmissionTemplate(Command):
             # Create temp file ready for launch
             shell_h.write("# Convert yaml into json with yq\n")
             shell_h.write(f"echo 'Converting {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} to json' 1>&2\n")
+            shell_h.write(f"echo 'If __DATE_STR__ placeholder has been used in engineParameters workDirectory or outputDirectory, it will be updated with the current timestamp' 1>&2\n")
             shell_h.write(f"json_path=$(mktemp {self.output_yaml_path.stem}.XXX.json)\n")
-            shell_h.write(f"yq eval --output-format=json '.' {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} > \"$json_path\"\n\n")
+            shell_h.write(f"yq eval \\\n"
+                          f"  --output-format=json \\\n"
+                          f"  '.' \\\n"
+                          f"  {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} | \\\n"
+                          f"jq --raw-output \\\n"
+                          f"  '\n"
+                          f"    (now | strflocaltime(\"%Y%m%d_%H%M%S\")) as $current_date |\n"
+                          f"    .engineParameters.workDirectory |= (sub(\"__DATE_STR__\"; $current_date)) |\n"
+                          f"    .engineParameters.outputDirectory |= (sub(\"__DATE_STR__\"; $current_date))\n"
+                          f"  ' > \"$json_path\"\n\n")
 
             # Check if 'ica-check-cwl-inputs' is in the path and then run it!
             shell_h.write("# Validate workflow inputs against ICA workflow version\n")
