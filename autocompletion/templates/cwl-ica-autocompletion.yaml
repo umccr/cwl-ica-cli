@@ -895,7 +895,51 @@ subcommands:
       - name: ignore-workflow-id-mismatch
         summary: |
           Ignore workflow id mismatch, useful for when creating a template for a different context
-
+      - name: gds-prefix
+        summary: |
+          Prefix for engine parameters workDirectory, outputDirectory
+        type: string
+        completion:
+          command_string: |
+            bash - <<EOF
+              __cwl-ica_list_gds_folders.sh
+            EOF
+      - name: gds-work-prefix
+        summary: |
+          Prefix for engine parameters workDirectory
+        type: string
+        completion:
+          command_string: |
+            bash - <<EOF
+              __cwl-ica_list_gds_folders.sh
+            EOF
+      - name: gds-output-prefix
+        summary: |
+          Prefix for engine parameters outputDirectory
+        type: string
+        completion:
+          command_string: |
+            bash - <<EOF
+              __cwl-ica_list_gds_folders.sh
+            EOF
+      - name: gds-work-directory
+        summary: |
+          Set engine parameters workDirectory
+        type: string
+        completion:
+          command_string: |
+            bash - <<EOF
+              __cwl-ica_list_gds_folders.sh
+            EOF
+      - name: gds-output-directory
+        summary: |
+          Set engine parameters outputDirectory
+        type: string
+        completion:
+          command_string: |
+            bash - <<EOF
+              __cwl-ica_list_gds_folders.sh
+            EOF
   create-workflow-submission-template:
     summary: |
       Create a ICA input template and bash script for a workflow
@@ -940,6 +984,181 @@ subcommands:
       - name: ignore-workflow-id-mismatch
         summary: |
           Ignore workflow id mismatch, useful for when creating a template for a different context
+      - name: gds-prefix
+        summary: |
+          Prefix for engine parameters workDirectory, outputDirectory
+        type: string
+        completion:
+          command_string: |
+            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+              if [[ -z "${volume_name}" || -z "${path}" ]]; then
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.name)/") |
+                    .[]
+                  ';
+              else
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.volumeName)\(.path)") | 
+                    .[]
+                  ';
+              fi
+            fi
+      - name: gds-work-prefix
+        summary: |
+          Prefix for engine parameters workDirectory
+        type: string
+        completion:
+          command_string: |
+            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+              if [[ -z "${volume_name}" || -z "${path}" ]]; then
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.name)/") |
+                    .[]
+                  ';
+              else
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.volumeName)\(.path)") | 
+                    .[]
+                  ';
+              fi
+            fi
+      - name: gds-output-prefix
+        summary: |
+          Prefix for engine parameters outputDirectory
+        type: string
+        completion:
+          command_string: |
+            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+              if [[ -z "${volume_name}" || -z "${path}" ]]; then
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.name)/") |
+                    .[]
+                  ';
+              else
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.volumeName)\(.path)") | 
+                    .[]
+                  ';
+              fi
+            fi
+      - name: gds-work-directory
+        summary: |
+          Set engine parameters workDirectory
+        type: string
+        completion:
+          command_string: |
+            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+              if [[ -z "${volume_name}" || -z "${path}" ]]; then
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.name)/") |
+                    .[]
+                  ';
+              else
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.volumeName)\(.path)") | 
+                    .[]
+                  ';
+              fi
+            fi
+      - name: gds-output-directory
+        summary: |
+          Set engine parameters outputDirectory
+        type: string
+        completion:
+          command_string: |
+            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+              if [[ -z "${volume_name}" || -z "${path}" ]]; then
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.name)/") |
+                    .[]
+                  ';
+              else
+                curl --fail --silent --location \
+                  --request GET \
+                  --header "Accept: application/json" \
+                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+                jq --raw-output \
+                  '
+                    .items |
+                    map("gds://\(.volumeName)\(.path)") | 
+                    .[]
+                  ';
+              fi
+            fi      
 
   ################################
   # Get Run-templates Commands
