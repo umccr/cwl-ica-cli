@@ -32,7 +32,7 @@ from pathlib import Path
 from argparse import ArgumentError
 from utils.globals import ICAv2AnalysisStorageSize
 from utils.errors import CheckArgumentError
-from typing import Optional, Dict
+from typing import Optional
 import json
 
 
@@ -225,10 +225,12 @@ Example:
         # Check activation id
         self.activation_id = self.args.get("--activation-id", None)
 
-        # Check if create_cwl_analysis_json_output_path is setl
-        self.create_cwl_analysis_json_output_path = Path(self.args.get("--create-cwl-analysis-json-output-path", None))
+        # Check if create_cwl_analysis_json_output_path is set
+        self.create_cwl_analysis_json_output_path = self.args.get("--create-cwl-analysis-json-output-path", None)
+
         # If it is specified, ensure parent exists and ensure file itself does not exist
         if self.create_cwl_analysis_json_output_path is not None:
+            self.create_cwl_analysis_json_output_path = Path(self.create_cwl_analysis_json_output_path)
             if not self.create_cwl_analysis_json_output_path.parent.is_dir():
                 logger.error(f"Please ensure the parent directory to {self.create_cwl_analysis_json_output_path} exists")
                 raise CheckArgumentError
@@ -280,7 +282,7 @@ Example:
         )
 
         if self.create_cwl_analysis_json_output_path is not None:
-            logger.info(f"Dumping payload to {self.create_cwl_analysis_json_output_path}")
+            logger.info(f"Dumping launch analysis payload to {self.create_cwl_analysis_json_output_path}")
             with open(self.create_cwl_analysis_json_output_path, "w") as create_analysis_h:
                 create_analysis_h.write(json.dumps(recursively_build_open_api_body_from_libica_item(cwl_analysis), indent=2))
                 create_analysis_h.write("\n")

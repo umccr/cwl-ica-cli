@@ -1325,6 +1325,10 @@ subcommands:
         summary: |
           Optional, the activation id used by the pipeline analysis
         type: string
+      - name: create-cwl-analysis-json-output-path
+        summary: |
+          Path to output a json file that contains the body for a create cwl analysis
+        type: string
   icav2-list-analysis-steps:
     summary: |
       List steps of an analysis
