@@ -24,6 +24,9 @@ class CreateToolSubmissionTemplate(CreateSubmissionTemplate):
                                                       [--ica-workflow-run-instance-id=<ica_workflow_run_id>]
                                                       [--ignore-workflow-id-mismatch]
                                                       [--access-token=<access_token>]
+                                                      [--gds-prefix=<gds_run_prefix>]
+                                                      [--gds-work-prefix=<gds_work_prefix> | --gds-work-directory=<gds_work_directory>]
+                                                      [--gds-output-prefix=<gds_run_output_prefix> | --gds-output-directory=<gds_run_output_directory>]
                                                       [--curl]
 
 Description:
@@ -31,13 +34,27 @@ Description:
 
 Options:
     --tool-path=<path_to_tool>                                 Required: Path to a cwl tool
+    --prefix=<prefix>                                          Optional: prefix to the run name and the output files
     --project=<project>                                        Required: Project the tool belongs to
     --launch-project=<project>                                 Optional: Linked project to launch from
     --ica-workflow-run-instance-id=<workflow_run_instance_id>  Optional: Workflow run id to base yaml template from
     --access-token=<access-token>                              Optional: Access token in same project as run instance id, ideally use env var ICA_ACCESS_TOKEN
     --ignore-workflow-id-mismatch                              Optional: Ignore workflow id mismatch, useful for when creating a template for a different context
-    --prefix=<prefix>                                          Optional: prefix to the run name and the output files
     --curl                                                     Optional: Use the curl command over ica binary to launch tool
+    --gds-prefix=<gds_prefix>                                  Optional: Prefix for engine parameters workDirectory, outputDirectory which become <gds_prefix>/work/__DATE_STR__ and <gds_prefix>/output/__DATE_STR__ respectively
+                                                                 where __DATE_STR__ is set to YYYYMMDD_HHMMSS at run time
+                                                                 If gds-prefix is NOT set, user must specify
+                                                                    one and only one of (gds-work-prefix OR gds-work-directory)
+                                                                    AND one and only one of (gds-output-prefix OR gds-output-directory)
+    --gds-work-prefix=<gds_work_prefix>                        Optional: Prefix for engine parameters workDirectory which becomes <gds_prefix>/__DATE_STR__/work
+                                                                 where __DATE_STR__ is set to YYYYMMDD_HHMMSS at run time
+                                                                 Overrides gds-prefix.workDirectory if set
+    --gds-work-directory=<gds_work_directory>                  Optional: Specify the exact output directory path, cannot be used with gds-work-prefix
+    --gds-output-prefix=<gds_output_directory>                 Optional: Prefix for engine parameters outputDirectory which becomes <gds_prefix>/__DATE_STR__/output
+                                                                 where __DATE_STR__ is set to YYYYMMDD_HHMMSS at run time
+                                                                 Overrides gds-prefix.outputDirectory if set
+    --gds-output-directory=<gds_output_directory>              Optional: Specify the exact output directory path, cannot be used with gds-output-prefix parameter
+
 
 Environment:
   * ICA_BASE_URL

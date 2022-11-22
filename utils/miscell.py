@@ -6,6 +6,7 @@ Yet every project of mine has always had one, and probably always will.
 
 A refined goal is to actively reduce the number of functions in this file.
 """
+from urllib.parse import urlparse, ParseResult
 
 from utils.repo import read_yaml, get_blob_url, get_raw_url
 from utils.yaml import dump_yaml
@@ -420,3 +421,20 @@ def sanitise_dict_keys(input_dict: Dict) -> Dict:
     for key, value in input_dict.items():
         output_dict[camel_to_snake_case(key)] = value
     return output_dict
+
+
+def strip_trailing_slash_from_url(url: str) -> str:
+    url_obj = urlparse(url)
+    new_url_obj = ParseResult(
+        scheme=url_obj.scheme,
+        netloc=url_obj.netloc,
+        path=url_obj.path.rstrip("/"),
+        params="",
+        query="",
+        fragment=""
+    )
+    return new_url_obj.geturl()
+
+    url_obj._replace
+
+    return url_obj.geturl()
