@@ -34,8 +34,9 @@ jobs:
              --user "$(id -u):$(id -g)" \
              --volume  "$PWD:$PWD" \
              --workdir "$PWD" \
-             ghcr.io/umccr/appspec:0.006 \
-               bash ".github/scripts/update_autocompletion.sh"
+             --entrypoint "bash" \
+             ghcr.io/alexiswl/app-appspec-p5:v0.007-rc \
+               ".github/scripts/update_autocompletion.sh"
       # Commit to github
       - id: commit_configuration_yaml_files
         name: Commit configuration yaml files
