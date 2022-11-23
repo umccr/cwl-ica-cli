@@ -26,7 +26,7 @@ from ruamel.yaml.comments import \
 from ruamel.yaml import YAML
 from ruamel.yaml.main import round_trip_dump
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Any
 from classes.project import Project
 from utils.errors import CheckArgumentError, InvalidTokenError
 from classes.cwl import CWL
@@ -309,6 +309,47 @@ class CreateSubmissionTemplate(Command):
         """
         return read_yaml(self.item_yaml_path)[self.item_type_key]
 
+    def sanitise_input(self, input_obj, input_item, input_item_type) -> Any:
+        # Handle InputArraySchema objects (and double arrays)
+        while isinstance(input_item_type, self.cwl_obj.parser.InputArraySchema):
+            if not "is_array" in input_obj.keys():
+                input_obj["is_array"] = 1
+            else:
+                input_obj["is_array"] += 1
+            input_item_type = input_item_type.items
+
+        # Schemas
+        if isinstance(input_item_type, str) and "#" in input_item_type:
+            # You may say I'm a schema... but I'm not the only one
+            input_obj["cwl_type"] = "schema"
+
+            # Read schema
+            relative_schema_file_path, schema_name = input_item_type.split("#", 1)
+            relative_schema_file_path = Path(relative_schema_file_path)
+            schema_version = re.sub(r"\.yaml$", "", relative_schema_file_path.name.rsplit("__", 1)[-1])
+
+            # Save schema
+            schema_object = CWLSchema(self.cwl_file_path.parent.joinpath(relative_schema_file_path).resolve(),
+                                      schema_name,
+                                      schema_version)
+            input_obj["schema_obj"] = schema_object.get_sanitised_object()
+
+        # Handle InputEnumSchema objects
+        elif isinstance(input_item_type, self.cwl_obj.parser.InputEnumSchema):
+            # Assign value to the first symbol
+            input_obj["cwl_type"] = "enum"
+            input_obj["symbols"] = [symbol.split("#", 1)[-1] for symbol in input_item_type.symbols]
+        elif isinstance(input_item_type, str):
+            # The low-hanging fruit
+            input_obj["cwl_type"] = input_item_type
+            # Check for secondary files
+            if hasattr(input_item, "secondaryFiles") and input_item.secondaryFiles is not None:
+                input_obj["secondary_files"] = input_item.secondaryFiles
+        else:
+            logger.warning(f"Don't know what to do with {input_item} of type {input_item_type}, skipping")
+
+        return input_obj
+
     def get_cwl_inputs_from_object(self) -> Dict:
         """
         Get cwl inputs from a cwl object
@@ -370,43 +411,15 @@ class CreateSubmissionTemplate(Command):
                     logger.warning("Can't handle multiple types that aren't simple")
                     continue
 
-            # Handle InputArraySchema objects (and double arrays)
-            while isinstance(input_item_type, self.cwl_obj.parser.InputArraySchema):
-                if not "is_array" in input_obj.keys():
-                    input_obj["is_array"] = 1
-                else:
-                    input_obj["is_array"] += 1
-                input_item_type = input_item_type.items
-
-            # Schemas
-            if isinstance(input_item_type, str) and "#" in input_item_type:
-                # You may say I'm a schema... but I'm not the only one
-                input_obj["cwl_type"] = "schema"
-                # Read schema
-                relative_schema_file_path, schema_name = input_item_type.split("#", 1)
-                relative_schema_file_path = Path(relative_schema_file_path)
-                schema_version = re.sub(r"\.yaml$", "", relative_schema_file_path.name.rsplit("__", 1)[-1])
-                # Save schema
-                input_obj["schema_obj"] = CWLSchema(self.cwl_file_path.parent.joinpath(relative_schema_file_path).resolve(),
-                                                    schema_name,
-                                                    schema_version).cwl_obj
-            # Handle InputEnumSchema objects
-            elif isinstance(input_item_type, self.cwl_obj.parser.InputEnumSchema):
-                # Assign value to the first symbol
-                input_obj["cwl_type"] = "enum"
-                input_obj["symbols"] = [symbol.split("#", 1)[-1] for symbol in input_item_type.symbols]
-            elif isinstance(input_item_type, str):
-                # The low hanging fruit
+            if isinstance(input_item_type, list):
+                input_item_type = input_item_type[0]
                 input_obj["cwl_type"] = input_item_type
-                # Check for secondary files
-                if hasattr(input_item, "secondaryFiles") and input_item.secondaryFiles is not None:
-                    input_obj["secondary_files"] = input_item.secondaryFiles
-            elif isinstance(input_item_type, list):
-                # Handled in check for multiple types
-                continue
-            else:
-                logger.warning(f"Don't know what to do with {input_item} of type {input_item_type}, skipping")
-                continue
+
+            input_obj = self.sanitise_input(
+                input_obj=input_obj,
+                input_item=input_item,
+                input_item_type=input_item_type
+            )
 
             inputs[input_id] = input_obj
 
@@ -489,7 +502,10 @@ class CreateSubmissionTemplate(Command):
         Uses the input template utils functions
         :return:
         """
-        self.input_template_object["input"] = create_input_dict(self.cwl_inputs)
+        self.input_template_object["input"] = create_input_dict(
+            self.cwl_inputs,
+            self.cwl_file_path
+        )
         self.input_template_object.yaml_set_comment_before_after_key(key="input",
                                                                      before=f"\nInputs to {self.item_type} {self.item_name}/{self.item_version}",
                                                                      indent=0)
@@ -639,7 +655,6 @@ class CreateSubmissionTemplate(Command):
                     file_h.write(re.sub(r"^\s{%s}" % YAML_INDENTATION_LEVEL, " " * YAML_INDENTATION_LEVEL + "# ", line))
                 else:
                     file_h.write(re.sub(r"# FIXME$", "", line.rstrip()) + "\n")
-
 
     def write_json_file(self):
         raise NotImplementedError
