@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Generated with perl module App::Spec v0.013
+# Generated with perl module App::Spec v0.000
 
 _cwl-ica() {
 
@@ -594,6 +594,11 @@ and update definition on ICA
 ' '--access-token' 'The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
 ' '--curl' 'Use curl binary over ica binary to launch tool
 ' '--ignore-workflow-id-mismatch' 'Ignore workflow id mismatch, useful for when creating a template for a different context
+' '--gds-prefix' 'Prefix for engine parameters workDirectory, outputDirectory
+' '--gds-work-prefix' 'Prefix for engine parameters workDirectory
+' '--gds-output-prefix' 'Prefix for engine parameters outputDirectory
+' '--gds-work-directory' 'Set engine parameters workDirectory
+' '--gds-output-directory' 'Set engine parameters outputDirectory
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
@@ -614,6 +619,21 @@ and update definition on ICA
           --curl)
           ;;
           --ignore-workflow-id-mismatch)
+          ;;
+          --gds-prefix)
+            _cwl-ica_create-tool-submission-template_option_gds_prefix_completion
+          ;;
+          --gds-work-prefix)
+            _cwl-ica_create-tool-submission-template_option_gds_work_prefix_completion
+          ;;
+          --gds-output-prefix)
+            _cwl-ica_create-tool-submission-template_option_gds_output_prefix_completion
+          ;;
+          --gds-work-directory)
+            _cwl-ica_create-tool-submission-template_option_gds_work_directory_completion
+          ;;
+          --gds-output-directory)
+            _cwl-ica_create-tool-submission-template_option_gds_output_directory_completion
           ;;
 
         esac
@@ -696,6 +716,11 @@ and update definition on ICA
 ' '--access-token' 'The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
 ' '--curl' 'Use curl binary over ica binary to launch workflow
 ' '--ignore-workflow-id-mismatch' 'Ignore workflow id mismatch, useful for when creating a template for a different context
+' '--gds-prefix' 'Prefix for engine parameters workDirectory, outputDirectory
+' '--gds-work-prefix' 'Prefix for engine parameters workDirectory
+' '--gds-output-prefix' 'Prefix for engine parameters outputDirectory
+' '--gds-work-directory' 'Set engine parameters workDirectory
+' '--gds-output-directory' 'Set engine parameters outputDirectory
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
@@ -716,6 +741,21 @@ and update definition on ICA
           --curl)
           ;;
           --ignore-workflow-id-mismatch)
+          ;;
+          --gds-prefix)
+            _cwl-ica_create-workflow-submission-template_option_gds_prefix_completion
+          ;;
+          --gds-work-prefix)
+            _cwl-ica_create-workflow-submission-template_option_gds_work_prefix_completion
+          ;;
+          --gds-output-prefix)
+            _cwl-ica_create-workflow-submission-template_option_gds_output_prefix_completion
+          ;;
+          --gds-work-directory)
+            _cwl-ica_create-workflow-submission-template_option_gds_work_directory_completion
+          ;;
+          --gds-output-directory)
+            _cwl-ica_create-workflow-submission-template_option_gds_output_directory_completion
           ;;
 
         esac
@@ -877,6 +917,7 @@ and update definition on ICA
 ' '--analysis-storage-id' 'Optional, takes precedence over analysis-storage-size
 ' '--analysis-storage-size' 'Optional, default is set to Small
 ' '--activation-id' 'Optional, the activation id used by the pipeline analysis
+' '--create-cwl-analysis-json-output-path' 'Path to output a json file that contains the body for a create cwl analysis
 ')
         __cwl-ica_handle_options_flags
         case ${MYWORDS[$INDEX-1]} in
@@ -907,6 +948,8 @@ and update definition on ICA
             _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion
           ;;
           --activation-id)
+          ;;
+          --create-cwl-analysis-json-output-path)
           ;;
 
         esac
@@ -1428,7 +1471,7 @@ _cwl-ica_compreply() {
     local prefix=""
     local IFS=$'\n'
     cur="$(printf '%q' "$cur")"
-    IFS=$'\n' COMPREPLY=($(compgen -P "$prefix" -W "$*" -- "$cur"))
+    IFS=$IFS COMPREPLY=($(compgen -P "$prefix" -W "$*" -- "$cur"))
     __ltrim_colon_completions "$prefix$cur"
 
     # http://stackoverflow.com/questions/7267185/bash-autocompletion-add-description-for-possible-completions
@@ -1440,7 +1483,8 @@ _cwl-ica_compreply() {
 
 _cwl-ica_add-category-to-tool_option_tool_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_name="$(python - <<EOF
+    local param_tool_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1458,7 +1502,8 @@ EOF
 }
 _cwl-ica_add-category-to-tool_option_category_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_category_name="$(python - <<EOF
+    local param_category_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1476,7 +1521,8 @@ EOF
 }
 _cwl-ica_add-category-to-workflow_option_workflow_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_name="$(python - <<EOF
+    local param_workflow_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1494,7 +1540,8 @@ EOF
 }
 _cwl-ica_add-category-to-workflow_option_category_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_category_name="$(python - <<EOF
+    local param_category_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1512,7 +1559,8 @@ EOF
 }
 _cwl-ica_add-linked-project_option_src_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_src_project="$(python - <<EOF
+    local param_src_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1530,7 +1578,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-expression_option_expression_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_expression_path="$(python - <<EOF
+    local param_expression_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -1626,7 +1675,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-expression_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1644,7 +1694,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-tool_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -1739,7 +1790,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-tool_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1757,7 +1809,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-workflow_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -1853,7 +1906,8 @@ EOF
 }
 _cwl-ica_add-maintainer-to-workflow_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1871,7 +1925,8 @@ EOF
 }
 _cwl-ica_add-tool-to-project_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -1961,7 +2016,8 @@ EOF
 }
 _cwl-ica_add-tool-to-project_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -1979,7 +2035,8 @@ EOF
 }
 _cwl-ica_add-workflow-to-project_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2070,7 +2127,8 @@ EOF
 }
 _cwl-ica_add-workflow-to-project_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2088,7 +2146,8 @@ EOF
 }
 _cwl-ica_append-typescript-directory-to-cwl-commandline-tool_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2183,7 +2242,8 @@ EOF
 }
 _cwl-ica_append-typescript-directory-to-cwl-expression-tool_option_expression_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_expression_path="$(python - <<EOF
+    local param_expression_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2279,7 +2339,8 @@ EOF
 }
 _cwl-ica_append-typescript-directory-to-cwl-workflow_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2375,7 +2436,8 @@ EOF
 }
 _cwl-ica_copy-tool-submission-template_option_ica_workflow_run_instance_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_ica_workflow_run_instance_id="$(python - <<EOF
+    local param_ica_workflow_run_instance_id="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2393,7 +2455,8 @@ EOF
 }
 _cwl-ica_copy-workflow-submission-template_option_ica_workflow_run_instance_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_ica_workflow_run_instance_id="$(python - <<EOF
+    local param_ica_workflow_run_instance_id="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2411,7 +2474,8 @@ EOF
 }
 _cwl-ica_create-expression-from-template_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2429,7 +2493,8 @@ EOF
 }
 _cwl-ica_create-tool-from-template_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2447,7 +2512,8 @@ EOF
 }
 _cwl-ica_create-tool-submission-template_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2542,7 +2608,8 @@ EOF
 }
 _cwl-ica_create-tool-submission-template_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2558,9 +2625,55 @@ EOF
 )"
     _cwl-ica_compreply "$param_project"
 }
+_cwl-ica_create-tool-submission-template_option_gds_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_prefix="$(
+bash - <<EOF
+  __cwl-ica_list_gds_folders.sh
+EOF
+)"
+    _cwl-ica_compreply "$param_gds_prefix"
+}
+_cwl-ica_create-tool-submission-template_option_gds_work_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_work_prefix="$(
+bash - <<EOF
+  __cwl-ica_list_gds_folders.sh
+EOF
+)"
+    _cwl-ica_compreply "$param_gds_work_prefix"
+}
+_cwl-ica_create-tool-submission-template_option_gds_output_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_output_prefix="$(
+bash - <<EOF
+  __cwl-ica_list_gds_folders.sh
+EOF
+)"
+    _cwl-ica_compreply "$param_gds_output_prefix"
+}
+_cwl-ica_create-tool-submission-template_option_gds_work_directory_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_work_directory="$(
+bash - <<EOF
+  __cwl-ica_list_gds_folders.sh
+EOF
+)"
+    _cwl-ica_compreply "$param_gds_work_directory"
+}
+_cwl-ica_create-tool-submission-template_option_gds_output_directory_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_output_directory="$(
+bash - <<EOF
+  __cwl-ica_list_gds_folders.sh
+EOF
+)"
+    _cwl-ica_compreply "$param_gds_output_directory"
+}
 _cwl-ica_create-typescript-expression-from-template_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2578,7 +2691,8 @@ EOF
 }
 _cwl-ica_create-typescript-interface-from-cwl-schema_option_schema_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_schema_path="$(python - <<EOF
+    local param_schema_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2673,7 +2787,8 @@ EOF
 }
 _cwl-ica_create-workflow-from-template_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2691,7 +2806,8 @@ EOF
 }
 _cwl-ica_create-workflow-submission-template_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2787,7 +2903,8 @@ EOF
 }
 _cwl-ica_create-workflow-submission-template_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -2803,9 +2920,185 @@ EOF
 )"
     _cwl-ica_compreply "$param_project"
 }
+_cwl-ica_create-workflow-submission-template_option_gds_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_prefix="$(
+if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+  volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+  path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+  if [[ -z "${volume_name}" || -z "${path}" ]]; then
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.name)/") |
+        .[]
+      ';
+  else
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.volumeName)\(.path)") |
+        .[]
+      ';
+  fi
+fi
+)"
+    _cwl-ica_compreply "$param_gds_prefix"
+}
+_cwl-ica_create-workflow-submission-template_option_gds_work_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_work_prefix="$(
+if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+  volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+  path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+  if [[ -z "${volume_name}" || -z "${path}" ]]; then
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.name)/") |
+        .[]
+      ';
+  else
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.volumeName)\(.path)") |
+        .[]
+      ';
+  fi
+fi
+)"
+    _cwl-ica_compreply "$param_gds_work_prefix"
+}
+_cwl-ica_create-workflow-submission-template_option_gds_output_prefix_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_output_prefix="$(
+if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+  volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+  path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+  if [[ -z "${volume_name}" || -z "${path}" ]]; then
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.name)/") |
+        .[]
+      ';
+  else
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.volumeName)\(.path)") |
+        .[]
+      ';
+  fi
+fi
+)"
+    _cwl-ica_compreply "$param_gds_output_prefix"
+}
+_cwl-ica_create-workflow-submission-template_option_gds_work_directory_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_work_directory="$(
+if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+  volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+  path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+  if [[ -z "${volume_name}" || -z "${path}" ]]; then
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.name)/") |
+        .[]
+      ';
+  else
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.volumeName)\(.path)") |
+        .[]
+      ';
+  fi
+fi
+)"
+    _cwl-ica_compreply "$param_gds_work_directory"
+}
+_cwl-ica_create-workflow-submission-template_option_gds_output_directory_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_gds_output_directory="$(
+if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
+  volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
+  path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
+  if [[ -z "${volume_name}" || -z "${path}" ]]; then
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.name)/") |
+        .[]
+      ';
+  else
+    curl --fail --silent --location \
+      --request GET \
+      --header "Accept: application/json" \
+      --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
+      --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
+    jq --raw-output \
+      '
+        .items |
+        map("gds://\(.volumeName)\(.path)") |
+        .[]
+      ';
+  fi
+fi
+)"
+    _cwl-ica_compreply "$param_gds_output_directory"
+}
 _cwl-ica_expression-init_option_expression_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_expression_path="$(python - <<EOF
+    local param_expression_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -2912,7 +3205,8 @@ EOF
 }
 _cwl-ica_expression-sync_option_expression_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_expression_path="$(python - <<EOF
+    local param_expression_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3001,7 +3295,8 @@ EOF
 }
 _cwl-ica_expression-validate_option_expression_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_expression_path="$(python - <<EOF
+    local param_expression_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3090,7 +3385,8 @@ EOF
 }
 _cwl-ica_get-workflow-step-ids_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3186,73 +3482,86 @@ EOF
 }
 _cwl-ica_icav2-deploy-pipeline_option_project_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_id"
 }
 _cwl-ica_icav2-deploy-pipeline_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_name="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_name"
 }
 _cwl-ica_icav2-deploy-pipeline_option_analysis_storage_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_analysis_storage_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_analysis_storage_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_analysis_storage_id"
 }
 _cwl-ica_icav2-deploy-pipeline_option_analysis_storage_size_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_analysis_storage_size="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_analysis_storage_size="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_analysis_storage_size"
 }
 _cwl-ica_icav2-get-analysis-step-logs_option_project_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_id"
 }
 _cwl-ica_icav2-get-analysis-step-logs_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_name="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_name"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_launch_json="$(find "${CURRENT_WORD-.}"* -maxdepth 0 -type d & (
+    local param_launch_json="$(
+find "${CURRENT_WORD-.}"* -maxdepth 0 -type d & (
   if [[ -d "${CURRENT_WORD-.}" ]]; then
     find "${CURRENT_WORD-.}" -maxdepth 1 -type f -name '*.json';
   elif [[ -n "${CURRENT_WORD-}" && -d "$(dirname "${CURRENT_WORD}")" ]]; then
@@ -3260,56 +3569,66 @@ _cwl-ica_icav2-launch-pipeline-analysis_option_launch_json_completion() {
   else
     find "." -maxdepth 1 -type f -name '*.json'
   fi
-) & wait)"
+) & wait
+)"
     _cwl-ica_compreply "$param_launch_json"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_pipeline_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_pipeline_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_pipeline_id"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_pipeline_code_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_pipeline_code="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_pipeline_code="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/pipelines" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .code'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_pipeline_code"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_project_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_id"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_name="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_name"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_output_parent_folder_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_output_parent_folder_path="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_output_parent_folder_path="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
     project_index="-1";
     project_name="";
     project_id="";
@@ -3358,56 +3677,66 @@ _cwl-ica_icav2-launch-pipeline-analysis_option_output_parent_folder_path_complet
     jq --raw-output \
       '.items[] | .data.details.path';
   fi
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_output_parent_folder_path"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_analysis_storage_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_analysis_storage_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_analysis_storage_id"
 }
 _cwl-ica_icav2-launch-pipeline-analysis_option_analysis_storage_size_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_analysis_storage_size="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_analysis_storage_size="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/analysisStorages" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_analysis_storage_size"
 }
 _cwl-ica_icav2-list-analysis-steps_option_project_id_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_id="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_id="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .id'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_id"
 }
 _cwl-ica_icav2-list-analysis-steps_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
+    local param_project_name="$(
+if [[ -n "${ICAV2_ACCESS_TOKEN-}" ]]; then
   curl --silent --fail --location --request "GET" \
        --url "https://${ICAV2_BASE_URL-ica.illumina.com}/ica/rest/api/projects" \
        --header 'Accept: application/vnd.illumina.v3+json' \
        --header "Authorization: Bearer ${ICAV2_ACCESS_TOKEN}" | \
   jq --raw-output '.items[] | .name'
-fi)"
+fi
+)"
     _cwl-ica_compreply "$param_project_name"
 }
 _cwl-ica_icav2-zip-workflow_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3503,7 +3832,8 @@ EOF
 }
 _cwl-ica_list-projects_option_tenant_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenant_name="$(python - <<EOF
+    local param_tenant_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -3517,7 +3847,8 @@ EOF
 }
 _cwl-ica_list-tool-runs_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3607,7 +3938,8 @@ EOF
 }
 _cwl-ica_list-tool-runs_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -3625,7 +3957,8 @@ EOF
 }
 _cwl-ica_list-workflow-runs_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 __cwl-ica_list_registered_workflows.py
 EOF
 )"
@@ -3633,7 +3966,8 @@ EOF
 }
 _cwl-ica_list-workflow-runs_option_project_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project="$(python - <<EOF
+    local param_project="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -3651,7 +3985,8 @@ EOF
 }
 _cwl-ica_project-init_option_tenant_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenant_name="$(python - <<EOF
+    local param_tenant_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -3665,7 +4000,8 @@ EOF
 }
 _cwl-ica_register-tool-run-instance_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(python - <<EOF
+    local param_project_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -3683,7 +4019,8 @@ EOF
 }
 _cwl-ica_register-workflow-run-instance_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(python - <<EOF
+    local param_project_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -3701,7 +4038,8 @@ EOF
 }
 _cwl-ica_schema-init_option_schema_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_schema_path="$(python - <<EOF
+    local param_schema_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3806,7 +4144,8 @@ EOF
 }
 _cwl-ica_schema-sync_option_schema_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_schema_path="$(python - <<EOF
+    local param_schema_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3894,7 +4233,8 @@ EOF
 }
 _cwl-ica_schema-validate_option_schema_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_schema_path="$(python - <<EOF
+    local param_schema_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -3989,7 +4329,8 @@ EOF
 }
 _cwl-ica_set-default-project_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(python - <<EOF
+    local param_project_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4007,7 +4348,8 @@ EOF
 }
 _cwl-ica_set-default-tenant_option_tenant_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenant_name="$(python - <<EOF
+    local param_tenant_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -4021,7 +4363,8 @@ EOF
 }
 _cwl-ica_set-default-user_option_username_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_username="$(python - <<EOF
+    local param_username="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4039,7 +4382,8 @@ EOF
 }
 _cwl-ica_tool-init_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4145,7 +4489,8 @@ EOF
 }
 _cwl-ica_tool-init_option_projects_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_projects="$(python - <<EOF
+    local param_projects="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4163,7 +4508,8 @@ EOF
 }
 _cwl-ica_tool-init_option_tenants_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenants="$(python - <<EOF
+    local param_tenants="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -4177,7 +4523,8 @@ EOF
 }
 _cwl-ica_tool-init_option_categories_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_categories="$(python - <<EOF
+    local param_categories="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4195,7 +4542,8 @@ EOF
 }
 _cwl-ica_tool-sync_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4285,7 +4633,8 @@ EOF
 }
 _cwl-ica_tool-sync_option_projects_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_projects="$(python - <<EOF
+    local param_projects="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4303,7 +4652,8 @@ EOF
 }
 _cwl-ica_tool-sync_option_tenants_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenants="$(python - <<EOF
+    local param_tenants="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -4317,7 +4667,8 @@ EOF
 }
 _cwl-ica_tool-validate_option_tool_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tool_path="$(python - <<EOF
+    local param_tool_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4412,7 +4763,8 @@ EOF
 }
 _cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_typescript_expression_dir="$(python - <<EOF
+    local param_typescript_expression_dir="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4526,7 +4878,8 @@ EOF
 }
 _cwl-ica_validate-api-key-script_option_project_name_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_project_name="$(python - <<EOF
+    local param_project_name="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4544,7 +4897,8 @@ EOF
 }
 _cwl-ica_workflow-init_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4651,7 +5005,8 @@ EOF
 }
 _cwl-ica_workflow-init_option_projects_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_projects="$(python - <<EOF
+    local param_projects="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4669,7 +5024,8 @@ EOF
 }
 _cwl-ica_workflow-init_option_tenants_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenants="$(python - <<EOF
+    local param_tenants="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -4683,7 +5039,8 @@ EOF
 }
 _cwl-ica_workflow-init_option_categories_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_categories="$(python - <<EOF
+    local param_categories="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4701,7 +5058,8 @@ EOF
 }
 _cwl-ica_workflow-sync_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
@@ -4792,7 +5150,8 @@ EOF
 }
 _cwl-ica_workflow-sync_option_projects_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_projects="$(python - <<EOF
+    local param_projects="$(
+python - <<EOF
 #!/usr/bin/env python
 
 """
@@ -4810,7 +5169,8 @@ EOF
 }
 _cwl-ica_workflow-sync_option_tenants_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_tenants="$(python - <<EOF
+    local param_tenants="$(
+python - <<EOF
 #!/usr/bin/env python
 
 from utils.repo import get_tenant_yaml_path
@@ -4824,7 +5184,8 @@ EOF
 }
 _cwl-ica_workflow-validate_option_workflow_path_completion() {
     local CURRENT_WORD="${words[$cword]}"
-    local param_workflow_path="$(python - <<EOF
+    local param_workflow_path="$(
+python - <<EOF
 #!/usr/bin/env python3
 
 """
