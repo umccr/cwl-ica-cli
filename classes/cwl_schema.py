@@ -4,6 +4,9 @@
 A subclass of cwl, this function implements the validate and create for a cwl object
 Based mostly on the cwl-utils package
 """
+import re
+from copy import deepcopy
+from typing import List, Dict
 
 from classes.cwl import CWL
 from utils.logging import get_logger
@@ -151,6 +154,75 @@ class CWLSchema(CWL):
                 validation_passing = False
 
         return validation_passing, issue_count
+
+    def get_sanitised_object(self) -> OrderedDict:
+        new_cwl_obj = deepcopy(self.cwl_obj)
+
+        new_fields = OrderedDict()
+        for field_key, field_dict in new_cwl_obj.get("fields").items():
+            field_type = deepcopy(field_dict.get("type"))
+            is_array = 0
+            optional = False
+
+            # Check if null
+            if isinstance(field_type, List):
+                if field_dict.get("type")[0] == "null":
+                    optional = True
+                    field_type = field_dict.get("type")[1]
+
+            # Latest field type should be a dict or list
+            if isinstance(field_type, Dict):
+                if field_type.get("type") == "array":
+                    field_type = field_type.get("items")
+                    is_array = 1
+            elif isinstance(field_type, List):
+                if not len(field_type) == 1:
+                    logger.warning(f"Don't know what to do with key {field_key}")
+                    logger.warning(f"{field_dict}")
+                field_type = field_dict.get("type")[0]
+            else:
+                new_fields[field_key] = field_dict
+                continue
+
+            # Field type / new field dict
+            if not isinstance(field_type, Dict):
+                logger.warning(f"Expected a dict to be left for {field_key}")
+                logger.warning(f"Got {field_dict}")
+                continue
+                
+            if len(field_type.keys()) > 1 and "$import" in field_type.keys():
+                logger.warning(f"Unsure how to handle $import and additional keys for {field_key}")
+                continue
+            elif len(field_type.keys()) == 1 and "$import" in field_type.keys():
+                logger.info("Importing from external schema")
+                schema_import_path = field_type.get("$import")
+                # Read schema from extenral paths
+                relative_schema_file_path, schema_name = schema_import_path.split("#", 1)
+                relative_schema_file_path = Path(relative_schema_file_path)
+                schema_version = re.sub(r"\.yaml$", "", relative_schema_file_path.name.rsplit("__", 1)[-1])
+                imported_schema_obj = CWLSchema(
+                    self.cwl_file_path.parent.joinpath(relative_schema_file_path).resolve(),
+                    schema_name,
+                    schema_version
+                )
+                new_fields[field_key] = imported_schema_obj.get_sanitised_object()
+            else:
+                new_fields[field_key] = field_dict
+                new_fields[field_key]["type"] = field_type
+
+            new_fields[field_key]["doc"] = field_dict.get("doc")
+            new_fields[field_key]["is_array"] = is_array
+            new_fields[field_key]["optional"] = optional
+
+        new_cwl_obj["fields"] = new_fields
+
+        return new_cwl_obj
+
+
+
+
+
+
 
 
 
