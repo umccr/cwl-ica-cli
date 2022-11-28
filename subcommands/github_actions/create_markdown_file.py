@@ -268,7 +268,6 @@ class CreateMarkdownFile(Command):
         logger.info("All projects, workflows and workflow versions match!")
         return True
 
-
     def is_run_match(self):
         """
         Iterate through all of the runs of this workflow and make sure that they exist at:
@@ -328,7 +327,6 @@ class CreateMarkdownFile(Command):
         # Also get the cwl object
         self.cwl_obj: parser.Tool = self.cwl_item.cwl_obj
 
-
     def get_header_section(self, md_file_obj: MdUtils) -> MdUtils:
         """
         Get the header section
@@ -347,7 +345,6 @@ class CreateMarkdownFile(Command):
         # Add ID and md5sum
         md_file_obj.new_line(f"> ID: {self.cwl_name}")
         md_file_obj.new_line(f"> md5sum: {self.cwl_item.md5sum}\n")
-
 
         # Add Documentation
         md_file_obj.new_header(level=3, title=f"{self.cwl_obj.label} documentation", add_table_of_contents='n')
@@ -484,7 +481,6 @@ class CreateMarkdownFile(Command):
             i_o_type = f"[ {' | '.join([symbol.split('#', 1)[-1] for symbol in i_o_type.symbols])} ]"
 
         return i_o_type, i_o_optional
-
 
     # Implemented in subclass
     def get_visual_section(self, md_file_obj: MdUtils) -> MdUtils:

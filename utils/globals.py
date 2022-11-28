@@ -14,6 +14,8 @@ PROJECT_ID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}
 YAML_INDENTATION_LEVEL = 4
 BLOCK_YAML_INDENTATION_LEVEL = 2
 
+GITHUB_DEFAULT_BRANCH = "main"
+
 SCOPES_BY_ROLE = {
     "read-only": [
         "TES.RUNS.READ",
