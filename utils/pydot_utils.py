@@ -16,7 +16,7 @@ from pydot import graph_from_dot_file, Dot
 
 from utils.subprocess_handler import run_subprocess_proc
 from utils.logging import get_logger
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from classes.cwl import CWL
 from utils.miscell import get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path, \
@@ -32,12 +32,50 @@ def build_cwl_dot(cwl_item: CWL, dot_out_path: Path):
     """
 
     # First pack the cwl file (adds consistency in the dot object)
-    cwl_packed_temp_file = NamedTemporaryFile()
+    cwl_packed_temp_file = NamedTemporaryFile(delete=False)
     cwl_item.run_cwltool_pack(cwl_packed_temp_file)
+    pyenv_dir = TemporaryDirectory()
+
+    # Create python environment
+    pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
+        ["python", "-m", "venv", pyenv_dir.name],
+        capture_output=True
+    )
+
+    if not pyenv_returncode == 0:
+        logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
+        logger.error(f"Stdout was {pyenv_stdout}")
+        logger.error(f"Stderr was {pyenv_stderr}")
+        raise ChildProcessError
+
+    # Install latest cwltool into new pyenv
+    pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
+        [
+            str(Path(pyenv_dir.name) / "bin" / "python"),
+            "-m", "pip", "install", "--upgrade", "cwltool"
+        ],
+        capture_output=True
+    )
+
+    if not pip_install_returncode == 0:
+        logger.error(f"Could not install latest version of cwltool into virtual env, got return code {pip_install_returncode}")
+        logger.error(f"Stdout was {pip_install_stdout}")
+        logger.error(f"Stderr was {pip_install_stderr}")
+        raise ChildProcessError
 
     with open(str(dot_out_path), 'w') as write_h:
-        build_returncode, _, build_stderr = run_subprocess_proc(["cwltool", "--print-dot", cwl_packed_temp_file.name],
-                                                                stdout=write_h, stderr=subprocess.PIPE)
+        build_dot_returncode, _, build_dot_stderr = run_subprocess_proc(
+            [
+                str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--debug",
+                "--print-dot", cwl_packed_temp_file.name
+            ],
+            stdout=write_h, stderr=subprocess.PIPE
+        )
+
+        if not build_dot_returncode == 0:
+            logger.error(f"Could not build dot file, got returncode {build_dot_returncode}")
+            logger.error(f"Stderr was {build_dot_stderr}")
+            raise ChildProcessError
 
 
 def edit_cwl_dot(cwl_item, cwl_obj, dot_path: Path):

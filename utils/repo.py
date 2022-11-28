@@ -6,7 +6,7 @@ Few repo requests
 
 import os
 
-from utils.globals import CWL_ICA_REPO_PATH_ENV_VAR
+from utils.globals import CWL_ICA_REPO_PATH_ENV_VAR, GITHUB_DEFAULT_BRANCH
 from pathlib import Path
 from ruamel import yaml
 from utils.errors import CWLICARepoAssetNotFoundError, CWLICARepoNotFoundError
@@ -306,10 +306,10 @@ def read_yaml(yaml_file):
 
 def get_branch_name() -> str:
     """
-    # TODO - add to globals and also convert to 'main' at some point
+    Get the GitHub branch name, useful when creating plots locally
     :return:
     """
-    return 'main'
+    return os.environ.get("GITHUB_BRANCH", GITHUB_DEFAULT_BRANCH)
 
 
 def get_blob_url() -> str:
