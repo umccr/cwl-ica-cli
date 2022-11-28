@@ -412,7 +412,8 @@ echo_stderr "Adding scripts to \"${conda_cwl_ica_env_prefix}/bin\""
 # Add scripts to bin
 chmod +x "$(get_this_path)/bin/"*
 rsync --archive \
-  "$(get_this_path)/bin/" "$(get_bin_path "${conda_cwl_ica_env_prefix}")/"	
+  --exclude "__init__.py" \
+  "$(get_this_path)/bin/" "$(get_bin_path "${conda_cwl_ica_env_prefix}")/"
 
 ###########
 # COPY LIBS
@@ -429,6 +430,11 @@ rsync --delete --archive \
 
 rsync --delete --archive \
   "$(get_this_path)/subcommands/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/subcommands/"
+
+rsync --delete --archive \
+  --include "*.py" \
+  --exclude "*" \
+  "$(get_this_path)/bin/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/bin/"
 
 #####################
 # REPLACE __VERSION__
