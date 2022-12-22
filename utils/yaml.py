@@ -7,6 +7,7 @@ https://stackoverflow.com/questions/51103498/using-ruamel-yaml-to-keep-multiline
 
 
 from ruamel import yaml
+from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import PreservedScalarString
 import textwrap
 
@@ -22,7 +23,10 @@ def dump_yaml(data_object, file_handler):
     :param file_handler:
     :return:
     """
-    yaml.main.round_trip_dump(data_object, file_handler, indent=4, block_seq_indent=2)
+    yaml = YAML()
+    yaml.indent = 4
+    yaml.block_seq_indent = 2
+    yaml.dump(data_object, file_handler)
 
 
 def dump_cwl_yaml(data_object, file_handler):
