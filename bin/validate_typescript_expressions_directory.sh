@@ -123,7 +123,7 @@ done
 # Check if we have the conda env
 # value of "0" for no and "1" for yes
 has_cwl_ica_conda_env="$( \
-  if ! type conda; then
+  if ! type conda 1>/dev/null 2>&1; then
     echo "0"; \
   else
     conda env list --json | \
