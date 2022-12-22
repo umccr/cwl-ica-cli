@@ -18,6 +18,7 @@ from libica.openapi.v2.model.create_data import CreateData
 from libica.openapi.v2.model.pipeline import Pipeline
 from libica.openapi.v2.model.project_data import ProjectData
 
+from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from utils.globals import ICAV2_DEFAULT_BASE_URL
 
 import os
@@ -599,7 +600,7 @@ def filter_analysis_steps(workflow_steps: List[AnalysisStep], show_technical_ste
             continue
 
         workflow_step_dict = {
-            "name": workflow_step.name.split("#", 1)[-1],
+            "name": get_fragment_from_cwl_id(workflow_step.name),
             "status": workflow_step.status
         }
 

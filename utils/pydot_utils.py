@@ -8,12 +8,13 @@ build_cwl_dot -> Runs the cwltool --print-dot and writes to tmp file
 edit_cwl_dot -> reads in the dot file and updates inputs / steps and outputs
              -> Updates links by setting urls in each
 
-build_cwl_svg -> takes in a dot file and generates an svg file through the graphviz binary
+build_cwl_workflow_image_from_dot -> takes in a dot file and generates an svg file through the graphviz binary
 """
 import subprocess
 
 from pydot import graph_from_dot_file, Dot
 
+from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from utils.subprocess_handler import run_subprocess_proc
 from utils.logging import get_logger
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -34,39 +35,12 @@ def build_cwl_dot(cwl_item: CWL, dot_out_path: Path):
     # First pack the cwl file (adds consistency in the dot object)
     cwl_packed_temp_file = NamedTemporaryFile(delete=False)
     cwl_item.run_cwltool_pack(cwl_packed_temp_file)
-    pyenv_dir = TemporaryDirectory()
 
-    # Create python environment
-    pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
-        ["python", "-m", "venv", pyenv_dir.name],
-        capture_output=True
-    )
-
-    if not pyenv_returncode == 0:
-        logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
-        logger.error(f"Stdout was {pyenv_stdout}")
-        logger.error(f"Stderr was {pyenv_stderr}")
-        raise ChildProcessError
-
-    # Install latest cwltool into new pyenv
-    pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
-        [
-            str(Path(pyenv_dir.name) / "bin" / "python"),
-            "-m", "pip", "install", "--upgrade", "cwltool"
-        ],
-        capture_output=True
-    )
-
-    if not pip_install_returncode == 0:
-        logger.error(f"Could not install latest version of cwltool into virtual env, got return code {pip_install_returncode}")
-        logger.error(f"Stdout was {pip_install_stdout}")
-        logger.error(f"Stderr was {pip_install_stderr}")
-        raise ChildProcessError
-
+    # Build dot object
     with open(str(dot_out_path), 'w') as write_h:
         build_dot_returncode, _, build_dot_stderr = run_subprocess_proc(
             [
-                str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--debug",
+                "cwltool", "--debug",
                 "--print-dot", cwl_packed_temp_file.name
             ],
             stdout=write_h, stderr=subprocess.PIPE
@@ -97,7 +71,7 @@ def edit_cwl_dot(cwl_item, cwl_obj, dot_path: Path):
         for node in graph.get_nodes():
             # Check inputs
             for i_o in cwl_obj.inputs + cwl_obj.outputs:
-                if Path(i_o.id.rsplit("#", 1)[-1]).name == Path(node.get_name().strip('"').rsplit("#", 1)[-1]).name:
+                if get_fragment_from_cwl_id(i_o.id).name == get_fragment_from_cwl_id(node.get_name().strip('"')).name:
                     # Set tooltip as input doc
                     node.set_tooltip(i_o.doc)
                     break
@@ -105,7 +79,7 @@ def edit_cwl_dot(cwl_item, cwl_obj, dot_path: Path):
     # Iterate through graph nodes and cwl steps
     for node in dot_obj.get_nodes():
         for step in cwl_obj.steps:
-            if Path(step.id.rsplit("#", 1)[-1]).name == Path(node.get_name().strip('"').rsplit("#", 1)[-1]).name:
+            if get_fragment_from_cwl_id(step.id).name == get_fragment_from_cwl_id(node.get_name().strip('"')).name:
                 # Colour node if workflow or expression?
                 # Get step cwl object
                 step_path = get_step_path_from_step_obj(step, cwl_item.cwl_file_path)
@@ -144,7 +118,7 @@ def get_step_path_from_step_obj(cwl_step_object, cwl_file_path) -> Path:
     return step_cwl_path
 
 
-def build_cwl_svg(dot_file, output_file_path, ratio_value):
+def build_cwl_workflow_image_from_dot(dot_file, output_file_path, ratio_value, image_format="svg"):
     """
     Build the svg file from the edited dot file to the path specified using graphviz
     We calculate the svg size by estimating the inputs / outputs to get the length
@@ -152,8 +126,7 @@ def build_cwl_svg(dot_file, output_file_path, ratio_value):
     """
     dot_return_code, dot_stdout, dot_stderr = run_subprocess_proc(["dot",
                                                                    f"-Gratio={ratio_value}",
-                                                                   "-Tsvg",
+                                                                   f"-T{image_format}",
                                                                    f"-o{output_file_path}",
                                                                    f"{dot_file}"],
                                                                   capture_output=True)
-

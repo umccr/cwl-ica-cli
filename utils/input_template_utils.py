@@ -15,7 +15,8 @@ from utils.globals import BLOCK_YAML_INDENTATION_LEVEL, YAML_INDENTATION_LEVEL
 import re
 from typing import Dict, List
 from pathlib import Path
-from cwl_utils.parser_v1_1 import SecondaryFileSchema
+from cwl_utils.parser.latest import \
+    SecondaryFileSchema
 
 logger = get_logger()
 
