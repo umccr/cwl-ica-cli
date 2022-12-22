@@ -43,7 +43,10 @@ where relative_path == abs_path.relative_to(GITHUB_WORKSPACE)
 """
 from typing import List, Tuple
 
+from cwl_utils.parser import Workflow, WorkflowStep, CommandLineTool
+
 from classes.command import Command
+from utils.cwl_helper_utils import get_type_from_cwl_io_object, get_fragment_from_cwl_id
 from utils.logging import get_logger
 from utils.repo import read_yaml, get_project_yaml_path, get_workflow_yaml_path
 from mdutils.mdutils import MdUtils
@@ -51,7 +54,7 @@ from classes.project_production import ProductionProject
 from classes.ica_workflow_version import ICAWorkflowVersion
 from classes.ica_workflow import ICAWorkflow
 from classes.ica_workflow_run import ICAWorkflowRun
-from utils.miscell import get_name_version_tuple_from_cwl_file_path, cwl_id_to_path, get_markdown_file_from_cwl_path
+from utils.miscell import get_name_version_tuple_from_cwl_file_path, get_markdown_file_from_cwl_path
 from utils.pydot_utils import get_step_path_from_step_obj
 from utils.ica_markdown_utils import get_run_instance_obj_from_id
 from utils.create_markdown_utils import add_toc_line
@@ -323,9 +326,8 @@ class CreateMarkdownFile(Command):
         self.cwl_item = item_version.cwl_obj
         # Call the cwl item to get the md5sum
         self.cwl_item()
-        parser = self.cwl_item.parser
         # Also get the cwl object
-        self.cwl_obj: parser.Tool = self.cwl_item.cwl_obj
+        self.cwl_obj: CommandLineTool = self.cwl_item.cwl_obj
 
     def get_header_section(self, md_file_obj: MdUtils) -> MdUtils:
         """
@@ -417,7 +419,7 @@ class CreateMarkdownFile(Command):
             # Add new paragraph
             md_file_obj.new_paragraph("\n")
 
-            md_file_obj.new_line(f"> ID: {cwl_id_to_path(input_obj.id).name}\n")
+            md_file_obj.new_line(f"> ID: {get_fragment_from_cwl_id(input_obj.id).name}\n")
             md_file_obj.new_line(f"**Optional:** `{is_optional}`")
             md_file_obj.new_line(f"**Type:** `{input_type}`")
             md_file_obj.new_line(f"**Docs:**")
@@ -427,60 +429,21 @@ class CreateMarkdownFile(Command):
 
         return md_file_obj
 
+    def get_inputs_template_section(self):
+        # TODO
+        pass
+
+    def get_overrides_template_section(self):
+        # TODO
+        pass
+
     def get_type_from_cwl_io_object(self, sub_cwl_object):
         """
         Get the type from the input object
         :param sub_cwl_object:
         :return:
         """
-        i_o_type = sub_cwl_object.type
-        i_o_optional = False
-
-        # If the instance type is a list, could be because its optional
-        if isinstance(i_o_type, list):
-            i_o_type_list = []
-
-            for i_o_type_i in i_o_type:
-                print(f"Printing type: {i_o_type_i}")
-                # This is an optional type
-                if i_o_type_i == 'null':
-                    i_o_optional = True
-                    continue
-                i_o_type_list.append(i_o_type_i)
-
-            if len(i_o_type_list) == 1:
-                i_o_type = i_o_type_list[0]
-            else:
-                i_o_type = i_o_type_list
-
-        # Check if an array
-        if isinstance(i_o_type, self.cwl_item.parser.ArraySchema):
-            recursion_level = 1
-            max_iters = 10
-            count = 0
-            while True:
-                count += 1
-                if count > max_iters:
-                    logger.warning(f"Got stuck in infinite while loop whilst trying to determine the type for input/output"
-                                   f"of step with type {type(i_o_type)}")
-                    break
-                if isinstance(i_o_type.items, str):
-                    i_o_type = i_o_type.items.rsplit("#", 1)[-1] + "[]"*recursion_level
-                    break
-                elif isinstance(i_o_type.items, self.cwl_item.parser.ArraySchema):
-                    # Recursive array
-                    i_o_type = i_o_type.items
-                    recursion_level += 1
-                else:
-                    logger.warning(f"Could not handle input/output of type {type(i_o_type)} with items of type {type(i_o_type.items)}")
-                    break
-
-        # Check if item is an enum schema
-        if isinstance(i_o_type, self.cwl_item.parser.EnumSchema):
-            # Return the list of possible symbols
-            i_o_type = f"[ {' | '.join([symbol.split('#', 1)[-1] for symbol in i_o_type.symbols])} ]"
-
-        return i_o_type, i_o_optional
+        return get_type_from_cwl_io_object(sub_cwl_object)
 
     # Implemented in subclass
     def get_visual_section(self, md_file_obj: MdUtils) -> MdUtils:
@@ -540,7 +503,7 @@ class CreateMarkdownFile(Command):
             output_type, is_optional = self.get_type_from_cwl_io_object(output_obj)
             md_file_obj.new_header(level=3, title=output_obj.label, add_table_of_contents='n')
             md_file_obj.new_paragraph("\n")
-            md_file_obj.new_line(f"> ID: {cwl_id_to_path(output_obj.id)}")
+            md_file_obj.new_line(f"> ID: {get_fragment_from_cwl_id(output_obj.id)}")
             md_file_obj.new_line("\n")
             md_file_obj.new_line(f"**Optional:** `{is_optional}`")
             md_file_obj.new_line(f"**Output Type:** `{output_type}`")
@@ -593,10 +556,10 @@ class CreateMarkdownFile(Command):
                 version()
 
                 # Assign var to object for type hints
-                cwl_obj: version.cwl_obj.parser.Workflow = version.cwl_obj.cwl_obj
+                cwl_obj: Workflow = version.cwl_obj.cwl_obj
 
                 # Type hints for step
-                step: version.cwl_obj.parser.WorkflowStep
+                step: WorkflowStep
                 for step in cwl_obj.steps:
                     if self.cwl_file_path.absolute() == get_step_path_from_step_obj(step, version.cwl_file_path):
                         workflows_used_by.append((workflow, version))

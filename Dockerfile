@@ -21,7 +21,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       graphviz \
       parallel \
       gcc \
-      python3-dev && \
+      python3-dev \
+      curl && \
     echo Cleaning up after apt installations 1>&2 && \
     apt-get clean -y && \
     echo Installing yq 1>&2 && \
@@ -29,6 +30,15 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         --output-document /usr/bin/yq \
         https://github.com/mikefarah/yq/releases/download/v4.11.2/yq_linux_amd64 && \
     chmod +x /usr/bin/yq && \
+    echo "Installing gh binary" && \
+    curl --fail --silent --show-error --location \
+     "https://cli.github.com/packages/githubcli-archive-keyring.gpg" | \
+    dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+    tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
+    apt-get update -y -q && \
+    apt install gh -y -q && \
     echo Updating mamba 1>&2 && \
     mamba update --yes \
       --quiet \

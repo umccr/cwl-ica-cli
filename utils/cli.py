@@ -155,14 +155,15 @@ Command:
     #################################
     GitHub Actions Scripts
     #################################
-    github-actions-sync-schemas                Sync all schemas to schema.yaml
-    github-actions-sync-expressions            Sync all expressions to expression.yaml
-    github-actions-sync-tools                  Sync all tools to tool.yaml and to all projects with that tool version
-    github-actions-sync-workflows              Sync workflows to workflow.yaml and to all projects with that workflow version
-    github-actions-create-expression-markdown  Create a markdown help report file for a cwl expression
-    github-actions-create-tool-markdown        Create a markdown help report file for a cwl tool
-    github-actions-create-workflow-markdown    Create a markdown help report file for a cwl workflow
-    github-actions-create-catalogue            Create the catalogue markdown file
+    github-actions-sync-schemas                  Sync all schemas to schema.yaml
+    github-actions-sync-expressions              Sync all expressions to expression.yaml
+    github-actions-sync-tools                    Sync all tools to tool.yaml and to all projects with that tool version
+    github-actions-sync-workflows                Sync workflows to workflow.yaml and to all projects with that workflow version
+    github-actions-create-expression-markdown    Create a markdown help report file for a cwl expression
+    github-actions-create-tool-markdown          Create a markdown help report file for a cwl tool
+    github-actions-create-workflow-markdown      Create a markdown help report file for a cwl workflow
+    github-actions-create-catalogue              Create the catalogue markdown file
+    github-actions-build-workflow-release-asset  Create the release asset and push to release
 
     ##################################
     V2 Extensions
@@ -559,6 +560,12 @@ def _dispatch():
         create_catalogue_obj = CreateCatalogue(command_argv)
         # Call command
         create_catalogue_obj()
+    elif cmd == "github-actions-build-workflow-release-asset":
+        from subcommands.github_actions.build_workflow_release_assets import BuildWorkflowReleaseAsset
+        # Initialise command
+        build_release_asset_obj = BuildWorkflowReleaseAsset(command_argv)
+        # Call command
+        build_release_asset_obj()
     elif cmd == "create-typescript-expression-from-template":
         from subcommands.creators.create_typescript_expression_from_template import CreateTypeScriptExpressionFromTemplate
         # Initialise command
