@@ -19,7 +19,7 @@ from utils.miscell import get_name_version_tuple_from_cwl_file_path, \
 from utils.repo import read_yaml
 import re
 from utils.pydot_utils import get_step_path_from_step_obj
-from utils.pydot_utils import build_cwl_dot, build_cwl_svg, edit_cwl_dot
+from utils.pydot_utils import build_cwl_dot, build_cwl_workflow_image_from_dot, edit_cwl_dot
 import math
 from tempfile import NamedTemporaryFile
 from os.path import relpath
@@ -246,7 +246,6 @@ Example
 
         return md_file_obj
 
-
     def get_visual_section(self, md_file_obj: MdUtils):
         """
         Create a visual section -> Also builds the svg file
@@ -296,7 +295,7 @@ Example
         ratio_value = round(min(1 / math.log(inputs_len), 1.0), 3) if inputs_len > 1 else 1
 
         # Build the cwl svg graph
-        build_cwl_svg(temp_dot_file.name, svg_path, ratio_value)
+        build_cwl_workflow_image_from_dot(temp_dot_file.name, svg_path, ratio_value)
 
         return md_file_obj
 
