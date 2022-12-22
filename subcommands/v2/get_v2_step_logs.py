@@ -12,6 +12,7 @@ import os
 from libica.openapi.v2.model.analysis_step_logs import AnalysisStepLogs
 from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 
+from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from utils.icav2_helpers import get_project_id_from_project_name, \
     get_icav2_configuration, is_project_id_format, \
     get_workflow_steps, filter_analysis_steps, write_analysis_step_logs
@@ -181,7 +182,7 @@ Example:
         # Get analysis step log object
         log_obj: AnalysisStepLogs = list(
             filter(
-                lambda x: x.get("name").split("#", 1)[-1] == matching_workflow_step.get("name"),
+                lambda x: str(get_fragment_from_cwl_id(x.get("name"))) == matching_workflow_step.get("name"),
                 workflow_steps
             )
         )[0].logs

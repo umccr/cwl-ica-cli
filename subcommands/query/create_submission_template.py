@@ -16,6 +16,9 @@ If an input can be of multiple types (i.e a file OR a string), we choose the fir
 import os
 
 from classes.command import Command
+from utils.cwl_helper_utils import InputArraySchema, InputEnumSchema, split_cwl_id_to_path_and_fragment, \
+    get_fragment_from_cwl_id
+from utils.cwl_utils_typing_helpers import WorkflowInputParameter
 from utils.logging import get_logger
 from utils.errors import ItemVersionNotFoundError, ItemNotFoundError
 from utils.ica_utils import get_base_url, get_region_from_base_url
@@ -36,7 +39,6 @@ from typing import Dict
 import re
 from utils.miscell import get_name_version_tuple_from_cwl_file_path, strip_trailing_slash_from_url
 from classes.ica_workflow import ICAWorkflow
-from classes.item import Item
 from classes.item_version import ItemVersion
 from utils.repo import read_yaml
 from utils.globals import BLOCK_YAML_INDENTATION_LEVEL, YAML_INDENTATION_LEVEL
@@ -311,8 +313,8 @@ class CreateSubmissionTemplate(Command):
 
     def sanitise_input(self, input_obj, input_item, input_item_type) -> Any:
         # Handle InputArraySchema objects (and double arrays)
-        while isinstance(input_item_type, self.cwl_obj.parser.InputArraySchema):
-            if not "is_array" in input_obj.keys():
+        while isinstance(input_item_type, InputArraySchema):
+            if "is_array" not in input_obj.keys():
                 input_obj["is_array"] = 1
             else:
                 input_obj["is_array"] += 1
@@ -324,7 +326,7 @@ class CreateSubmissionTemplate(Command):
             input_obj["cwl_type"] = "schema"
 
             # Read schema
-            relative_schema_file_path, schema_name = input_item_type.split("#", 1)
+            relative_schema_file_path, schema_name = split_cwl_id_to_path_and_fragment(input_item_type)
             relative_schema_file_path = Path(relative_schema_file_path)
             schema_version = re.sub(r"\.yaml$", "", relative_schema_file_path.name.rsplit("__", 1)[-1])
 
@@ -335,10 +337,13 @@ class CreateSubmissionTemplate(Command):
             input_obj["schema_obj"] = schema_object.get_sanitised_object()
 
         # Handle InputEnumSchema objects
-        elif isinstance(input_item_type, self.cwl_obj.parser.InputEnumSchema):
+        elif isinstance(input_item_type, InputEnumSchema):
             # Assign value to the first symbol
             input_obj["cwl_type"] = "enum"
-            input_obj["symbols"] = [symbol.split("#", 1)[-1] for symbol in input_item_type.symbols]
+            input_obj["symbols"] = [
+                get_fragment_from_cwl_id(symbol)
+                for symbol in input_item_type.symbols
+            ]
         elif isinstance(input_item_type, str):
             # The low-hanging fruit
             input_obj["cwl_type"] = input_item_type
@@ -373,7 +378,7 @@ class CreateSubmissionTemplate(Command):
 
         inputs = {}
 
-        input_item: CreateSubmissionTemplate.cwl_obj.parser.WorkflowInputParameter
+        input_item: WorkflowInputParameter
         for input_item in self.cwl_obj.cwl_obj.inputs:
             # Get the input id
             input_id = self.get_input_name_from_id(input_item.id)
@@ -522,10 +527,10 @@ class CreateSubmissionTemplate(Command):
         self.set_default_engine_parameters_as_commented_map()
 
         # Step 2: Write out yaml file
-        with open(self.output_yaml_path, 'w') as yaml_h:
-            round_trip_dump(self.input_template_object, yaml_h,
-                            indent=YAML_INDENTATION_LEVEL,
-                            block_seq_indent=BLOCK_YAML_INDENTATION_LEVEL)
+        with YAML(output=self.output_yaml_path) as yaml_h:
+            yaml_h.indent = YAML_INDENTATION_LEVEL
+            yaml_h.block_seq_indent = BLOCK_YAML_INDENTATION_LEVEL
+            yaml_h.dump(self.input_template_object)
 
     def decorate_yaml_file(self):
         """
@@ -608,10 +613,10 @@ class CreateSubmissionTemplate(Command):
                 yaml_obj["input"][input_name] = input_value
 
         # (Re)-Writing out the yaml
-        with open(self.output_yaml_path, 'w') as yaml_h:
-            round_trip_dump(yaml_obj, yaml_h,
-                            indent=YAML_INDENTATION_LEVEL,
-                            block_seq_indent=BLOCK_YAML_INDENTATION_LEVEL)
+        with YAML(output=self.output_yaml_path) as yaml_h:
+            yaml_h.indent = YAML_INDENTATION_LEVEL
+            yaml_h.block_seq_indent = BLOCK_YAML_INDENTATION_LEVEL
+            yaml_h.dump(yaml_obj, yaml_h)
 
         # Now for the tricky bit - using 'FileInput' to remove everything else
         # We know that the indentation on 'input' is YAML_INDENTATION_LEVEL,

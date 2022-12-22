@@ -5,17 +5,21 @@ Need to tinker a workflow? No idea where to start?
 If you need to tinker the engine parameters of a workflow, you will need to first know the step id of that
 you wish to change the parameters to
 """
+from urllib.parse import urlparse
 
 from classes.command import Command
 from utils.logging import get_logger
 from utils.repo import read_yaml, get_workflow_yaml_path, get_workflows_dir
 
+from cwl_utils.parser import Workflow
+
 from pathlib import Path
 from typing import Optional, List, Dict
 from classes.item_workflow import ItemWorkflow
 from classes.item_version_workflow import ItemVersionWorkflow
-from utils.miscell import cwl_id_to_path, get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path
+from utils.miscell import get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path
 from utils.errors import CWLItemNotFound, CheckArgumentError
+from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from classes.cwl_workflow import CWLWorkflow
 
 import json
@@ -116,8 +120,7 @@ Example:
         self.cwl_item()
 
         # Pull out the cwl object
-        parser = self.cwl_item.cwl_obj.parser
-        self.cwl_obj: parser.Workflow = self.cwl_item.cwl_obj.cwl_obj
+        self.cwl_obj: Workflow = self.cwl_item.cwl_obj.cwl_obj
 
     def get_steps_of_cwl_workflow(self, cwl_file_path, cwl_obj, path_prefix=Path()):
         """
@@ -127,24 +130,33 @@ Example:
         step_ids: List[Dict] = []
 
         for step in cwl_obj.steps:
-            step_run_path = cwl_file_path.parent.absolute().resolve().joinpath(step.run).resolve()
+            step_run_path = Path(urlparse(step.run).path)
             step_items_dir = get_items_dir_from_cwl_file_path(step_run_path)
             if step_items_dir.name == "workflows":
-                logger.info(f"Step {cwl_id_to_path(step.id).name} is a subworkflow, importing")
+                logger.info(f"Step {get_fragment_from_cwl_id(step.id).name} is a subworkflow, importing")
                 # Step is a subworkflow
                 # Get name / version of subworkflow
                 step_name, step_version = get_name_version_tuple_from_cwl_file_path(step_run_path, step_items_dir)
                 step_cwl_wf_obj = CWLWorkflow(step_name, step_version, step_run_path)
+
                 # Call the step object
                 step_cwl_wf_obj()
                 step_cwl_obj = step_cwl_wf_obj.cwl_obj
 
-                step_ids.extend(self.get_steps_of_cwl_workflow(step_run_path, step_cwl_obj,
-                                                               path_prefix=Path(path_prefix) / Path(step.run).name))
+                # Extend steps
+                step_ids.extend(
+                    self.get_steps_of_cwl_workflow(
+                        step_run_path,
+                        step_cwl_obj,
+                        path_prefix=Path(path_prefix) / Path(step.run).name
+                    )
+                )
             else:
-                step_ids.append({
-                    "step_path": str(path_prefix / cwl_id_to_path(step.id).name),
-                    "overrides_key": f"#{path_prefix.name}{'/' if not path_prefix.name == '' else ''}{cwl_id_to_path(step.id).name}"
-                })
+                step_ids.append(
+                    {
+                        "step_path": str(path_prefix / get_fragment_from_cwl_id(step.id).name),
+                        "overrides_key": f"#{path_prefix.name}{'/' if not path_prefix.name == '' else ''}{get_fragment_from_cwl_id(step.id).name}"
+                    }
+                )
 
         return step_ids
