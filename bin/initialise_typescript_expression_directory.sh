@@ -134,7 +134,7 @@ fi
 # Check if we have the conda env
 # value of "0" for no and "1" for yes
 has_cwl_ica_conda_env="$( \
-  if ! type conda; then
+  if ! type conda 1>/dev/null 2>&1; then
     echo "0"; \
   else
     conda env list --json | \
@@ -176,7 +176,8 @@ echo "Creating typescript expression directory"
 mkdir -p "${typescript_expression_dir}"
 
 # Run yarn init in a temp directory
-temp_dir="$(mktemp -d)"
+temp_dir="$(mktemp -d)/${package_name}"
+mkdir "${temp_dir}"
 
 trap 'rm -rf "${temp_dir}"' EXIT
 
