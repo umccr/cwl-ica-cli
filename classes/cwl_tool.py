@@ -184,11 +184,9 @@ class CWLTool(CWL):
             arguments=[],
             hints={
                 "ResourceRequirement": {
-                    "ilmn-tes:resources": {
-                        "tier": "standard/economy",
-                        "type": "standard/standardHiCpu/standardHiMem/standardHiIo/fpga",
-                        "size": "small/medium/large/xlarge/xxlarge"
-                    },
+                    "ilmn-tes:resources/tier": "standard/economy",
+                    "ilmn-tes:resources/type": "standard/standardHiCpu/standardHiMem/standardHiIo/fpga",
+                    "ilmn-tes:resources/size": "small/medium/large/xlarge/xxlarge",
                     "coresMin": 2,
                     "ramMin": 4000
                 },
