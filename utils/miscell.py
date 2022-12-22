@@ -6,7 +6,7 @@ Yet every project of mine has always had one, and probably always will.
 
 A refined goal is to actively reduce the number of functions in this file.
 """
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import urlparse, ParseResult, urldefrag
 
 from utils.repo import read_yaml, get_blob_url, get_raw_url
 from utils.yaml import dump_yaml
@@ -21,6 +21,7 @@ import zlib
 from deepdiff import DeepDiff
 import json
 from typing import Dict, Any
+from datetime import datetime
 from tempfile import TemporaryDirectory
 from string import ascii_letters, digits
 from utils.errors import InvalidNameError
@@ -375,7 +376,7 @@ def cwl_id_to_path(cwl_id: str) -> Path:
     :param cwl_id:
     :return:
     """
-    return Path(cwl_id.rsplit("#", 1)[-1])
+    return Path(urldefrag(cwl_id).fragment)
 
 
 def summarise_differences_of_two_dicts(dict_1: Dict, dict_2: Dict) -> str:
@@ -438,3 +439,7 @@ def strip_trailing_slash_from_url(url: str) -> str:
     url_obj._replace
 
     return url_obj.geturl()
+
+
+def get_current_time_in_release_format() -> str:
+    return datetime.utcnow().strftime("%y%m%d%H%M%S")

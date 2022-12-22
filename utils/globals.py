@@ -5,6 +5,7 @@ List of globals
 """
 
 from enum import Enum
+import re
 
 CWL_ICA_REPO_PATH_ENV_VAR = "CWL_ICA_REPO_PATH"
 ICA_BASE_URL_ENV_VAR = "ICA_BASE_URL"
@@ -137,6 +138,8 @@ ICA_TES_INSTANCE_SIZES_BY_TYPE = {
     }
 }
 
+ICAV1_CWLTOOL_VERSION = "3.0.20201203173111"
+
 ICAV2_COMPUTE_RESOURCE_MAPPINGS = [
     {
         "v1": "type: standardHiCpu",
@@ -172,6 +175,9 @@ ICAV2_DRAGEN_TEMPSPACE_MAPPINGS = {
     "v1": "/ephemeral",
     "v2": "/scratch"
 }
+
+MATCH_RUN_LINE_REGEX_OBJ = re.compile(r"run: (/)?([^/\0]+(/)?)+$")
+MATCH_SCHEMA_LINE_REGEX_OBJ = re.compile(r"((?:- \$import)|(?:type)): ((/)?([^/\0]+(/)?)+)")
 
 PARAMS_XML_FILE_NAME = "params.xml"
 
