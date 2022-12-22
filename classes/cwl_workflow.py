@@ -4,14 +4,16 @@
 A subclass of cwl, this function implements the validate and create for a cwl workflow
 Based mostly on the cwl-utils package
 """
+import math
 
 from classes.cwl import CWL
 from utils.logging import get_logger
 from utils.errors import CWLValidationError, CWLPackagingError
-from cwl_utils.parser_v1_1 import Workflow, LoadingOptions  # For creation of workflow
+from cwl_utils.parser.latest import \
+    Workflow, LoadingOptions  # For creation of workflow
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 import os
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from pathlib import Path
 from utils.yaml import dump_cwl_yaml as dump_yaml, to_multiline_string
 from itertools import combinations
@@ -32,8 +34,14 @@ class CWLWorkflow(CWL):
     ]
 
     def __init__(self, name, version, cwl_file_path, create=False, user_obj=None):
+        # Initialise tmp packed file
+        self.temp_packed_file = None
         # Call super class
         super().__init__(cwl_file_path, name, version, cwl_type="workflow", create=create, user_obj=user_obj)
+
+    def __exit__(self):
+        if Path(self.temp_packed_file).is_file():
+            os.remove(self.temp_packed_file)
 
     def validate_object(self):
         """
@@ -123,32 +131,31 @@ class CWLWorkflow(CWL):
         self.run_cwltool_validate(self.cwl_file_path)
 
         # Pack workflow
-        tmp_packed_file = NamedTemporaryFile(prefix=f"{self.cwl_file_path.name}",
-                                             suffix="packed.json",
-                                             delete=False)
+        self.tmp_packed_file = NamedTemporaryFile(prefix=f"{self.cwl_file_path.name}",
+                                                  suffix="packed.json",
+                                                  delete=False)
 
         try:
             # Pack into tmp file
-            self.run_cwltool_pack(tmp_packed_file)
+            self.run_cwltool_pack(self.tmp_packed_file)
 
             # Validate packed file
-            self.run_cwltool_validate(Path(tmp_packed_file.name))
+            self.run_cwltool_validate(Path(self.tmp_packed_file.name))
 
             # Get packed file object
-            self.cwl_packed_obj = self.read_packed_file(tmp_packed_file)
+            self.cwl_packed_obj = self.read_packed_file(self.tmp_packed_file)
 
             # Generate packed md5sum
-            self.md5sum = self.get_packed_md5sum(tmp_packed_file)
+            self.md5sum = self.get_packed_md5sum(self.tmp_packed_file)
         except (CWLValidationError, CWLPackagingError):
             validation_passing = False
-        finally:
-            os.remove(tmp_packed_file.name)
 
         # Expect 'author' in last of keys
         if '$graph' not in self.cwl_packed_obj.keys():
-            logger.error(f"Could not find the top-level key \"$graphr\" in the packed version of the "
+            logger.error(f"Could not find the top-level key \"$graph\" in the packed version of the "
                          f"cwl file \"{self.cwl_file_path}\". "
                          f"Please ensure you have no 'inline' steps and all steps point to a file")
+            logger.error(f"Got top level keys {list(self.cwl_packed_obj.keys())}")
             raise CWLValidationError
 
         # Check authorship in workflow - we assume that workflow is the last item in the graph
@@ -229,3 +236,28 @@ class CWLWorkflow(CWL):
         for output in self.cwl_obj.outputs:
             if not hasattr(output, "outputSource") or output.outputSource is None:
                 logger.warning(f"Couldn't find output source for output {output.id}")
+
+    def get_subworkflows(self):
+        """
+        Get subworkflows based on steps
+        :return:
+        """
+        from utils.cwl_workflow_helper_utils import collect_objects_recursively
+        return collect_objects_recursively(
+            self
+        ).get("workflows")
+
+    def generate_workflow_image(self, output_image_path: Path):
+        """
+        Generate a png or svg from a workflow object
+        :return:
+        """
+        from utils.pydot_utils import build_cwl_dot, build_cwl_workflow_image_from_dot
+
+        inputs_len = len(self.cwl_obj.inputs)
+        ratio_value = round(min(1 / math.log(inputs_len), 1.0), 3) if inputs_len > 1 else 1
+
+        with TemporaryDirectory() as tmpdir:
+            dot_tmp_output_path = Path(tmpdir) / (self.cwl_file_path.stem + ".dot")
+            build_cwl_dot(self, dot_tmp_output_path)
+            build_cwl_workflow_image_from_dot(dot_tmp_output_path, output_image_path, ratio_value, output_image_path.suffix.lstrip("."))

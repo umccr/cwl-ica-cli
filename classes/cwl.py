@@ -14,14 +14,17 @@ cwl object:
 
 from pathlib import Path
 from ruamel import yaml
+from os import environ
+from utils.globals import ICAV1_CWLTOOL_VERSION
 from utils.logging import get_logger
 from utils.errors import CWLPackagingError, CWLValidationError, CWLImportError, InvalidAuthorshipError
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 import json
 from utils.subprocess_handler import run_subprocess_proc
 from hashlib import md5
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 from string import ascii_lowercase, digits
+import cwl_utils.parser as parser
 
 logger = get_logger()
 
@@ -42,7 +45,6 @@ class CWL:
         self.version = version
         self.cwl_type = cwl_type
         self.cwl_obj = None  # Imported through cwl
-        self.parser = None
         self.cwl_packed_obj = None  # Only created for validate_object and to grab authorship schemas.
         self.md5sum = None  # Packed md5sum
         self.create = create
@@ -93,71 +95,8 @@ class CWL:
             # Function re-implemented in subclass
             raise NotImplementedError
 
-        # Read in the cwl file from a yaml
-        with open(self.cwl_file_path, "r") as cwl_h:
-            yaml_obj = yaml.main.round_trip_load(cwl_h, preserve_quotes=True)
-
-        # Now based on the version we import the parser of interest
-        # Import parser based on CWL Version
-        if yaml_obj['cwlVersion'] == 'v1.0':
-            from cwl_utils import parser_v1_0 as parser
-        elif yaml_obj['cwlVersion'] == 'v1.1':
-            from cwl_utils import parser_v1_1 as parser
-        elif yaml_obj['cwlVersion'] == 'v1.2':
-            from cwl_utils import parser_v1_2 as parser
-        else:
-            logger.error("Version error. Did not recognise {} as a CWL version".format(yaml_obj["CWLVersion"]))
-            raise CWLImportError
-
-        # Due to https://github.com/common-workflow-language/cwl-utils/issues/74
-        # We must first check for SchemaDefRequirement types and add them to the name spaces
-        if yaml_obj.get("requirements", None) is None:
-            pass
-        elif yaml_obj.get("requirements").get("SchemaDefRequirement", None) is None:
-            pass
-        elif yaml_obj.get("requirements").get("SchemaDefRequirement").get("types", None) is None:
-            pass
-        else:
-            for imports in yaml_obj.get("requirements").get("SchemaDefRequirement").get("types"):
-                # Get import key
-                if imports.get("$import", None) is None:
-                    continue
-
-                # We need the relative import path and the schema path
-                schema_relative_imports_path = imports.get("$import")
-                schema_import_path = (Path(self.cwl_file_path).parent / Path(schema_relative_imports_path)).resolve()
-
-                # Log this
-                logger.debug(f"Manually adding in \"{schema_relative_imports_path}\" into namespaces before "
-                             f"we import the cwl object")
-
-                # Import schema
-                from classes.cwl_schema import CWLSchema
-                from utils.repo import get_schemas_dir
-                from utils.miscell import get_name_version_tuple_from_cwl_file_path
-                schema_name, schema_version = get_name_version_tuple_from_cwl_file_path(schema_import_path,
-                                                                                        get_schemas_dir())
-                schema_obj = CWLSchema(schema_import_path, name=schema_name, version=schema_version)
-
-                # Get name and type
-                schema_name = schema_obj.cwl_obj.get("name")
-
-                # Schema path
-                schema_namespace_str = "#".join(map(str, [schema_relative_imports_path, schema_name]))
-
-                # Now add to namespaces
-                if yaml_obj.get('$namespaces') is None:
-                    yaml_obj['$namespaces'] = OrderedDict({
-                        schema_namespace_str: schema_namespace_str
-                    })
-                else:
-                    yaml_obj['$namespaces'][schema_namespace_str] = schema_namespace_str
-
-        # Also set the parser for other users
-        self.parser = parser
-
         # Now import cwl object as a file
-        self.cwl_obj = parser.load_document_by_yaml(yaml_obj, self.cwl_file_path.absolute().as_uri())
+        self.cwl_obj = parser.load_document_by_uri(self.cwl_file_path.absolute().resolve().as_uri())
 
     def validate_object(self):
         """
@@ -247,20 +186,57 @@ class CWL:
 
     def run_cwltool_pack(self, packed_file: NamedTemporaryFile):
         """
-        Run subprocess command ["cwltool", "--pack", "/path/to/cwl"]
-        A packed file should also be tested through cwltool validate
+        Pack command with cwlutils
         :return:
         """
+        # Running cwltool validate with
+        logger.info(f"Creating virtual env to run cwltool --pack with cwltool version '{ICAV1_CWLTOOL_VERSION}'")
 
-        # Pack
-        _return_code, _stdout, _stderr = run_subprocess_proc(["cwltool", "--pack", self.cwl_file_path],
-                                                             capture_output=True)
+        # Create the py env tmp dir for a downgraded version of cwltool
+        pyenv_dir = TemporaryDirectory()
 
+        # Create python environment
+        pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
+            ["python", "-m", "venv", pyenv_dir.name],
+            capture_output=True
+        )
+
+        if not pyenv_returncode == 0:
+            logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
+            logger.error(f"Stdout was {pyenv_stdout}")
+            logger.error(f"Stderr was {pyenv_stderr}")
+            raise ChildProcessError
+
+        # Install latest cwltool into new pyenv
+        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
+            [
+                str(Path(pyenv_dir.name) / "bin" / "python"),
+                "-m", "pip", "install", f"setuptools<58"
+            ],
+            capture_output=True
+        )
+
+        # Install latest cwltool into new pyenv
+        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
+            [
+                str(Path(pyenv_dir.name) / "bin" / "python"),
+                "-m", "pip", "install", f"cwltool=={ICAV1_CWLTOOL_VERSION}"
+            ],
+            capture_output=True
+        )
+
+        _return_code, _stdout, _stderr = run_subprocess_proc(
+            [
+                 str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--pack", self.cwl_file_path
+            ],
+            capture_output=True)
+
+        # cwltool validation failed
         if not _return_code == 0:
             raise CWLPackagingError
 
         with open(packed_file.name, "w") as cwl_packed_h:
-            cwl_packed_h.write(json.dumps(json.loads(_stdout), indent=2, ensure_ascii=False)+"\n")
+            cwl_packed_h.write(json.dumps(json.loads(_stdout), indent=2, ensure_ascii=False) + "\n")
 
     @staticmethod
     def run_cwltool_validate(cwl_file_path: Path):
@@ -268,9 +244,47 @@ class CWL:
         Run subprocess command ["cwltool", "--validate", "/path/to/cwl"]
         :return:
         """
+        # Running cwltool validate with
+        logger.info(f"Creating virtual env to run cwltool --validate with cwltool version '{ICAV1_CWLTOOL_VERSION}'")
 
-        _return_code, _stdout, _stderr = run_subprocess_proc(["cwltool", "--validate", cwl_file_path],
-                                                             capture_output=True)
+        # Create the py env tmp dir for a downgraded version of cwltool
+        pyenv_dir = TemporaryDirectory()
+
+        # Create python environment
+        pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
+            ["python", "-m", "venv", pyenv_dir.name],
+            capture_output=True
+        )
+
+        if not pyenv_returncode == 0:
+            logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
+            logger.error(f"Stdout was {pyenv_stdout}")
+            logger.error(f"Stderr was {pyenv_stderr}")
+            raise ChildProcessError
+
+        # Install latest cwltool into new pyenv
+        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
+            [
+                str(Path(pyenv_dir.name) / "bin" / "python"),
+                "-m", "pip", "install", f"setuptools<58"
+            ],
+            capture_output=True
+        )
+
+        # Install latest cwltool into new pyenv
+        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
+            [
+                str(Path(pyenv_dir.name) / "bin" / "python"),
+                "-m", "pip", "install", f"cwltool=={ICAV1_CWLTOOL_VERSION}"
+            ],
+            capture_output=True
+        )
+
+        _return_code, _stdout, _stderr = run_subprocess_proc(
+            [
+                 str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--validate", cwl_file_path
+            ],
+            capture_output=True)
 
         # cwltool validation failed
         if not _return_code == 0:

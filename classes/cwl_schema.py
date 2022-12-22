@@ -7,8 +7,12 @@ Based mostly on the cwl-utils package
 import re
 from copy import deepcopy
 from typing import List, Dict
+from urllib.parse import urlparse
+
+from ruamel.yaml import YAML
 
 from classes.cwl import CWL
+from utils.cwl_helper_utils import split_cwl_id_to_path_and_fragment
 from utils.logging import get_logger
 from utils.errors import CWLSchemaError
 from tempfile import NamedTemporaryFile
@@ -17,7 +21,8 @@ from pathlib import Path
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 from ruamel import yaml
 import json
-from cwl_utils.parser_v1_1 import RecordSchema
+from cwl_utils.parser.latest import \
+    RecordSchema
 
 logger = get_logger()
 
@@ -128,8 +133,10 @@ class CWLSchema(CWL):
             "fields": self.cwl_obj.fields,
         })
 
-        with open(self.cwl_file_path, 'w') as cwl_h:
-            yaml.main.round_trip_dump(write_obj, cwl_h)
+        with YAML(output=self.cwl_file_path) as cwl_h:
+            yaml.indent = 4
+            yaml.block_seq_indent = 2
+            cwl_h.dump(write_obj)
 
     def check_docs(self, cwl_attr_list, issue_count):
         """
@@ -197,7 +204,7 @@ class CWLSchema(CWL):
                 logger.info("Importing from external schema")
                 schema_import_path = field_type.get("$import")
                 # Read schema from extenral paths
-                relative_schema_file_path, schema_name = schema_import_path.split("#", 1)
+                relative_schema_file_path, schema_name = split_cwl_id_to_path_and_fragment(schema_import_path)
                 relative_schema_file_path = Path(relative_schema_file_path)
                 schema_version = re.sub(r"\.yaml$", "", relative_schema_file_path.name.rsplit("__", 1)[-1])
                 imported_schema_obj = CWLSchema(
@@ -217,12 +224,3 @@ class CWLSchema(CWL):
         new_cwl_obj["fields"] = new_fields
 
         return new_cwl_obj
-
-
-
-
-
-
-
-
-

@@ -11,7 +11,8 @@ from utils.errors import CWLValidationError, CWLPackagingError
 from tempfile import NamedTemporaryFile
 import os
 from pathlib import Path
-from cwl_utils.parser_v1_1 import ExpressionTool, LoadingOptions  # For creation of tool
+from cwl_utils.parser.latest import \
+    ExpressionTool, LoadingOptions  # For creation of tool
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 from ruamel import yaml
 from utils.yaml import dump_cwl_yaml as dump_yaml, to_multiline_string
