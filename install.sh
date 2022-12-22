@@ -115,7 +115,7 @@ get_lib_path(){
   if [[ "${OSTYPE}" == "msys" ]]; then
     echo "${conda_env_prefix}/Lib"
   else
-    echo "${conda_env_prefix}/lib/python3.8"
+    echo "${conda_env_prefix}/lib/python3.10"
   fi
 }
 
