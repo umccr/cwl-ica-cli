@@ -4,8 +4,10 @@
 A subclass of cwl, this function implements the validate and create for a cwl object
 Based mostly on the cwl-utils package
 """
+from typing import List, Union
 
 from classes.cwl import CWL
+from utils.cwl_utils_typing_helpers import ResourceRequirementType, DockerRequirementType, RequirementType
 from utils.logging import get_logger
 from utils.errors import CWLValidationError, CWLPackagingError
 from tempfile import NamedTemporaryFile
@@ -24,7 +26,13 @@ class CWLTool(CWL):
     Implement the validate_object and create_object and write_object implementations for a cwltool
     """
 
-    EXPECTED_HINTS = ["ResourceRequirement", "DockerRequirement"]
+    EXPECTED_HINT_TYPES = Union[
+        ResourceRequirementType, DockerRequirementType
+    ]
+    EXPECTED_HINT_LIST = [
+        ResourceRequirementType, DockerRequirementType
+    ]
+
 
     def __init__(self, cwl_file_path, name, version, create=False, user_obj=None):
         # Call super class
@@ -102,7 +110,7 @@ class CWLTool(CWL):
             # Just make sure that 'ResourceRequirement' and 'DockerRequirement' are not in the 'requirements' section
             # Both should be in the hints section instead
             for requirement in requirements:
-                if requirement.class_ in self.EXPECTED_HINTS:
+                if isinstance(requirement, self.EXPECTED_HINT_TYPES):
                     logger.error(f"Requirement {requirement.class_} should be in 'hints' section instead")
                     issue_count += 1
                     validation_passing = False
@@ -118,8 +126,15 @@ class CWLTool(CWL):
             validation_passing = False
 
         # We make sure that 'ResourceRequirement' and 'DockerRequirement' are in the 'hints' section
-        hint_classes = [_hint.get("class", None) for _hint in hints]
-        if not len(list(set(hint_classes).intersection(set(self.EXPECTED_HINTS)))) == 2:
+        num_expected_hints = len(
+            list(
+                filter(
+                    lambda hint_requirement: isinstance(hint_requirement, self.EXPECTED_HINT_TYPES),
+                    hints
+                )
+            )
+        )
+        if not num_expected_hints == len(self.EXPECTED_HINT_LIST) == 2:
             issue_count += 1
             logger.error(f"Issue: {issue_count}. "
                          f"Could not find both 'ResourceRequirement' and 'DockerRequirement' in hints")
