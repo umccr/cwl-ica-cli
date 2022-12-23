@@ -198,6 +198,23 @@ StepInputExpressionRequirementType = Union[
     StepInputExpressionRequirement_v1_2
 ]
 
+RequirementType = Union[
+    ProcessRequirementType,
+    InlineJavascriptRequirementType,
+    SchemaDefRequirementType,
+    DockerRequirementType,
+    SoftwareRequirementType,
+    InitialWorkDirRequirementType,
+    EnvVarRequirementType,
+    ShellCommandRequirementType,
+    ResourceRequirementType,
+    SubworkflowFeatureRequirementType,
+    ScatterFeatureRequirementType,
+    MultipleInputFeatureRequirementType,
+    StepInputExpressionRequirementType
+]
+
+
 WorkflowInputParameter = Union[
     WorkflowInputParameter_v1_1,
     WorkflowInputParameter_v1_2
