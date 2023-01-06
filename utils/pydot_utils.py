@@ -12,9 +12,10 @@ build_cwl_workflow_image_from_dot -> takes in a dot file and generates an svg fi
 """
 import subprocess
 
+from cwl_utils.parser import WorkflowStep
 from pydot import graph_from_dot_file, Dot
 
-from utils.cwl_helper_utils import get_fragment_from_cwl_id
+from utils.cwl_helper_utils import get_fragment_from_cwl_id, split_cwl_id_to_path_and_fragment
 from utils.subprocess_handler import run_subprocess_proc
 from utils.logging import get_logger
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -107,13 +108,14 @@ def edit_cwl_dot(cwl_item, cwl_obj, dot_path: Path):
         logger.warning("Generation of dot file failed")
 
 
-def get_step_path_from_step_obj(cwl_step_object, cwl_file_path) -> Path:
+def get_step_path_from_step_obj(cwl_step_object: WorkflowStep, cwl_file_path: Path) -> Path:
     """
     # Get the absolute path to the step
     step_object:
     :return:
     """
-    step_cwl_path = cwl_file_path.parent.absolute().joinpath(Path(cwl_step_object.run)).resolve()
+    rel_step_path, _ = split_cwl_id_to_path_and_fragment(cwl_step_object.run)
+    step_cwl_path = cwl_file_path.parent.absolute().joinpath(rel_step_path).resolve()
 
     return step_cwl_path
 
