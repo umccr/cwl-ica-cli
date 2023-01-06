@@ -15,7 +15,7 @@ cwl object:
 from pathlib import Path
 from ruamel import yaml
 from os import environ
-from utils.globals import ICAV1_CWLTOOL_VERSION
+from utils.globals import ICAV1_CWLTOOL_VERSION, ICAV1_CWLTOOL_CONDA_ENV_NAME
 from utils.logging import get_logger
 from utils.errors import CWLPackagingError, CWLValidationError, CWLImportError, InvalidAuthorshipError
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -189,45 +189,12 @@ class CWL:
         Pack command with cwlutils
         :return:
         """
-        # Running cwltool validate with
-        logger.info(f"Creating virtual env to run cwltool --pack with cwltool version '{ICAV1_CWLTOOL_VERSION}'")
-
-        # Create the py env tmp dir for a downgraded version of cwltool
-        pyenv_dir = TemporaryDirectory()
-
-        # Create python environment
-        pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
-            ["python", "-m", "venv", pyenv_dir.name],
-            capture_output=True
-        )
-
-        if not pyenv_returncode == 0:
-            logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
-            logger.error(f"Stdout was {pyenv_stdout}")
-            logger.error(f"Stderr was {pyenv_stderr}")
-            raise ChildProcessError
-
-        # Install latest cwltool into new pyenv
-        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
-            [
-                str(Path(pyenv_dir.name) / "bin" / "python"),
-                "-m", "pip", "install", f"setuptools<58"
-            ],
-            capture_output=True
-        )
-
-        # Install latest cwltool into new pyenv
-        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
-            [
-                str(Path(pyenv_dir.name) / "bin" / "python"),
-                "-m", "pip", "install", f"cwltool=={ICAV1_CWLTOOL_VERSION}"
-            ],
-            capture_output=True
-        )
-
         _return_code, _stdout, _stderr = run_subprocess_proc(
             [
-                 str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--pack", self.cwl_file_path
+                 "conda", "run",
+                 "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
+                 "cwltool", "--pack", self.cwl_file_path
+
             ],
             capture_output=True)
 
@@ -244,45 +211,12 @@ class CWL:
         Run subprocess command ["cwltool", "--validate", "/path/to/cwl"]
         :return:
         """
-        # Running cwltool validate with
-        logger.info(f"Creating virtual env to run cwltool --validate with cwltool version '{ICAV1_CWLTOOL_VERSION}'")
-
-        # Create the py env tmp dir for a downgraded version of cwltool
-        pyenv_dir = TemporaryDirectory()
-
-        # Create python environment
-        pyenv_returncode, pyenv_stdout, pyenv_stderr = run_subprocess_proc(
-            ["python", "-m", "venv", pyenv_dir.name],
-            capture_output=True
-        )
-
-        if not pyenv_returncode == 0:
-            logger.error(f"Could not create a temp python environment, got return code {pyenv_returncode}")
-            logger.error(f"Stdout was {pyenv_stdout}")
-            logger.error(f"Stderr was {pyenv_stderr}")
-            raise ChildProcessError
-
-        # Install latest cwltool into new pyenv
-        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
-            [
-                str(Path(pyenv_dir.name) / "bin" / "python"),
-                "-m", "pip", "install", f"setuptools<58"
-            ],
-            capture_output=True
-        )
-
-        # Install latest cwltool into new pyenv
-        pip_install_returncode, pip_install_stdout, pip_install_stderr = run_subprocess_proc(
-            [
-                str(Path(pyenv_dir.name) / "bin" / "python"),
-                "-m", "pip", "install", f"cwltool=={ICAV1_CWLTOOL_VERSION}"
-            ],
-            capture_output=True
-        )
-
         _return_code, _stdout, _stderr = run_subprocess_proc(
             [
-                 str(Path(pyenv_dir.name) / "bin" / "cwltool"), "--validate", cwl_file_path
+                "conda", "run",
+                "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
+                "cwltool", "--validate", cwl_file_path
+
             ],
             capture_output=True)
 
@@ -342,11 +276,13 @@ class CWL:
 
         validated = True
 
-        expected_keys = ['https://schema.org/name',
-                         'https://schema.org/email']
+        expected_keys = [
+            'https://schema.org/name',
+            'https://schema.org/email'
+        ]
 
-        # XYZ
-        if len(list(set(list(authorship_dict.keys())).intersection(set(expected_keys)))) < len(expected_keys):
+        # Ensure all expected keys are in the authorship keys
+        if not all(map(lambda expected_key: expected_key in authorship_dict.keys(), expected_keys)):
             logger.error("Could not find all of the following attributes in the tool {expected_keys}".format(
                 expected_keys=", ".join([key for key in expected_keys])
             ))
@@ -366,5 +302,7 @@ class CWL:
         """
         bad_chars = list(set(arg_val).difference(ascii_lowercase + digits + "_"))
         if not len(bad_chars) == 0:
-            logger.warning(f"Found {id_type} '{arg_val}' uses chars '{', '.join(bad_chars)}' that "
-                           f"aren't recommended in names of {id_type}")
+            logger.warning(
+                f"Found {id_type} '{arg_val}' uses chars '{', '.join(bad_chars)}' that "
+                f"aren't recommended in names of {id_type}"
+            )

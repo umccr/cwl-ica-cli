@@ -14,9 +14,9 @@ set -euo pipefail
 # GLOBALS
 ###########
 CWL_ICA_CONDA_ENV_NAME="cwl-ica"
+CWLTOOL_ICAV1_CONDA_ENV_NAME="cwltool-icav1"
 REQUIRED_CONDA_VERSION="4.9.0"
 STABLE_YARN_VERSION="3.2.3"
-
 
 ##########
 # GET HELP
@@ -175,6 +175,7 @@ has_conda_env() {
   : '
   Check if a conda environment exists
   '
+  local conda_env_name="$1"
   local conda_envs
   local conda_env_path
 
@@ -185,7 +186,7 @@ has_conda_env() {
                })"
 
   for conda_env_path in ${conda_envs}; do
-    if [[ "$(basename "${conda_env_path}")" == "${CWL_ICA_CONDA_ENV_NAME}" ]]; then
+    if [[ "$(basename "${conda_env_path}")" == "${conda_env_name}" ]]; then
       # Conda env has been found
       return 0
     fi
@@ -213,6 +214,54 @@ get_conda_env_prefix() {
     cygpath --path "${conda_env_prefix}"
   else
     echo "${conda_env_prefix}"
+  fi
+}
+
+update_conda_env() {
+  : '
+  Update the conda environment
+  '
+  local conda_env_name="$1"
+  local yes="$2"
+
+  local conda_env_file
+
+  conda_env_file="$(get_this_path)/${conda_env_name,,}-conda-env.yaml"
+
+  if ! has_conda_env "${conda_env_name}"; then
+    if [[ "${yes}" == "true" ]]; then
+      echo_stderr "Creating cwltool-icav1 conda env"
+      run_conda_create "${conda_env_name}" "${conda_env_file}"
+    else
+      echo_stderr "'${conda_env_name}' conda env does not exist - would you like to create one?"
+      select yn in "Yes" "No"; do
+        case "$yn" in
+            "Yes" )
+              run_conda_create "${conda_env_name}" "${conda_env_file}"
+              break;;
+            "No" )
+              echo_stderr "Installation cancelled"
+              exit 0;;
+        esac
+      done
+    fi
+  else
+    if [[ "${yes}" == "true" ]]; then
+      echo_stderr "Updating '${conda_env_name}' conda env"
+      run_conda_update "${conda_env_name}" "${conda_env_file}"
+    else
+      echo_stderr "Found conda env '${conda_env_name}' - would you like to run an update?"
+      select yn in "Yes" "No"; do
+        case "$yn" in
+            "Yes" )
+              run_conda_update "${conda_env_name}" "${conda_env_file}"
+              break;;
+            "No" )
+              echo_stderr "Installation cancelled"
+              exit 0;;
+        esac
+      done
+    fi
   fi
 }
 
@@ -361,43 +410,8 @@ fi
 # CREATE/UPDATE CONDA ENV
 #########################
 
-conda_env_file="$(get_this_path)/cwl-ica-conda-env.yaml"
-
-if ! has_conda_env; then
-  if [[ "${yes}" == "true" ]]; then
-    echo_stderr "Creating cwl-ica conda env"
-    run_conda_create "${CWL_ICA_CONDA_ENV_NAME}" "${conda_env_file}"
-  else
-    echo_stderr "cwl-ica conda env does not exist - would you like to create one?"
-    select yn in "Yes" "No"; do
-      case "$yn" in
-          "Yes" )
-            run_conda_create "${CWL_ICA_CONDA_ENV_NAME}" "${conda_env_file}"
-            break;;
-          "No" )
-            echo_stderr "Installation cancelled"
-            exit 0;;
-      esac
-    done
-  fi
-else
-  if [[ "${yes}" == "true" ]]; then
-    echo_stderr "Updating cwl-ica conda env"
-    run_conda_update "${CWL_ICA_CONDA_ENV_NAME}" "${conda_env_file}"
-  else
-    echo_stderr "Found conda env 'cwl-ica' - would you like to run an update?"
-    select yn in "Yes" "No"; do
-      case "$yn" in
-          "Yes" )
-            run_conda_update "${CWL_ICA_CONDA_ENV_NAME}" "${conda_env_file}"
-            break;;
-          "No" )
-            echo_stderr "Installation cancelled"
-            exit 0;;
-      esac
-    done
-  fi
-fi
+update_conda_env "${CWL_ICA_CONDA_ENV_NAME}" "${yes}"
+update_conda_env "${CWLTOOL_ICAV1_CONDA_ENV_NAME}" "${yes}"
 
 # Now we can obtain the env prefix which is where we will place our
 conda_cwl_ica_env_prefix="$(get_conda_env_prefix)"
