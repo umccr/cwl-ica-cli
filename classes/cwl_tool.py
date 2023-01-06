@@ -219,7 +219,7 @@ class CWLTool(CWL):
                 schemas=["https://schema.org/version/latest/schemaorg-current-http.rdf"],
                 namespaces={
                     "s": "https://schema.org/",
-                    "ilmn-tes": "http://platform.illumina.com/rdf/ica/"
+                    "ilmn-tes": "https://platform.illumina.com/rdf/ica/"
                 }
             ),
             successCodes=[0]
