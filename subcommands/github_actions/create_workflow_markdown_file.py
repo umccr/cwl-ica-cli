@@ -4,7 +4,7 @@
 Create a markdown help page for this workflow
 
 """
-
+from cwl_utils.parser import WorkflowStep
 
 from utils.logging import get_logger
 from subcommands.github_actions.create_markdown_file import CreateMarkdownFile
@@ -196,6 +196,7 @@ Example
 
         md_file_obj.new_header(level=2, title=f"{self.cwl_obj.label} Steps", add_table_of_contents='n')
 
+        step_obj: WorkflowStep
         for step_obj in self.cwl_obj.steps:
             # Get the step path
             step_path = get_step_path_from_step_obj(step_obj, self.cwl_file_path)

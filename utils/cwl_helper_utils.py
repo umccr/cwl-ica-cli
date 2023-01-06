@@ -371,8 +371,18 @@ def get_type_from_cwl_io_object(cwl_item: Union[WorkflowInputParameter, Workflow
 
     # Check if item is an enum schema
     if isinstance(i_o_type, EnumSchema):
+        symbols_list = list(
+            map(
+                lambda symbol: str(
+                    get_fragment_from_cwl_id(symbol).relative_to(
+                        get_fragment_from_cwl_id(cwl_item.id)
+                    )
+                ),
+                i_o_type.symbols
+            )
+        )
         # Return the list of possible symbols
-        i_o_type = f"[ {' | '.join([str(get_fragment_from_cwl_id(symbol)) for symbol in i_o_type.symbols])} ]"
+        i_o_type = f"[ {' | '.join(symbols_list)}  ]"
 
     return i_o_type, i_o_optional
 
