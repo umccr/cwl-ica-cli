@@ -1,0 +1,9 @@
+name: cwltool-icav1
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - setuptools<=58
+  - pip:
+    - cwltool==3.0.20201203173111
