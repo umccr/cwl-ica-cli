@@ -1,4 +1,4 @@
-FROM docker.io/condaforge/mambaforge-pypy3:4.10.3-6
+FROM docker.io/condaforge/mambaforge-pypy3:22.9.0-2
 
 # Set args
 ARG CONDA_GROUP_NAME="cwl_ica_group"
