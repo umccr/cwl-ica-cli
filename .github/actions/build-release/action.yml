@@ -89,7 +89,7 @@ runs:
           "--include=classes/***" \
           "--include=subcommands/***" \
           "--include=utils/***" \
-          "--include=cwl-ica-conda-env.yaml" \
+          "--include=*-conda-env.yaml" \
           "--include=install.sh" \
           "--exclude=*" \
           "./" "release-${{ inputs.git_tag }}/"
