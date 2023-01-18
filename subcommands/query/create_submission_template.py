@@ -311,8 +311,9 @@ class CreateSubmissionTemplate(Command):
         """
         return read_yaml(self.item_yaml_path)[self.item_type_key]
 
-    def sanitise_input(self, input_obj, input_item, input_item_type) -> Any:
+    def sanitise_input(self, input_obj, input_item) -> Any:
         # Handle InputArraySchema objects (and double arrays)
+        input_item_type = input_obj["cwl_type"]
         while isinstance(input_item_type, InputArraySchema):
             if "is_array" not in input_obj.keys():
                 input_obj["is_array"] = 1
@@ -340,10 +341,16 @@ class CreateSubmissionTemplate(Command):
         elif isinstance(input_item_type, InputEnumSchema):
             # Assign value to the first symbol
             input_obj["cwl_type"] = "enum"
-            input_obj["symbols"] = [
-                get_fragment_from_cwl_id(symbol)
-                for symbol in input_item_type.symbols
-            ]
+            input_obj["symbols"] = list(
+                map(
+                    lambda symbol: str(
+                        get_fragment_from_cwl_id(symbol).relative_to(
+                            get_fragment_from_cwl_id(input_item.id)
+                        )
+                    ),
+                    input_item_type.symbols
+                )
+            )
         elif isinstance(input_item_type, str):
             # The low-hanging fruit
             input_obj["cwl_type"] = input_item_type
@@ -387,43 +394,43 @@ class CreateSubmissionTemplate(Command):
                 "doc": input_item.doc,
                 "optional": False
             }
-            input_item_type = input_item.type
+            input_item_types = input_item.type
 
             # Check if we need to go through a second time
             was_in_optional_list = False
             # Check if we get an array (this likely means first option is null)
-            if isinstance(input_item_type, list):
+            if isinstance(input_item_types, list):
                 was_in_optional_list = True
                 # Check elements are in array
-                if len(input_item_type) < 1:
+                if len(input_item_types) < 1:
                     logger.warning("Input item has no length, skipping")
                     continue
                 # Check if first option is null (means an optional item)
-                elif input_item_type[0] == 'null':
+                elif input_item_types[0] == 'null':
                     # Pop null item
-                    _ = input_item_type.pop(0)
+                    _ = input_item_types.pop(0)
                     input_obj["optional"] = True
 
-                if len(input_item_type) == 0:
+                if len(input_item_types) == 0:
                     logger.warning("Input item has no length, skipping")
                     continue
-                elif len(input_item_type) == 1:
-                    input_item_type = input_item_type[0]
-                    input_obj["cwl_type"] = input_item_type
-                elif all([isinstance(_item, str) for _item in input_item_type]):
-                    input_obj["cwl_type"] = [_item for _item in input_item_type]
+                elif len(input_item_types) == 1:
+                    input_obj["cwl_type"] = input_item_types[0]
+                elif all([isinstance(_item, str) for _item in input_item_types]):
+                    input_obj["cwl_type"] = [_item for _item in input_item_types]
                 else:
                     logger.warning("Can't handle multiple types that aren't simple")
                     continue
 
-            if isinstance(input_item_type, list):
-                input_item_type = input_item_type[0]
-                input_obj["cwl_type"] = input_item_type
+            if isinstance(input_item_types, list):
+                # If input item types is still a list, we set the input item type as the first element
+                input_obj["cwl_type"] = input_item_types[0]
+            else:
+                input_obj["cwl_type"] = input_item_types
 
             input_obj = self.sanitise_input(
                 input_obj=input_obj,
-                input_item=input_item,
-                input_item_type=input_item_type
+                input_item=input_item
             )
 
             inputs[input_id] = input_obj
