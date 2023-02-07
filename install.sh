@@ -77,6 +77,16 @@ check_readlink_program() {
   fi
 }
 
+check_bash_version(){
+  if [[ "$( bash -c "echo \"\${BASH_VERSION}\" 2>/dev/null" | cut -d'.' -f1)" -lt "4" ]]; then
+    echo_stderr "Please upgrade to bash version 4 or higher, if you are running MacOS then please run the following commands"
+    echo_stderr "brew install bash"
+    echo_stderr "sudo bash -c \"echo \$(brew --prefix)/bin/bash >> /etc/shells\""
+    echo_stderr "chsh -s \$(brew --prefix)/bin/bash"
+    return 1
+  fi
+}
+
 check_rsync() {
   if ! type "rsync"; then
     echo_stderr "Could not find executable \"rsync\""
@@ -403,6 +413,11 @@ fi
 
 if ! check_rsync; then
   echo_stderr "Failed at rsync check stage"
+  exit 1
+fi
+
+if ! check_bash_version; then
+  echo_stderr "Failed at bash version check stage"
   exit 1
 fi
 
