@@ -169,7 +169,6 @@ Environment Variables
         if full_github_tag_regex_obj is None:
             logger.error(f"GITHUB_TAG env var '{','.join(self.github_tag)}' is not formatted as expected")
             raise ArgumentError
-        print(full_github_tag_regex_obj.group(1))
         if not full_github_tag_regex_obj.group(1) == self.github_tag[0]:
             logger.error(f"GITHUB_TAG env var '{','.join(self.github_tag)}' is not as expected")
             raise ArgumentError
