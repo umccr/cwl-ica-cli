@@ -217,6 +217,12 @@ rsync --archive \
   "${temp_dir}/" \
   "${typescript_expressions_dir}/"
 
+# Delete temp dir
+rm -rf "${temp_dir}"
+
+# Exit trap
+trap - EXIT
+
 # Step 3 - Convert js code to cwljs code (with sed)
 if [[ "${cwlify_js_code}" == "true" ]]; then
   echo_stderr "Converting js code to cwljs code"
