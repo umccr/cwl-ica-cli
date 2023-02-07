@@ -1305,6 +1305,22 @@ subcommands:
       - name: xtrace
         summary: |
           Set xtrace on the validate_typescript_expressions_directory shell script
+  typescript-expression-update:
+    summary: |
+      Update a typescript expression yarn.lock file
+    options:
+      - name: typescript-expression-dir
+        summary: |
+          The name of the workflow
+        type: string
+        completion:
+          command_string: |
+            python - <<EOF
+            __cwl-ica_list_all_typescript_expression_paths.py
+            EOF
+      - name: xtrace
+        summary: |
+          Set xtrace on the update_yarn_dependencies shell script
   icav2-zip-workflow:
     summary: |
       Zip up a workflow ready to become a pipeline in ICAv2
