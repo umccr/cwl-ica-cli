@@ -42,6 +42,36 @@ def run_typescript_validation_script(typescript_expression_dir: Path, xtrace: bo
             logger.info(f"stderr was '{stderr}'")
 
 
+def run_typescript_upgrade_script(typescript_expression_dir: Path, xtrace: bool=False):
+        logger.info("Running validate_typescript_expressions_directory.sh script")
+        command_prefix = ["bash"]
+        command_list = [
+            "update_yarn_dependencies.sh",
+            "--typescript-expressions-dir", f"{typescript_expression_dir}"
+        ]
+
+        if xtrace:
+            command_prefix.extend(["-o", "xtrace"])
+
+        returncode, stdout, stderr = run_subprocess_proc(
+            command_prefix + command_list,
+            capture_output=not xtrace
+        )
+
+        if not xtrace:
+            print(stdout, stderr)
+
+        if not returncode == 0:
+            logger.error(f"validation of typescript expression failed with returncode '{returncode}'\n"
+                         f"stdout was '{stdout}'\n"
+                         f"stderr was '{stderr}'")
+            raise AssertionError
+        else:
+            logger.info("validation of typescript expression directory command finished successfully")
+            logger.info(f"stdout was '{stdout}'")
+            logger.info(f"stderr was '{stderr}'")
+
+
 def create_typescript_expression_dir(typescript_expression_path: Path, xtrace=False):
     """
     Run subprocess on command initialise_typescript_expression_directory.sh

@@ -150,6 +150,7 @@ Command:
     append-typescript-directory-to-cwl-workflow                Create a new typescript expression to complement a CWL workflow
     create-typescript-interface-from-cwl-schema                Create a typescript interface to complement a CWL schema
     typescript-expression-validate                             Validate a typescript expression and generate a .cwljs file ready for importation by
+    typescript-expression-update                               Update the dependencies in a typescript-expression directory
 
 
     #################################
@@ -602,6 +603,12 @@ def _dispatch():
         typescript_expression_dir_validate = TypeScriptExpressionDirValidate(command_argv)
         # Call Command
         typescript_expression_dir_validate()
+    elif cmd == "typescript-expression-update":
+        from subcommands.updaters.update_typescript_expressions_dir import TypeScriptExpressionDirUpdate
+        # Initialise command
+        typescript_expression_dir_update = TypeScriptExpressionDirUpdate(command_argv)
+        # Call Command
+        typescript_expression_dir_update()
 
     # V2 add-ons
     elif cmd == "icav2-zip-workflow":

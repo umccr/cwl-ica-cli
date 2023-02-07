@@ -24,7 +24,7 @@ from pathlib import Path
 from utils.globals import ICAV2_MAX_STEP_CHARACTERS, ICAV2_COMPUTE_RESOURCE_MAPPINGS, ICAV2_CONTAINER_MAPPINGS, \
     ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, MATCH_RUN_LINE_REGEX_OBJ, MATCH_SCHEMA_LINE_REGEX_OBJ
 from utils.miscell import get_items_dir_from_cwl_file_path
-from utils.cwl_helper_utils import get_include_items, get_fragment_from_cwl_id
+from utils.cwl_helper_utils import get_include_items, get_fragment_from_cwl_id, get_path_from_cwl_id
 from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to_schema_list_recursively, \
     get_schema_mappings
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
@@ -54,6 +54,91 @@ def get_step_mappings(steps: List[WorkflowStep], workflow_path: Path) -> List[Di
 
     return step_mappings
 
+
+def collect_locations_from_secondary_file_print_deps_recursively(secondary_file_print_deps: Dict, cwl_path: Path) -> List[Path]:
+    """
+    Used to collect secondary files recursively
+    :param secondary_file_print_deps:
+    {
+    "class": "File",
+    "location": "bclconvert-with-qc-pipeline__4.0.3.cwl",
+    "format": "https://www.iana.org/assignments/media-types/application/cwl",
+    "secondaryFiles": [
+        {
+            "class": "File",
+            "location": "https://schema.org/version/latest/schemaorg-current-http.rdf",
+            "basename": "schemaorg-current-http.rdf",
+            "nameroot": "schemaorg-current-http",
+            "nameext": ".rdf"
+        },
+        {
+            "class": "File",
+            "location": "../../../schemas/bclconvert-run-configuration/2.0.0--4.0.3/bclconvert-run-configuration__2.0.0--4.0.3.yaml",
+            "format": "https://www.iana.org/assignments/media-types/application/cwl",
+            "secondaryFiles": [
+                {
+                    "class": "File",
+                    "location": "../../../schemas/samplesheet/2.0.0--4.0.3/samplesheet__2.0.0--4.0.3.yaml#samplesheet",
+                    "format": "https://www.iana.org/assignments/media-types/application/cwl",
+                    "secondaryFiles": [
+                      ....
+
+    :return: Array
+      [
+        "../../../schemas/bclconvert-run-configuration/2.0.0--4.0.3/bclconvert-run-configuration__2.0.0--4.0.3.yaml"
+        ...
+      ]
+    """
+
+    location_list: List = []
+
+    if "location" in secondary_file_print_deps.keys():
+        file_location = secondary_file_print_deps["location"]
+        if file_location.startswith("https:"):
+            pass
+        elif Path(file_location).name == cwl_path.name:
+            pass
+        else:
+            location_list.append(
+                cwl_path.parent.joinpath(
+                    get_path_from_cwl_id(secondary_file_print_deps["location"])
+                ).absolute()
+            )
+
+    if "secondaryFiles" in secondary_file_print_deps.keys():
+        for secondary_file_print_dep in secondary_file_print_deps["secondaryFiles"]:
+            location_list.extend(
+                collect_locations_from_secondary_file_print_deps_recursively(secondary_file_print_dep, cwl_path)
+            )
+
+    # May end up with some duplicates
+    location_list = list(set(location_list))
+
+    return location_list
+
+
+def collect_objects_by_print_deps(cwl_path: Path) -> List:
+    """
+    Supersedes collect objects recursively
+    :param cwl_path:
+    :return:
+    """
+
+    returncode, stdout, stderr = run_subprocess_proc(
+        [
+            "cwltool", "--print-deps", str(cwl_path)
+        ],
+        capture_output=True
+    )
+
+    deps_as_dict: Dict = json.loads(stdout)
+
+    dep_locations = collect_locations_from_secondary_file_print_deps_recursively(
+        deps_as_dict,
+        cwl_path
+    )
+
+    return dep_locations
 
 def collect_objects_recursively(cwl_item, workflow_items: Optional[Dict] = None) -> Dict:
     # Get workflow items
@@ -129,7 +214,8 @@ def check_workflow_step_lengths(cwl_workflow: Workflow, cwl_file_path: Path):
 
 def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     # Collect all the workflow objects
-    all_workflow_objects = collect_objects_recursively(cwl_obj)
+    #all_workflow_objects = collect_objects_recursively(cwl_obj)
+    all_workflow_paths = collect_objects_by_print_deps(cwl_obj.cwl_file_path)
 
     # Create a temporary directory
     output_tempdir_obj = TemporaryDirectory()
@@ -140,18 +226,16 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     logger.info(f"Transferring files over into {output_tempdir}")
 
     # Copy over the workflow objects
-    for cwl_item, cwl_file_list in all_workflow_objects.items():
+    for cwl_path in all_workflow_paths:
 
-        # Get the cwl file list
-        for cwl_file in cwl_file_list:
-            # Get the new path
-            new_path = output_tempdir.joinpath(cwl_file.relative_to(get_cwl_ica_repo_path()))
+        # Get the new path
+        new_path = output_tempdir.joinpath(cwl_path.relative_to(get_cwl_ica_repo_path()))
 
-            # Create a directory for this file
-            new_path.parent.mkdir(parents=True, exist_ok=False)
+        # Create a directory for this file
+        new_path.parent.mkdir(parents=True, exist_ok=False)
 
-            # And copy over contents of the file
-            shutil.copy2(cwl_file, new_path)
+        # And copy over contents of the file
+        shutil.copy2(cwl_path, new_path)
 
     # Copy over the main workflow
     new_workflow_path = output_tempdir / "workflow.cwl"
