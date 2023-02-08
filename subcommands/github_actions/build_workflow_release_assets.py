@@ -239,7 +239,7 @@ Environment Variables
         """
 
     def get_release_url(self):
-        return get_releases_url() + self.release_name
+        return get_releases_url() + self.github_tag[1]
 
     def create_markdown_file_object(self):
         self.initialise_markdown_file()
@@ -642,7 +642,9 @@ Environment Variables
         """
 
         gh_create_release_command = [
-            "gh", "release", "create", self.github_tag[1],
+            "gh", "release", "create",
+            self.github_tag[1],
+            "--title", self.github_tag[1],
             "--notes-file",  self.md_path,
         ]
 
