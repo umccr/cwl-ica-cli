@@ -239,7 +239,7 @@ Environment Variables
         """
 
     def get_release_url(self):
-        return get_releases_url() + self.release_name
+        return get_releases_url() + self.github_tag[1]
 
     def create_markdown_file_object(self):
         self.initialise_markdown_file()
