@@ -642,7 +642,9 @@ Environment Variables
         """
 
         gh_create_release_command = [
-            "gh", "release", "create", self.github_tag[1],
+            "gh", "release", "create",
+            self.github_tag[1],
+            "--title", self.github_tag[1],
             "--notes-file",  self.md_path,
         ]
 
