@@ -190,6 +190,9 @@ class CreateSubmissionTemplate(Command):
         launch_project_name = self.args.get("--launch-project")
         if launch_project_name is not None:
             self.launch_project_name = launch_project_name
+        else:
+            logger.error("Please specify --launch-project parameter")
+            raise CheckArgumentError
 
         # Get the output json object
         if self.args.get("--prefix", None) is None:
