@@ -13,20 +13,24 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 from zipfile import ZIP_DEFLATED, ZipFile
 
+from cwl_utils.parser import load_document_by_uri, CommandLineTool
+
 from classes.cwl_workflow import CWLWorkflow
 from classes.cwl_tool import CWLTool
 from classes.cwl_expression import CWLExpression
 from cwl_utils.parser.latest import \
-    Workflow, WorkflowStep
-from typing import Optional, Dict, List
+    Workflow, WorkflowStep, ExpressionTool
+from typing import Optional, Dict, List, Union
 from pathlib import Path
 
-from utils.globals import ICAV2_MAX_STEP_CHARACTERS, ICAV2_COMPUTE_RESOURCE_MAPPINGS, ICAV2_CONTAINER_MAPPINGS, \
-    ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, MATCH_RUN_LINE_REGEX_OBJ, MATCH_SCHEMA_LINE_REGEX_OBJ
+from utils.globals import ICAV2_MAX_STEP_CHARACTERS, ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS, ICAV2_CONTAINER_MAPPINGS, \
+    ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, MATCH_RUN_LINE_REGEX_OBJ, MATCH_SCHEMA_LINE_REGEX_OBJ, \
+    ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS
 from utils.miscell import get_items_dir_from_cwl_file_path
 from utils.cwl_helper_utils import get_include_items, get_fragment_from_cwl_id, get_path_from_cwl_id
 from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to_schema_list_recursively, \
     get_schema_mappings
+from utils.cwl_utils_typing_helpers import ResourceRequirementType, DockerRequirementType
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
 from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path, get_tools_dir, get_workflows_dir
 from utils.logging import get_logger
@@ -270,27 +274,62 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
         if not path_item.is_file():
             continue
 
+        # Load file as cwl object
+        path_item_cwl_obj: Optional[Union[CommandLineTool | Workflow | ExpressionTool]]
+        if path_item.suffix == ".cwl":
+            path_item_cwl_obj: Union[CommandLineTool | Workflow | ExpressionTool] = load_document_by_uri(path_item)
+        else:
+            path_item_cwl_obj = None
+
         with FileInput(path_item, inplace=True) as _input:
             for line in _input:
                 # Strip line then reprint it
                 # Which also conveniently converts any windows line endings into standard unix line endings
                 line_strip = line.rstrip()
 
-                # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
-                for resource_mapping in ICAV2_COMPUTE_RESOURCE_MAPPINGS:
+                for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
                     if resource_mapping.get("v1") in line_strip:
                         line_strip = line_strip.replace(
                             resource_mapping.get("v1"),
                             resource_mapping.get("v2")
                         )
 
-                # Deal with https://github.com/umccr-illumina/dragen/issues/48
-                for container_mapping in ICAV2_CONTAINER_MAPPINGS:
-                    if container_mapping.get("v1") in line_strip:
-                        line_strip = line_strip.replace(
-                            container_mapping.get("v1"),
-                            container_mapping.get("v2")
-                        )
+                if path_item_cwl_obj is not None:
+                    if path_item_cwl_obj.hints is None:
+                        continue
+                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/128
+                    for resource_mapping in ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS:
+                        for hint in path_item_cwl_obj.hints:
+                            if isinstance(hint, ResourceRequirementType) and \
+                                    hint.extension_fields is not None and \
+                                    "ilmn-tes:resources/type" in hint.extension_fields.keys() \
+                                    and hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == "standard" and \
+                                    resource_mapping.get("v1") in line_strip: \
+                                    line_strip = line_strip.replace(
+                                        resource_mapping.get("v1"),
+                                        resource_mapping.get("v2")
+                                    )
+                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
+                    for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
+                        for hint in path_item_cwl_obj.hints:
+                            if isinstance(hint, ResourceRequirementType) and \
+                                    hint.extension_fields is not None and \
+                                    "ilmn-tes:resources/type" in hint.extension_fields.keys() and \
+                                    hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == resource_mapping.get("v1") and \
+                                    resource_mapping.get("v1") in line_strip:
+                                line_strip = line_strip.replace(
+                                    resource_mapping.get("v1"),
+                                    resource_mapping.get("v2")
+                                )
+                    # Deal with https://github.com/umccr-illumina/dragen/issues/48
+                    for container_mapping in ICAV2_CONTAINER_MAPPINGS:
+                        for requirement in path_item_cwl_obj.requirements:
+                            if isinstance(requirement, DockerRequirementType) and \
+                                    requirement.dockerPull == resource_mapping.get("v1"):
+                                line_strip = line_strip.replace(
+                                    container_mapping.get("v1"),
+                                    container_mapping.get("v2")
+                                )
 
                 # Deal with https://github.com/umccr-illumina/ica_v2/issues/21
                 # / also related https://github.com/umccr-illumina/ica_v2/issues/47

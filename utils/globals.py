@@ -141,14 +141,33 @@ ICA_TES_INSTANCE_SIZES_BY_TYPE = {
 ICAV1_CWLTOOL_VERSION = "3.0.20201203173111"
 ICAV1_CWLTOOL_CONDA_ENV_NAME = "cwltool-icav1"
 
-ICAV2_COMPUTE_RESOURCE_MAPPINGS = [
+ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS = [
     {
-        "v1": "type: standardHiCpu",
-        "v2": "type: hicpu"
+        "v1": "ilmn-tes:resources/type: standardHiCpu",
+        "v2": "ilmn-tes:resources/type: hicpu"
     },
     {
-        "v1": "type: standardHiMem",
-        "v2": "type: himem"
+        "v1": "ilmn-tes:resources/type: standardHiMem",
+        "v2": "ilmn-tes:resources/type: himem"
+    }
+]
+
+ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS = [
+    {
+        "v1": "ilmn-tes:resources/size: medium",
+        "v2": "ilmn-tes:resources/size: small"
+    },
+    {
+        "v1": "ilmn-tes:resources/size: large",
+        "v2": "ilmn-tes:resources/size: small"
+    },
+    {
+        "v1": "ilmn-tes:resources/size: xlarge",
+        "v2": "ilmn-tes:resources/size: medium"
+    },
+    {
+        "v1": "ilmn-tes:resources/size: xxlarge",
+        "v2": "ilmn-tes:resources/size: large"
     }
 ]
 
