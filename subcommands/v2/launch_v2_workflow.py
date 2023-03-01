@@ -105,7 +105,11 @@ Example:
     """
     
     def __init__(self, command_argv):
-
+        logger.warning(
+            "The cwl-ica icav2-launch-pipeline-analysis subcommand has been deprecated, "
+            "please checkout the icav2 projectpipelines start-cwl-wes subcommand instead "
+            "from the https://github.com/umccr/icav2-cli-plugins repository"
+        )
         # Collect args from doc strings
         super(LaunchV2Workflow, self).__init__(command_argv)
 
