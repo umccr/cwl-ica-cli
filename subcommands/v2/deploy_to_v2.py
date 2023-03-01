@@ -74,6 +74,11 @@ Example:
             self._help(fail=True)
 
     def check_args(self):
+        logger.warning(
+            "The cwl-ica icav2-deploy-pipeline subcommand has been deprecated, "
+            "please checkout the icav2 projectpipelines create-cwl-workflow* subcommands "
+            "from the https://github.com/umccr/icav2-cli-plugins repository"
+        )
         # Confirm zipped_workflow_path is set and is a file
         zipped_workflow_path_arg = self.args.get("--zipped-workflow-path", None)
         if zipped_workflow_path_arg is None:

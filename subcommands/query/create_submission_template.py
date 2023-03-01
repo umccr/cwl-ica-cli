@@ -190,6 +190,9 @@ class CreateSubmissionTemplate(Command):
         launch_project_name = self.args.get("--launch-project")
         if launch_project_name is not None:
             self.launch_project_name = launch_project_name
+        else:
+            logger.error("Please specify --launch-project parameter")
+            raise CheckArgumentError
 
         # Get the output json object
         if self.args.get("--prefix", None) is None:
@@ -716,7 +719,7 @@ class CreateSubmissionTemplate(Command):
             # Check yq is present
             shell_h.write(f"# Check jq, yq and {launch_binary} is in path\n")
             shell_h.write(f"echo 'Checking jq, yq and {launch_binary} are installed' 1>&2\n")
-            shell_h.write(f"if ! type jq, yq {launch_binary} >/dev/null 1>&2; then\n")
+            shell_h.write(f"if ! type jq yq {launch_binary} >/dev/null 1>&2; then\n")
             shell_h.write(f"    echo \"Error: Please ensure you've installed 'jq', 'yq' and '{launch_binary}' before continuing\"\n")
             shell_h.write("fi\n\n")
 
@@ -739,8 +742,8 @@ class CreateSubmissionTemplate(Command):
             shell_h.write(f"# Enter the right context to launch the workflow\n")
             shell_h.write(f"echo 'Entering launch project context' 1>&2\n")
             shell_h.write(f"if type ica-context-switcher >/dev/null 2>&1; then\n")
-            shell_h.write(f"    ica-context-switcher --project-name '{self.launch_project_name}' --scope 'admin'\n")
-            # TODO - check if ica-access-token is present and check it is the right project context
+            shell_h.write(f"    ica-context-switcher --project-name '{self.launch_project_name}' --scope 'admin' || \\\n")
+            shell_h.write(f"    ( echo 'Error! Failed to switch to admin context of \'{self.launch_project_name}\', exiting' 1>&2 && exit 1 )\n")
             shell_h.write(f"else\n")
             shell_h.write(f"    ica projects enter '{self.launch_project_name}'\n")
             if self.is_curl:
@@ -751,11 +754,12 @@ class CreateSubmissionTemplate(Command):
             shell_h.write("# Convert yaml into json with yq\n")
             shell_h.write(f"echo 'Converting {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} to json' 1>&2\n")
             shell_h.write(f"echo 'If __DATE_STR__ placeholder has been used in engineParameters workDirectory or outputDirectory, it will be updated with the current timestamp' 1>&2\n")
+            shell_h.write(f"trap 'rm -f ${{json_path}}' EXIT")
             shell_h.write(f"json_path=$(mktemp {self.output_yaml_path.stem}.XXX.json)\n")
-            shell_h.write(f"yq eval \\\n"
+            shell_h.write(f"yq \\\n"
                           f"  --output-format=json \\\n"
                           f"  '.' \\\n"
-                          f"  {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} | \\\n"
+                          f"  < \"{self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)}\" | \\\n"
                           f"jq --raw-output \\\n"
                           f"  '\n"
                           f"    (now | strflocaltime(\"%Y%m%d_%H%M%S\")) as $current_date |\n"
@@ -787,3 +791,7 @@ class CreateSubmissionTemplate(Command):
             else:
                 shell_h.write("# Submit command through ica binary\n")
                 shell_h.write(f"ica workflows versions launch \"{self.ica_workflow_id}\" \"{self.ica_workflow_version_name}\" \"$json_path\"\n")
+
+            # Delete json output file and remove trap
+            shell_h.write("rm -f \"${json_path}\"\n")
+            shell_h.write("trap - EXIT\n")

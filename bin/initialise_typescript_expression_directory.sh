@@ -197,6 +197,7 @@ trap 'rm -rf "${temp_dir}"' EXIT
     ts-jest \
     jest \
     cwl-ts-auto \
+    cwlts \
     @types/jest \
     @types/node && \
   yarn install && \

@@ -20,7 +20,7 @@ class CreateToolSubmissionTemplate(CreateSubmissionTemplate):
     cwl-ica [options] create-tool-submission-template (--tool-path=<path_to_tool>)
                                                       (--prefix=<path_to_output_prefix>)
                                                       (--project=<project_tool_belongs_to>)
-                                                      [--launch-project=<project_to_launch_tool>]
+                                                      (--launch-project=<project_to_launch_tool>)
                                                       [--ica-workflow-run-instance-id=<ica_workflow_run_id>]
                                                       [--ignore-workflow-id-mismatch]
                                                       [--access-token=<access_token>]

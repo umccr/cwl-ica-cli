@@ -27,5 +27,6 @@ dependencies:
     - mdutils
     - deepdiff
     - in-place
+    - pre-commit
     - websocket
     - websocket-client

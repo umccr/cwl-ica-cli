@@ -25,7 +25,7 @@ from utils.logging import get_logger
 from pathlib import Path
 from argparse import ArgumentError
 from utils.globals import \
-    ICAV2_COMPUTE_RESOURCE_MAPPINGS, \
+    ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS, \
     ICAV2_CONTAINER_MAPPINGS, \
     ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, \
     PARAMS_XML_FILE_NAME, \
@@ -63,7 +63,12 @@ Example:
     """
 
     def __init__(self, command_argv):
-
+        logger.warning(
+            "The cwl-ica icav2-zip-workflow subcommand has been deprecated, "
+            "Please tag the workflow and push to github to build the workflow as a release asset. "
+            "You can then use the icav2 projectpipelines create-cwl-workflow* subcommands "
+            "from the https://github.com/umccr/icav2-cli-plugins repository to import the pipeline."
+        )
         # Collect args from doc strings
         super(ZipV2Workflow, self).__init__(command_argv)
 
@@ -211,7 +216,7 @@ Example:
                     line_strip = line.rstrip()
 
                     # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
-                    for resource_mapping in ICAV2_COMPUTE_RESOURCE_MAPPINGS:
+                    for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
                         if resource_mapping.get("v1") in line_strip:
                             line_strip = line_strip.replace(
                                 resource_mapping.get("v1"),

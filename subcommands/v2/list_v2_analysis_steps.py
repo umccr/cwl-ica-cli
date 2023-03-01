@@ -60,7 +60,11 @@ Example:
     """
 
     def __init__(self, command_argv):
-
+        logger.warning(
+            "The cwl-ica list-analysis-steps subcommand has been deprecated, "
+            "please checkout the icav2 projectanalyses list-analysis-steps subcommand "
+            "from the https://github.com/umccr/icav2-cli-plugins repository"
+        )
         # Collect args from doc strings
         super(ICAv2ListAnalysisSteps, self).__init__(command_argv)
 

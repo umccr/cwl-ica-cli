@@ -89,6 +89,11 @@ Example:
             self._help(fail=True)
 
     def check_args(self):
+        logger.warning(
+            "The cwl-ica icav2-get-analysis-step-logs subcommand has been deprecated, "
+            "please checkout the icav2 projectanalyses get-analysis-step-logs subcommand instead "
+            "from the https://github.com/umccr/icav2-cli-plugins repository"
+        )
         # Get project id
         self.project_id = self.args.get("--project-id", None)
         self.project_name = self.args.get("--project-name", None)
