@@ -754,8 +754,8 @@ class CreateSubmissionTemplate(Command):
             shell_h.write("# Convert yaml into json with yq\n")
             shell_h.write(f"echo 'Converting {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} to json' 1>&2\n")
             shell_h.write(f"echo 'If __DATE_STR__ placeholder has been used in engineParameters workDirectory or outputDirectory, it will be updated with the current timestamp' 1>&2\n")
-            shell_h.write(f"trap 'rm -f ${{json_path}}' EXIT")
-            shell_h.write(f"json_path=$(mktemp {self.output_yaml_path.stem}.XXX.json)\n")
+            shell_h.write(f"trap 'rm -f ${{json_path}}' EXIT\n")
+            shell_h.write(f"json_path=\"$(mktemp {self.output_yaml_path.stem}.XXX.json)\"\n")
             shell_h.write(f"yq \\\n"
                           f"  --output-format=json \\\n"
                           f"  '.' \\\n"
