@@ -14,6 +14,9 @@ ICAWorkflow has the following properties
     * The modification time of the ICA workflow version
     * Any run instances associated with this ICAWorkflowVersion
 """
+from typing import List
+
+from libica.openapi.libwes import WorkflowVersionCompact
 
 from classes.ica_workflow_version import ICAWorkflowVersion
 from pathlib import Path
@@ -193,6 +196,29 @@ class ICAWorkflow:
                              f"update workflow \"{self.ica_workflow_id}\"")
 
         self.workflow_obj = api_response
+
+    def list_workflow_versions(self, access_token) -> List[WorkflowVersionCompact]:
+        """
+        List workflow versions
+        :return:
+        """
+
+        # Set config
+        configuration = self.get_ica_wes_configuration(access_token)
+
+        # Create a project token
+        with libica.openapi.libwes.ApiClient(configuration) as api_client:
+            # Create an instance of the API class
+            api_instance = libica.openapi.libwes.WorkflowVersionsApi(api_client)
+
+            try:
+                # Get the details of a workflow version
+                api_response = api_instance.list_workflow_versions(self.ica_workflow_id)
+            except ApiException:
+                logger.error(f"Api exeception error when trying to "
+                             f"update workflow \"{self.ica_workflow_id}\"")
+
+        return api_response.items
 
     @classmethod
     def from_dict(cls, workflow_dict):
