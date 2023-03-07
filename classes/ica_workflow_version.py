@@ -68,7 +68,7 @@ class ICAWorkflowVersion:
         )
         return configuration
 
-    def create_workflow_version(self, workflow_definition, access_token, project_id, linked_projects):
+    def create_workflow_version(self, workflow_definition, access_token, project_id, linked_projects, status="draft"):
         """
         Use libica to create a workflow version though POST
         :return:
@@ -90,7 +90,8 @@ class ICAWorkflowVersion:
             body = libica.openapi.libwes.CreateWorkflowVersionRequest(version=self.ica_workflow_version_name,
                                                                       definition=workflow_definition,
                                                                       language=language,
-                                                                      acl=acl)
+                                                                      acl=acl,
+                                                                      status=status)
 
             try:
                 # Create a new workflow version

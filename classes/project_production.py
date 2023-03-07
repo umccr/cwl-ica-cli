@@ -6,6 +6,8 @@ ProductionProject ica workflow versions hold a 7 digit git commit id suffix at t
 This is updated by the github actions script.
 """
 
+import os
+
 from classes.ica_workflow import ICAWorkflow
 from classes.ica_workflow_version import ICAWorkflowVersion
 from pathlib import Path
@@ -13,7 +15,8 @@ from classes.cwl import CWL
 from classes.project import Project
 from utils.logging import get_logger
 from utils.errors import WorkflowVersionExistsError, ProductionProjectError
-import os
+from libica.openapi.libwes.rest import ApiException
+
 
 logger = get_logger()
 
@@ -44,7 +47,7 @@ class ProductionProject(Project):
         # Call super class
         super(ProductionProject, self).__init__(project_name, project_id, project_abbr, project_api_key_name, project_description, linked_projects, tenant_id, tools, workflows)
 
-    def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False) -> bool:
+    def sync_item_version_with_project(self, ica_workflow_version: ICAWorkflowVersion, md5sum, cwl_packed_obj, force=False) -> bool:
         """
         Takes an ica workflow version object (which, yes will be an item in this in either tools or workflows)
         Gets the new item versions md5sum and the cwl_packed_dict for uploading to ica
@@ -67,10 +70,26 @@ class ProductionProject(Project):
         ica_workflow_version.ica_workflow_version_name = '--'.join([ica_workflow_version.name,
                                                                     os.environ.get("GIT_COMMIT_ID")][:7])
 
-        # Create the workflow version - modification time is auto added to ica workflow version object
-        ica_workflow_version.create_workflow_version(cwl_packed_obj, self.get_project_token(),
-                                                     project_id=self.project_id, linked_projects=self.linked_projects)
-        _ = ica_workflow_version.get_workflow_version_object(self.get_project_token())
+        # Check if the workflow version exists first - it might if we've tried to do a sync first.
+        try:
+            _ = ica_workflow_version.get_workflow_version_object(self.get_project_token())
+            # If this worked, confirm md5sums are the same
+            if not ica_workflow_version.get_workflow_version_md5sum() == md5sum:
+                logger.error(f"Workflow version '{ica_workflow_version.ica_workflow_id}/{ica_workflow_version.ica_workflow_version_name}' "
+                             f"already exists but has a conflicting md5sum. This is a production project so not overwriting."
+                             f"Local md5sum is {md5sum} but ica remote md5sum is {ica_workflow_version.get_workflow_version_md5sum()}")
+                raise ProductionProjectError
+
+        except ApiException:
+            # Create the workflow version - modification time is auto added to ica workflow version object
+            ica_workflow_version.create_workflow_version(
+                cwl_packed_obj,
+                self.get_project_token(),
+                project_id=self.project_id,
+                linked_projects=self.linked_projects,
+                status="released"
+            )
+            _ = ica_workflow_version.get_workflow_version_object(self.get_project_token())
 
         return True
 
