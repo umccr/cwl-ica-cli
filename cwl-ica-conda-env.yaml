@@ -24,7 +24,7 @@ dependencies:
     - docopt
     - PyJWT
     - tabulate
-    - mdutils
+    - mdutils==1.4.0
     - deepdiff
     - in-place
     - pre-commit
