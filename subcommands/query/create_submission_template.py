@@ -523,6 +523,7 @@ class CreateSubmissionTemplate(Command):
         )
         self.input_template_object.yaml_set_comment_before_after_key(key="input",
                                                                      before=f"\nInputs to {self.item_type} {self.item_name}/{self.item_version}",
+                                                                     after="",
                                                                      indent=0)
 
     def write_yaml_file(self):
@@ -579,15 +580,18 @@ class CreateSubmissionTemplate(Command):
         # Get distinction between inputs set and inputs not set in workflow run id
         inputs_present_in_workflow_run = []
 
-        # Check that the ica run instance id is
+        # Check that the ica run instance id doesnt have keys available to this worklfow
         missing_keys = list(set(list(ica_workflow_run_obj.ica_input.keys())) - set(list(yaml_obj["input"].keys())))
         if not len(missing_keys) == 0:
-            logger.error("Items in instance are not in yaml object")
-            logger.error(f"Missing inputs: {', '.join(missing_keys)}")
-            raise ValueError
+            logger.warning("Items in instance are not in yaml object")
+            logger.warning(f"Missing inputs: {', '.join(missing_keys)}")
+            logger.warning(f"These values will be omitted frmo the yaml file")
 
         # Updating items
         for input_name, input_value in deepcopy(ica_workflow_run_obj.ica_input).items():
+            if input_name in missing_keys:
+                continue
+
             # Append to list we 'don't comment out'
             inputs_present_in_workflow_run.append(input_name)
 
@@ -659,7 +663,7 @@ class CreateSubmissionTemplate(Command):
                     # We're at a key
                     input_key = input_key_regex_obj.group(1)
                     # Check if key is in list
-                    if input_key in inputs_present_in_workflow_run:
+                    if input_key in inputs_present_in_workflow_run and not input_key in missing_keys:
                         comment_out_line = False
                     else:
                         #logger.info(f"Commenting out input {input_key}, not present in {self.ica_workflow_run_id}")
@@ -754,8 +758,8 @@ class CreateSubmissionTemplate(Command):
             shell_h.write("# Convert yaml into json with yq\n")
             shell_h.write(f"echo 'Converting {self.output_yaml_path.absolute().resolve().relative_to(self.output_shell_path.absolute().resolve().parent)} to json' 1>&2\n")
             shell_h.write(f"echo 'If __DATE_STR__ placeholder has been used in engineParameters workDirectory or outputDirectory, it will be updated with the current timestamp' 1>&2\n")
-            shell_h.write(f"trap 'rm -f ${{json_path}}' EXIT")
-            shell_h.write(f"json_path=$(mktemp {self.output_yaml_path.stem}.XXX.json)\n")
+            shell_h.write(f"trap 'rm -f ${{json_path}}' EXIT\n")
+            shell_h.write(f"json_path=\"$(mktemp {self.output_yaml_path.stem}.XXX.json)\"\n")
             shell_h.write(f"yq \\\n"
                           f"  --output-format=json \\\n"
                           f"  '.' \\\n"

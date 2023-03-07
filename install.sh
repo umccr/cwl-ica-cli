@@ -479,6 +479,20 @@ sed "s/__VERSION__/latest/" \
 mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp" \
   "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py"
 
+latest_cwltool_version="$(
+  conda run --name "cwl-ica" \
+  cwltool --version | cut -f2 -d' '
+)"
+
+sed "s/__LATEST_CWLTOOL_VERSION__/${latest_cwltool_version}/" \
+  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py" > \
+  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py.tmp"
+
+  mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py.tmp" \
+  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py"
+
+
+
 ##################################
 # Update npm and yarn
 ##################################
