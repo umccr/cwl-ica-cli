@@ -15,7 +15,8 @@ cwl object:
 from pathlib import Path
 from ruamel import yaml
 from os import environ
-from utils.globals import ICAV1_CWLTOOL_VERSION, ICAV1_CWLTOOL_CONDA_ENV_NAME
+from utils.globals import ICAV1_CWLTOOL_VERSION, ICAV1_CWLTOOL_CONDA_ENV_NAME, LATEST_CWLTOOL_CONDA_ENV_NAME, \
+    LATEST_CWLTOOL_VERSION
 from utils.logging import get_logger
 from utils.errors import CWLPackagingError, CWLValidationError, CWLImportError, InvalidAuthorshipError
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -222,7 +223,25 @@ class CWL:
 
         # cwltool validation failed
         if not _return_code == 0:
+            logger.error(f"cwltool validate failed when run in conda environment {ICAV1_CWLTOOL_CONDA_ENV_NAME} "
+                         f"with cwltool version {ICAV1_CWLTOOL_VERSION}")
             raise CWLValidationError
+
+        _return_code, _stdout, _stderr = run_subprocess_proc(
+            [
+                "conda", "run",
+                "--name", f"{LATEST_CWLTOOL_CONDA_ENV_NAME}",
+                "cwltool", "--validate", cwl_file_path
+
+            ],
+            capture_output=True)
+
+        # cwltool validation failed
+        if not _return_code == 0:
+            logger.error(f"cwltool validate failed when run in conda environment {LATEST_CWLTOOL_CONDA_ENV_NAME} "
+                         f"with cwltool version {LATEST_CWLTOOL_VERSION}")
+            raise CWLValidationError
+
 
     @staticmethod
     def read_packed_file(packed_file: NamedTemporaryFile):
