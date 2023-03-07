@@ -212,20 +212,25 @@ class CWL:
         Run subprocess command ["cwltool", "--validate", "/path/to/cwl"]
         :return:
         """
-        _return_code, _stdout, _stderr = run_subprocess_proc(
-            [
-                "conda", "run",
-                "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
-                "cwltool", "--validate", cwl_file_path
 
-            ],
-            capture_output=True)
+        if environ.get("GIT_COMMIT_ID", None) is not None:
+            logger.info("Not running cwltool --validate with ICAv1 cwltool version "
+                        "in the interests of time on GitHub Actions")
+        else:
+            _return_code, _stdout, _stderr = run_subprocess_proc(
+                [
+                    "conda", "run",
+                    "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
+                    "cwltool", "--validate", cwl_file_path
 
-        # cwltool validation failed
-        if not _return_code == 0:
-            logger.error(f"cwltool validate failed when run in conda environment {ICAV1_CWLTOOL_CONDA_ENV_NAME} "
-                         f"with cwltool version {ICAV1_CWLTOOL_VERSION}")
-            raise CWLValidationError
+                ],
+                capture_output=True)
+
+            # cwltool validation failed
+            if not _return_code == 0:
+                logger.error(f"cwltool validate failed when run in conda environment {ICAV1_CWLTOOL_CONDA_ENV_NAME} "
+                             f"with cwltool version {ICAV1_CWLTOOL_VERSION}")
+                raise CWLValidationError
 
         _return_code, _stdout, _stderr = run_subprocess_proc(
             [
