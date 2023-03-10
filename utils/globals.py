@@ -189,7 +189,7 @@ ICAV2_CONTAINER_MAPPINGS = [
         "v2": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.9.3",
     },
     {
-        "v1": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:3.9.3",
+        "v1": "699120554104.dkr.ecr.us-east-1.amazonaws.com/public/dragen:4.0.3",
         "v2": "079623148045.dkr.ecr.us-east-1.amazonaws.com/cp-prod/7ecddc68-f08b-4b43-99b6-aee3cbb34524:latest"
     }
 ]
