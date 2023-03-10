@@ -181,6 +181,7 @@ class ICAWorkflowVersion:
             except ApiException:
                 logger.error(f"Api exeception error when trying to "
                              f"create workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
+                raise ApiException
 
         self.workflow_version_obj = api_response
 
@@ -211,6 +212,7 @@ class ICAWorkflowVersion:
             except ApiException:
                 logger.error(f"Api exeception error when trying to "
                              f"get workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
+                raise ApiException
 
         self.workflow_version_obj = api_response
 
