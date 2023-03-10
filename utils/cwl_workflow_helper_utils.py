@@ -325,11 +325,11 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                                 )
                     # Deal with https://github.com/umccr-illumina/dragen/issues/48
                     for container_mapping in ICAV2_CONTAINER_MAPPINGS:
-                        if path_item_cwl_obj.requirements is None:
+                        if path_item_cwl_obj.hints is None:
                             continue
-                        for requirement in path_item_cwl_obj.requirements:
-                            if isinstance(requirement, DockerRequirementType) and \
-                                    requirement.dockerPull == resource_mapping.get("v1"):
+                        for hint in path_item_cwl_obj.hints:
+                            if isinstance(hint, DockerRequirementType) and \
+                                    hint.dockerPull == container_mapping.get("v1"):
                                 line_strip = line_strip.replace(
                                     container_mapping.get("v1"),
                                     container_mapping.get("v2")
