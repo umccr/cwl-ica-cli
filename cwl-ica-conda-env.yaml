@@ -15,7 +15,6 @@ dependencies:
     - pytest
     - humanfriendly
     - libica==2.1.0
-    - mdutils
     - pyyaml
     - requests
     - verboselogs
