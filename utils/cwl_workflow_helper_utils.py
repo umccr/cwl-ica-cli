@@ -295,7 +295,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                         for hint in path_item_cwl_obj.hints:
                             if isinstance(hint, ResourceRequirementType) and \
                                     hint.extension_fields is not None and \
-                                    "ilmn-tes:resources/type" in hint.extension_fields.keys() \
+                                    "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() \
                                     and hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == "standard" and \
                                     resource_mapping.get("v1") in line_strip: \
                                     line_strip = line_strip.replace(
@@ -309,7 +309,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                         for hint in path_item_cwl_obj.hints:
                             if isinstance(hint, ResourceRequirementType) and \
                                     hint.extension_fields is not None and \
-                                    "ilmn-tes:resources/type" in hint.extension_fields.keys() and \
+                                    "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() and \
                                     hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == resource_mapping.get("v1") and \
                                     resource_mapping.get("v1") in line_strip:
                                 line_strip = line_strip.replace(
@@ -321,11 +321,18 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                         for hint in path_item_cwl_obj.hints:
                             if isinstance(hint, ResourceRequirementType) and \
                                 hint.extension_fields is not None and \
-                                    "ilmn-tes:resources/type" in hint.extension_fields.keys():
-                                line_strip = line_strip.replace(
-                                    "ilmn-tes:resources/type",
-                                    "ilmn-tes:resources:type"
-                                )
+                                len(
+                                    list(
+                                        filter(
+                                            lambda key: key.startswith("https://platform.illumina.com/rdf/ica/resources/"),
+                                            hint.extension_fields.keys()
+                                        )
+                                    )
+                                ) > 0:
+                                    line_strip = line_strip.replace(
+                                        "ilmn-tes:resources/",
+                                        "ilmn-tes:resources:"
+                                    )
 
                     # Deal with https://github.com/umccr-illumina/dragen/issues/48
                     for container_mapping in ICAV2_CONTAINER_MAPPINGS:

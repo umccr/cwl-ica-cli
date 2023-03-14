@@ -146,12 +146,12 @@ LATEST_CWLTOOL_CONDA_ENV_NAME = "cwl-ica"
 
 ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS = [
     {
-        "v1": "ilmn-tes:resources/type: standardHiCpu",
-        "v2": "ilmn-tes:resources/type: hicpu"
+        "v1": "standardHiCpu",
+        "v2": "hicpu"
     },
     {
-        "v1": "ilmn-tes:resources/type: standardHiMem",
-        "v2": "ilmn-tes:resources/type: himem"
+        "v1": "standardHiMem",
+        "v2": "himem"
     }
 ]
 
