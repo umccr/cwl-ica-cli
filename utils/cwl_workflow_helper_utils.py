@@ -287,13 +287,6 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                 # Which also conveniently converts any windows line endings into standard unix line endings
                 line_strip = line.rstrip()
 
-                for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
-                    if resource_mapping.get("v1") in line_strip:
-                        line_strip = line_strip.replace(
-                            resource_mapping.get("v1"),
-                            resource_mapping.get("v2")
-                        )
-
                 if path_item_cwl_obj is not None:
                     # Deal with https://github.com/umccr-illumina/ica_v2/issues/128
                     for resource_mapping in ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS:
@@ -323,6 +316,17 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                                     resource_mapping.get("v1"),
                                     resource_mapping.get("v2")
                                 )
+                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/130
+                    if path_item_cwl_obj.hints is not None:
+                        for hint in path_item_cwl_obj.hints:
+                            if isinstance(hint, ResourceRequirementType) and \
+                                hint.extension_fields is not None and \
+                                    "ilmn-tes:resources/type" in hint.extension_fields.keys():
+                                line_strip = line_strip.replace(
+                                    "ilmn-tes:resources/type",
+                                    "ilmn-tes:resources:type"
+                                )
+
                     # Deal with https://github.com/umccr-illumina/dragen/issues/48
                     for container_mapping in ICAV2_CONTAINER_MAPPINGS:
                         if path_item_cwl_obj.hints is None:
