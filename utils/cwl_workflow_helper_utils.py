@@ -25,7 +25,7 @@ from pathlib import Path
 
 from utils.globals import ICAV2_MAX_STEP_CHARACTERS, ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS, ICAV2_CONTAINER_MAPPINGS, \
     ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, MATCH_RUN_LINE_REGEX_OBJ, MATCH_SCHEMA_LINE_REGEX_OBJ, \
-    ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS
+    ICAV2_COMPUTE_RESOURCE_STANDARD_SIZE_MAPPINGS, MATCH_INCLUDE_LINE_REGEX_OBJ
 from utils.miscell import get_items_dir_from_cwl_file_path
 from utils.cwl_helper_utils import get_include_items, get_fragment_from_cwl_id, get_path_from_cwl_id
 from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to_schema_list_recursively, \
@@ -144,6 +144,7 @@ def collect_objects_by_print_deps(cwl_path: Path) -> List:
 
     return dep_locations
 
+
 def collect_objects_recursively(cwl_item, workflow_items: Optional[Dict] = None) -> Dict:
     # Get workflow items
     if workflow_items is None:
@@ -248,6 +249,15 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     # Edit the main workflow
     step_mappings = get_step_mappings(cwl_obj.cwl_obj.steps, cwl_obj.cwl_file_path)
     schema_mappings = get_schema_mappings(get_schemas(cwl_obj), cwl_obj.cwl_file_path)
+    include_mappings = list(
+        map(
+            lambda x: os.path.relpath(x, cwl_obj.cwl_file_path.parent),
+            filter(
+                lambda x: x.name.endswith(".cwljs"),
+                all_workflow_paths
+            )
+        )
+    )
 
     with FileInput(new_workflow_path, inplace=True) as _input:
         for line in _input:
@@ -265,6 +275,13 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                     line_strip = line_strip.replace(
                         urlparse(line_match_schema.group(2)).path,
                         str(schema_mapping.get('schema_path'))
+                    )
+            for include_mapping in include_mappings:
+                line_match_include = MATCH_INCLUDE_LINE_REGEX_OBJ.match(line_strip.lstrip())
+                if line_match_include is not None and urlparse(line_match_include.group(1)).path == include_mapping:
+                    line_strip = line_strip.replace(
+                        urlparse(line_match_include.group(1)).path,
+                        os.path.relpath(include_mapping, get_cwl_ica_repo_path().parent)
                     )
             print(line_strip)
 

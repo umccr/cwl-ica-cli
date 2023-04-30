@@ -201,6 +201,7 @@ ICAV2_DRAGEN_TEMPSPACE_MAPPINGS = {
 
 MATCH_RUN_LINE_REGEX_OBJ = re.compile(r"run: (/)?([^/\0]+(/)?)+$")
 MATCH_SCHEMA_LINE_REGEX_OBJ = re.compile(r"((?:- \$import)|(?:type)): ((/)?([^/\0]+(/)?)+)")
+MATCH_INCLUDE_LINE_REGEX_OBJ = re.compile(r"(?:- \$include): ((/)?([^/\0]+(/)?)+)")
 
 PARAMS_XML_FILE_NAME = "params.xml"
 
