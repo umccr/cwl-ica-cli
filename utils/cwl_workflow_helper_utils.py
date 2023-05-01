@@ -281,7 +281,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                 if line_match_include is not None and urlparse(line_match_include.group(1)).path == include_mapping:
                     line_strip = line_strip.replace(
                         urlparse(line_match_include.group(1)).path,
-                        os.path.relpath(include_mapping, get_cwl_ica_repo_path().parent)
+                        os.path.relpath((Path(cwl_obj.cwl_file_path.parent) / include_mapping).resolve(), get_cwl_ica_repo_path())
                     )
             print(line_strip)
 
