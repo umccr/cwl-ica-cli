@@ -7,3 +7,4 @@ dependencies:
   - setuptools<=58
   - pip:
     - cwltool==3.0.20201203173111
+    - filelock>=3
