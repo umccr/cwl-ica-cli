@@ -22,11 +22,11 @@ jobs:
       # Get tag name, from /ref/heads/<tag> to <tag>
       - name: Get Tag Name
         id: get_tag_name
-        run: echo "::set-output name=tag_name::$(basename ${{ github.ref }})"
+        run: echo "tag_name=$(basename ${{ github.ref }})" >> "${GITHUB_OUTPUT}"
       # Is pre-release?
       - name: Determine if this is a pre-release or not
         id: is_prerelease
-        run: echo "::set-output name=prerelease::$(if [[ "${{ steps.get_tag_name.outputs.tag_name }}" == "pre"* || "${{ steps.get_tag_name.outputs.tag_name }}" == "dev" ]]; then echo true; else echo false; fi)"
+        run: echo "prerelease=$(if [[ "${{ steps.get_tag_name.outputs.tag_name }}" == "pre"* || "${{ steps.get_tag_name.outputs.tag_name }}" == "dev" ]]; then echo true; else echo false; fi)" >> "${GITHUB_OUTPUT}"
       # Build project
       - name: Build project # This would actually build your project, using zip for an example artifact
         uses: ./.github/actions/build-release
@@ -58,6 +58,7 @@ jobs:
           asset_path: release-${{ steps.get_tag_name.outputs.tag_name }}.zip
           asset_name: release-${{ steps.get_tag_name.outputs.tag_name }}.zip
           asset_content_type: application/zip
+
   # Second job - can be run in parallel to building release
   build_container:
     name: Build Container
