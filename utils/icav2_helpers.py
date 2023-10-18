@@ -9,14 +9,21 @@ import tempfile
 import requests
 
 from libica.openapi.v2.api.project_analysis_api import ProjectAnalysisApi
+from libica.openapi.v2.api.region_api import RegionApi
+from libica.openapi.v2.api.user_api import UserApi
 from libica.openapi.v2.model.analysis import Analysis
 from libica.openapi.v2.model.analysis_step import AnalysisStep
 from libica.openapi.v2.model.analysis_step_list import AnalysisStepList
 from libica.openapi.v2.model.analysis_step_logs import AnalysisStepLogs
 from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 from libica.openapi.v2.model.create_data import CreateData
+from libica.openapi.v2.model.data import Data
 from libica.openapi.v2.model.pipeline import Pipeline
+from libica.openapi.v2.model.project import Project
 from libica.openapi.v2.model.project_data import ProjectData
+from libica.openapi.v2.model.project_data_paged_list import ProjectDataPagedList
+from libica.openapi.v2.model.region import Region
+from libica.openapi.v2.model.user import User
 
 from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from utils.globals import ICAV2_DEFAULT_BASE_URL
@@ -27,7 +34,7 @@ from urllib.parse import urlparse
 
 import libica
 import libica.openapi.v2
-from libica.openapi.v2 import Configuration, ApiClient
+from libica.openapi.v2 import Configuration, ApiClient, ApiException
 from libica.openapi.v2.api.project_data_api import ProjectDataApi
 from libica.openapi.v2.api.project_api import ProjectApi
 from libica.openapi.v2.api.analysis_storage_api import AnalysisStorageApi
@@ -254,7 +261,63 @@ def write_icav2_file_contents(project_id: str, data_id, output_path: Path, confi
         f_h.write(r.content)
 
 
-def get_files_from_directory_id_non_recursively(project_id: str, data_id: str, configuration: Configuration) -> Dict:
+def get_files_from_directory_id_recursively(project_id: str, data_id: str, configuration: Configuration) -> List[Data]:
+    """
+    Get files from directory
+    :param project_id:
+    :param data_id:
+    :param configuration:
+    :return:
+    """
+
+    # Initialise return value
+    data_items: List[Data] = []
+
+    # Create instance
+    with ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = ProjectDataApi(api_client)
+
+    next_page_token = None
+    first_iter = True
+    response_items: List[Data] = []
+    page_size = 1000
+
+    # Iterate through data list while page token is not none
+    while next_page_token is not None or first_iter:
+        # First iteration now false
+        first_iter = False
+
+        # example passing only required values which don't have defaults set
+        try:
+            # Retrieve the list of project data.
+            api_response: ProjectDataPagedList = api_instance.get_project_data_list(
+                project_id,
+                page_token=next_page_token,
+                parent_folder_id=[data_id],
+                page_size=str(page_size)
+            )
+        except libica.openapi.v2.ApiException as e:
+            raise ValueError("Exception when calling ProjectDataApi->get_project_data_list: %s\n" % e)
+
+        # Get page tokmen
+        next_page_token = api_response.next_page_token
+
+        # Append response items
+        response_items.extend(api_response.items)
+
+    for data_item in response_items:
+        data_type: str = data_item.get("data").get("details").get('data_type')  # One of FILE | FOLDER
+        data_id = data_item.get("data").get("id")
+        if data_type == "FILE":
+            data_items.append(data_item)
+        if data_type == "FOLDER":
+            data_items.extend(get_files_from_directory_id_recursively(project_id, data_id, configuration))
+
+    return data_items
+
+
+def get_files_from_directory_id_non_recursively(project_id: str, data_id: str, configuration: Configuration) -> List[Data]:
     # Enter a context with an instance of the API client
     with ApiClient(configuration) as api_client:
         # Create an instance of the API class
@@ -317,7 +380,7 @@ def get_data_obj_from_project_id_and_path(project_id: str, data_path: str, confi
         raise FileNotFoundError(f"Found multiple results for {data_path} in project {project_id}")
 
 
-def get_data_obj_by_id(project_id: str, data_id: str, configuration: Configuration) -> str:
+def get_data_obj_by_id(project_id: str, data_id: str, configuration: Configuration) -> Data:
     # Enter a context with an instance of the API client
     with ApiClient(configuration) as api_client:
         # Create an instance of the API class
@@ -681,3 +744,93 @@ def recursively_build_open_api_body_from_libica_item(libica_item: Any) -> Union[
             output_value = value
         open_api_body_dict[libica_item.attribute_map.get(key)] = output_value
     return open_api_body_dict
+
+
+def get_region_obj_from_project_id(project_id: str, configuration: Configuration) -> Region:
+    """
+    Collect the region object from the project id
+    :param project_id:
+    :param configuration:
+    :return:
+    """
+    with ApiClient(configuration) as api_client:
+        api_instance = ProjectApi(api_client)
+
+    try:
+        api_response = api_instance.get_project(project_id)
+    except ApiException as e:
+        logger.error("Exception when calling ProjectApi->get_project: %s\n" % e)
+        raise ApiException
+
+    return api_response.region
+
+
+def is_data_id(data_str: str) -> bool:
+    if data_str.startswith("fil.") or data_str.startswith("fol."):
+        return True
+    return False
+
+
+def get_creator_name_from_creator_id(creator_id: str,  configuration: Configuration) -> str:
+    """
+
+    :param creator_id:
+    :param configuration:
+    :return:
+    """
+    with ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = UserApi(api_client)
+
+    # example passing only required values which don't have defaults set
+    try:
+        # Retrieve a user.
+        api_response: User = api_instance.get_user(creator_id)
+    except ApiException as e:
+        logger.error("Exception when calling UserApi->get_user: %s\n" % e)
+        raise ApiException
+
+    return api_response.username
+
+
+def get_regions(configuration: Configuration) -> List[Region]:
+    """
+    Return a list of regions
+    :return:
+    """
+    with ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = RegionApi(api_client)
+
+    # example, this endpoint has no required or optional parameters
+    try:
+        # Retrieve a list of regions. Only the regions the user has access to through his/her entitlements are returned.
+        api_response = api_instance.get_regions()
+    except ApiException as e:
+        logger.error("Exception when calling RegionApi->get_regions: %s\n" % e)
+        raise ApiException
+
+    return api_response.items
+
+
+def check_project_has_data_sharing_enabled(project_id: str) -> bool:
+    """
+    Check a project has data-sharing enabled before creating a dataset with that project
+    :param project_id: 
+    :return: 
+    """
+
+    configuration = get_icav2_configuration()
+
+    with ApiClient(configuration) as api_client:
+        # Create an instance of the API class
+        api_instance = ProjectApi(api_client)
+
+    # example passing only required values which don't have defaults set
+    try:
+        # Retrieve a project.
+        api_response: Project = api_instance.get_project(project_id)
+    except libica.openapi.v2.ApiException as e:
+        logger.error("Exception when calling ProjectApi->get_project: %s\n" % e)
+
+    return api_response.data_sharing_enabled

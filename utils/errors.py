@@ -355,3 +355,31 @@ class CWLTypeNotFoundError(Exception):
     Raise error if we don't know how to handle the cwl type in the template creation
     """
     pass
+
+
+class InvalidDataItem(Exception):
+    """
+    Raise error if the data item in ICAv2 is not was we expected
+    """
+    pass
+
+
+class InvalidBunchVersionName(Exception):
+    """
+    Raise error if the data item in ICAv2 is not was we expected
+    """
+    pass
+
+
+class ProjectNotFoundError(Exception):
+    """
+    Raise error if the v2 project is not found
+    """
+    pass
+
+
+class BunchNotFoundError(Exception):
+    """
+    Raise error if the bunch is not found in the configuration yaml
+    """
+    pass
