@@ -6,7 +6,7 @@ set -euo pipefail
 # Globals
 REQUIRED_NODE_VERSION="16.10"
 REQUIRED_YARN_VERSION="1.22"
-STABLE_YARN_VERSION="3.2.3"
+STABLE_YARN_VERSION="stable"
 
 # Handy functions
 echo_stderr(){
@@ -34,6 +34,9 @@ Usage: initialise_typescript_expression_directory.sh (--typescript-expression-di
 Required parameters:
          --typescript-expression-dir: Path to place typescript expressions
          --package-name: Simple place holder for the name attribute in the package.json file
+
+Optional parameters:
+         --node-linker: One of 'node-modules' or 'pnp'
 "
 }
 
@@ -78,6 +81,7 @@ fi
 # Get arguments
 typescript_expression_dir=""
 package_name=""
+node_linker=""
 # Get args from command line
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -87,6 +91,10 @@ while [ $# -gt 0 ]; do
       ;;
     --package-name)
       package_name="$2"
+      shift 1
+      ;;
+    --node-linker)
+      node_linker="$2"
       shift 1
       ;;
     -h|--help)
@@ -131,117 +139,55 @@ if [[ ! -d "$(dirname "${typescript_expression_dir}")" ]]; then
   exit 1
 fi
 
-# Check if we have the conda env
-# value of "0" for no and "1" for yes
-has_cwl_ica_conda_env="$( \
-  if ! type conda 1>/dev/null 2>&1; then
-    echo "0"; \
-  else
-    conda env list --json | \
-    jq --raw-output \
-      '
-        .envs |
-        map(
-          select(
-            split("/")[-1] |
-            test("^cwl-ica$")
-          )
-        ) |
-        length
-      '; \
-  fi \
-)"
-
-# If conda, has yarn and node as the condaenv versions
-# (if they exist!)
-if [[ "${has_cwl_ica_conda_env}" == "1" ]]; then
-  CWL_ICA_BIN_PATH="$( \
-    conda run --name "cwl-ica" && \
-    sh -c "echo '${CONDA_PREFIX}/bin'" \
-  )"
-  if [[ -d "${CWL_ICA_BIN_PATH}" ]]; then
-    # Hash yarn
-    if [[ -r "${CWL_ICA_BIN_PATH}/yarn" ]]; then
-      hash -p "${CWL_ICA_BIN_PATH}/yarn" "yarn"
-    fi
-
-    # Hash node
-    if [[ -r "${CWL_ICA_BIN_PATH}/node" ]]; then
-      hash -p "${CWL_ICA_BIN_PATH}/node" "node"
-    fi
-  fi
-fi
-
 echo "Creating typescript expression directory"
 mkdir -p "${typescript_expression_dir}"
 
+cd "${typescript_expression_dir}"
+
 # Run yarn init in a temp directory
-temp_dir="$(mktemp -d)/${package_name}"
-mkdir "${temp_dir}"
+echo_stderr "Running 'yarn init -2' in '${typescript_expression_dir}'" && \
+yarn init -2 && \
 
-trap 'rm -rf "${temp_dir}"' EXIT
+echo_stderr "Setting yarn version to stable" && \
+yarn set version "${STABLE_YARN_VERSION}" && \
 
-(
-  cd "${temp_dir}" && \
-  echo_stderr "Running 'yarn init -2' in '${typescript_expression_dir}'" && \
-  yarn init -2 && \
-  echo_stderr "Setting yarn version to stable" && \
-  yarn set version "${STABLE_YARN_VERSION}" && \
-  echo_stderr "Running an installation test" && \
-  yarn install && \
+echo_stderr "Running an installation test" && \
+yarn install && \
   echo_stderr "Checking the new version of yarn, should be >3" && \
   echo_stderr "Yarn version is '$(yarn --version)'" && \
   echo_stderr "Add project requirements" && \
-  yarn add --dev \
-    typescript \
-    ts-jest \
-    jest \
-    cwl-ts-auto \
-    cwlts \
-    @types/jest \
-    @types/node && \
-  yarn install && \
-  echo_stderr "Copying yarn.lock, package.json into typescript expression directory" && \
-  rsync --archive \
-    --include "package.json" \
-    --include "yarn.lock" \
-    --exclude "*" \
-    "${temp_dir}/" \
-    "${typescript_expression_dir}/"
-)
-rm -rf "${temp_dir}"
-trap - EXIT
+yarn add --dev \
+  typescript \
+  ts-jest \
+  jest \
+  cwl-ts-auto \
+  cwlts \
+  @types/jest \
+  @types/node && \
+yarn install && \
 
 # Initialise the .yarnrc.yml file
 echo_stderr "Initialising the .yarnrc.yml file"
 (
-  set -e && \
-  cd "${typescript_expression_dir}" && \
   {
-    echo 'nodeLinker: node-modules'
+    echo "nodeLinker: ${node_linker}"
   } > .yarnrc.yml
 )
 
 # Update the package name
 echo_stderr "Update the package name and licensing inside package.json"
-(
-  set -e
-  cd "${typescript_expression_dir}"
-  jq --raw-output \
-   --arg name "${package_name}" \
-   --arg license "MIT" \
-   '
-     .name = $name |
-     .license = $license
-   ' < package.json > package.json.tmp && \
-  mv package.json.tmp package.json
-)
+jq --raw-output \
+ --arg name "${package_name}" \
+ --arg license "MIT" \
+ '
+   .name = $name |
+   .license = $license
+ ' < package.json > package.json.tmp && \
+mv package.json.tmp package.json
 
 # Initialising typescript project
 echo_stderr "Initialising typescript project in directory"
 (
-  set -e && \
-  cd "${typescript_expression_dir}" && \
   {
     echo '{'
     echo '    "compilerOptions": {'
@@ -257,8 +203,6 @@ echo_stderr "Initialising typescript project in directory"
 
 echo_stderr "Initialised ts-jest configuration"
 (
-  set -e && \
-  cd "${typescript_expression_dir}" && \
   {
     echo "/** @type {import(\'ts-jest/dist/types\').InitialOptionsTsJest} */"
     echo "module.exports = {"
@@ -272,15 +216,6 @@ echo_stderr "Initialised ts-jest configuration"
     echo "}"
   } > jest.config.js
 )
-
-# If no conda then run yarn install in this directory
-if [[ "${has_cwl_ica_conda_env}" == "0" ]]; then
-  echo_stderr "Since we're not running through cwl-ica, we re-populate the package list"
-  (
-    cd "${typescript_expression_dir}" && \
-    yarn install
-  )
-fi
 
 # Create the tests directory too
 mkdir -p "${typescript_expression_dir}/tests"
