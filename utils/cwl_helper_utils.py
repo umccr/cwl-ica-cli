@@ -22,6 +22,9 @@ from cwl_utils.parser.cwl_v1_0 import \
     InputEnumSchema as InputEnumSchema_v1_0, \
     InputArraySchema as InputArraySchema_v1_0, \
     InputRecordSchema as InputRecordSchema_v1_0, \
+    OutputEnumSchema as OutputEnumSchema_v1_0, \
+    OutputArraySchema as OutputArraySchema_v1_0, \
+    OutputRecordSchema as OutputRecordSchema_v1_0, \
     ArraySchema as ArraySchema_v1_0, \
     EnumSchema as EnumSchema_v1_0, \
     InlineJavascriptRequirement as InlineJavascriptRequirement_v1_0
@@ -31,6 +34,9 @@ from cwl_utils.parser.cwl_v1_1 import \
     InputEnumSchema as InputEnumSchema_v1_1, \
     InputArraySchema as InputArraySchema_v1_1, \
     InputRecordSchema as InputRecordSchema_v1_1, \
+    OutputEnumSchema as OutputEnumSchema_v1_1, \
+    OutputArraySchema as OutputArraySchema_v1_1, \
+    OutputRecordSchema as OutputRecordSchema_v1_1, \
     ArraySchema as ArraySchema_v1_1, \
     EnumSchema as EnumSchema_v1_1, \
     InlineJavascriptRequirement as InlineJavascriptRequirement_v1_1
@@ -40,9 +46,24 @@ from cwl_utils.parser.cwl_v1_2 import \
     InputEnumSchema as InputEnumSchema_v1_2, \
     InputArraySchema as InputArraySchema_v1_2, \
     InputRecordSchema as InputRecordSchema_v1_2, \
+    OutputEnumSchema as OutputEnumSchema_v1_2, \
+    OutputArraySchema as OutputArraySchema_v1_2, \
+    OutputRecordSchema as OutputRecordSchema_v1_2, \
     ArraySchema as ArraySchema_v1_2, \
     EnumSchema as EnumSchema_v1_2, \
     InlineJavascriptRequirement as InlineJavascriptRequirement_v1_2
+
+from cwl_utils.parser.latest import \
+    WorkflowInputParameter, \
+    WorkflowOutputParameter, \
+    shortname, \
+    RecordSchema
+
+from cwl_utils.parser import \
+    Workflow, \
+    WorkflowStep, \
+    CommandLineTool, \
+    load_document_by_uri
 
 RecordSchema = Union[
     RecordSchema_v1_0,
@@ -68,6 +89,24 @@ InputRecordSchema = Union[
     InputRecordSchema_v1_2
 ]
 
+OutputEnumSchema = Union[
+    OutputEnumSchema_v1_0,
+    OutputEnumSchema_v1_1,
+    OutputEnumSchema_v1_2
+]
+
+OutputArraySchema = Union[
+    OutputArraySchema_v1_0,
+    OutputArraySchema_v1_1,
+    OutputArraySchema_v1_2
+]
+
+OutputRecordSchema = Union[
+    OutputRecordSchema_v1_0,
+    OutputRecordSchema_v1_1,
+    OutputRecordSchema_v1_2
+]
+
 ArraySchema = Union[
     ArraySchema_v1_0,
     ArraySchema_v1_1,
@@ -86,17 +125,10 @@ InlineJavascriptRequirement = Union[
     InlineJavascriptRequirement_v1_2
 ]
 
-from cwl_utils.parser.latest import \
-    WorkflowInputParameter, \
-    WorkflowOutputParameter, \
-    shortname, \
-    RecordSchema
-
-from cwl_utils.parser import \
-    Workflow, \
-    WorkflowStep, \
-    CommandLineTool, \
-    load_document_by_uri
+WorkflowParameter = Union[
+    WorkflowInputParameter,
+    WorkflowOutputParameter
+]
 
 from utils.logging import get_logger
 
@@ -166,6 +198,24 @@ def create_template_from_workflow_inputs(workflow_inputs: List[WorkflowInputPara
     return input_type_dict
 
 
+def create_template_from_workflow_outputs(workflow_outputs: List[WorkflowOutputParameter]):
+    """
+    List outputs by template
+    :param workflow_outputs:
+    :return:
+    """
+    output_type_dict = {}
+
+    for workflow_output in workflow_outputs:
+        output_type_dict.update(
+            {
+                shortname(workflow_output.id): get_workflow_output_type(workflow_output)
+            }
+        )
+
+    return output_type_dict
+
+
 def get_workflow_input_type(workflow_input: WorkflowInputParameter):
     if isinstance(workflow_input.type, str):
         return get_workflow_input_type_from_str_type(workflow_input)
@@ -179,7 +229,32 @@ def get_workflow_input_type(workflow_input: WorkflowInputParameter):
         return get_workflow_input_type_from_array_type(workflow_input)
     else:
         logger.warning(f"Don't know what to do here with {type(workflow_input.type)}")
+
+
+def get_workflow_output_type(workflow_output: WorkflowOutputParameter):
+    if isinstance(workflow_output.type, str):
+        return get_workflow_output_type_from_str_type(workflow_output)
+    elif isinstance(workflow_output.type, OutputEnumSchema):
+        return get_workflow_output_type_from_enum_schema(workflow_output)
+    elif isinstance(workflow_output.type, OutputArraySchema):
+        return get_workflow_output_type_from_array_schema(workflow_output)
+    elif isinstance(workflow_output.type, OutputRecordSchema):
+        return get_workflow_output_type_from_record_schema(workflow_output)
+    elif isinstance(workflow_output.type, List):
+        return get_workflow_output_type_from_array_type(workflow_output)
+    else:
+        logger.warning(f"Don't know what to do here with {type(workflow_output.type)}")
         
+
+def get_workflow_parameter_type_from_enum_schema(workflow_parameter: WorkflowParameter):
+    """
+    Workflow input type is an enum type
+    :param workflow_parameter:
+    :return:
+    """
+    workflow_parameter_type: InputEnumSchema = workflow_parameter.type
+    return shortname(workflow_parameter_type.symbols[0])
+
 
 def get_workflow_input_type_from_enum_schema(workflow_input: WorkflowInputParameter):
     """
@@ -187,8 +262,33 @@ def get_workflow_input_type_from_enum_schema(workflow_input: WorkflowInputParame
     :param workflow_input:
     :return:
     """
-    workflow_type: InputEnumSchema = workflow_input.type
-    return shortname(workflow_type.symbols[0])
+    return get_workflow_parameter_type_from_enum_schema(workflow_input)
+
+
+def get_workflow_output_type_from_enum_schema(workflow_output: WorkflowOutputParameter):
+    """
+    Workflow output type is an enum type
+    :param workflow_output:
+    :return:
+    """
+    return get_workflow_output_type_from_enum_schema(workflow_output)
+
+
+def get_workflow_type_from_array_schema(workflow_parameter: WorkflowInputParameter):
+    """
+    Workflow input type is an array schema
+    items attribute may be a file uri
+    :param workflow_parameter:
+    :return:
+    """
+
+    workflow_parameter_new = deepcopy(workflow_parameter)
+
+    workflow_parameter_new.type = workflow_parameter.type.items
+
+    return [
+        get_workflow_input_type(workflow_parameter_new)
+    ]
 
 
 def get_workflow_input_type_from_array_schema(workflow_input: WorkflowInputParameter):
@@ -199,17 +299,40 @@ def get_workflow_input_type_from_array_schema(workflow_input: WorkflowInputParam
     :return:
     """
 
-    workflow_input_new = deepcopy(workflow_input)
+    return get_workflow_type_from_array_schema(workflow_input)
 
-    workflow_input_new.type = workflow_input.type.items
 
-    return [
-        get_workflow_input_type(workflow_input_new)
-    ]
+def get_workflow_output_type_from_array_schema(workflow_output: WorkflowOutputParameter):
+    """
+    Workflow output type is an array schema
+    items attribute may be a file uri
+    :param workflow_output:
+    :return:
+    """
+    return get_workflow_type_from_array_schema(workflow_output)
 
 
 def get_workflow_input_type_from_record_schema(workflow_input: WorkflowInputParameter):
     raise NotImplementedError
+
+
+def get_workflow_output_type_from_record_schema(workflow_output: WorkflowOutputParameter):
+    raise NotImplementedError
+
+
+def get_workflow_type_from_array_type(workflow_parameter: WorkflowParameter):
+    """
+    Workflow input is type list -
+    likely that the first input is 'null'
+    :param workflow_parameter:
+    :return:
+    """
+    if not workflow_parameter.type[0] == "null":
+        logger.error("Unsure what to do with input of type list where first element is not null")
+        raise ValueError
+    workflow_input_new = deepcopy(workflow_parameter)
+    workflow_input_new.type = workflow_parameter.type[1]
+    return get_workflow_input_type(workflow_input_new)
 
 
 def get_workflow_input_type_from_array_type(workflow_input: WorkflowInputParameter):
@@ -219,12 +342,57 @@ def get_workflow_input_type_from_array_type(workflow_input: WorkflowInputParamet
     :param workflow_input:
     :return:
     """
-    if not workflow_input.type[0] == "null":
-        logger.error("Unsure what to do with input of type list where first element is not null")
-        raise ValueError
-    workflow_input_new = deepcopy(workflow_input)
-    workflow_input_new.type = workflow_input.type[1]
-    return get_workflow_input_type(workflow_input_new)
+    return get_workflow_type_from_array_type(workflow_input)
+
+
+def get_workflow_output_type_from_array_type(workflow_output: WorkflowOutputParameter):
+    """
+    Workflow input is type list -
+    likely that the first input is 'null'
+    :param workflow_input:
+    :return:
+    """
+    return get_workflow_type_from_array_type(workflow_output)
+
+
+def get_workflow_parameter_type_from_str_type(workflow_parameter: WorkflowParameter):
+    """
+        Workflow input type is a string type
+        :param workflow_input:
+        :return: A list with the following attributes
+          {
+
+          }
+        """
+    from utils.cwl_schema_helper_utils import CWLSchemaObj
+    if workflow_parameter.type.startswith("file://"):
+        # This is a schema!
+        return CWLSchemaObj.load_schema_from_uri(workflow_parameter.type).get_template()
+    if "#" in workflow_parameter.type:
+        original_path = Path(urlparse(workflow_parameter.id).path)
+        full_uri_path = original_path.parent.joinpath(
+            get_path_from_cwl_id(workflow_parameter.type)).resolve().absolute().as_uri()
+        return CWLSchemaObj.load_schema_from_uri(full_uri_path).get_template()
+    if workflow_parameter.type == "Directory":
+        return {
+            "class": "Directory",
+            "location": "icav2://project_id/path/to/dir/"
+        }
+    elif workflow_parameter.type == "File":
+        return {
+            "class": "File",
+            "location": "icav2://project_id/path/to/file"
+        }
+    elif workflow_parameter.type == "boolean":
+        return workflow_parameter.default if workflow_parameter.default is not None else False
+    elif workflow_parameter.type == "int":
+        return workflow_parameter.default if workflow_parameter.default is not None else "string"
+    elif workflow_parameter.type == "float":
+        return workflow_parameter.default if workflow_parameter.default is not None else "string"
+    elif workflow_parameter.type == "string":
+        return workflow_parameter.default if workflow_parameter.default is not None else "string"
+    else:
+        logger.warning(f"Don't know what to do here with {workflow_parameter.type}")
 
 
 def get_workflow_input_type_from_str_type(workflow_input: WorkflowInputParameter):
@@ -236,34 +404,19 @@ def get_workflow_input_type_from_str_type(workflow_input: WorkflowInputParameter
 
       }
     """
-    from utils.cwl_schema_helper_utils import CWLSchemaObj
-    if workflow_input.type.startswith("file://"):
-        # This is a schema!
-        return CWLSchemaObj.load_schema_from_uri(workflow_input.type).get_inputs_template()
-    if "#" in workflow_input.type:
-        original_path = Path(urlparse(workflow_input.id).path)
-        full_uri_path = original_path.parent.joinpath(get_path_from_cwl_id(workflow_input.type)).resolve().absolute().as_uri()
-        return CWLSchemaObj.load_schema_from_uri(full_uri_path).get_inputs_template()
-    if workflow_input.type == "Directory":
-        return {
-            "class": "Directory",
-            "location": "icav2://project_id/path/to/dir/"
-        }
-    elif workflow_input.type == "File":
-        return {
-            "class": "File",
-            "location": "icav2://project_id/path/to/file"
-        }
-    elif workflow_input.type == "boolean":
-        return workflow_input.default if workflow_input.default is not None else False
-    elif workflow_input.type == "int":
-        return workflow_input.default if workflow_input.default is not None else "string"
-    elif workflow_input.type == "float":
-        return workflow_input.default if workflow_input.default is not None else "string"
-    elif workflow_input.type == "string":
-        return workflow_input.default if workflow_input.default is not None else "string"
-    else:
-        logger.warning(f"Don't know what to do here with {workflow_input.type}")
+    return get_workflow_parameter_type_from_str_type(workflow_input)
+
+
+def get_workflow_output_type_from_str_type(workflow_output: WorkflowOutputParameter):
+    """
+    Workflow output type is a string type
+    :param workflow_output:
+    :return: A list with the following attributes
+      {
+
+      }
+    """
+    return get_workflow_parameter_type_from_str_type(workflow_output)
 
 
 def get_workflow_overrides_steps_dict(workflow_steps: List[WorkflowStep],
@@ -425,3 +578,7 @@ def split_cwl_id_to_path_and_fragment(cwl_id: str) -> Tuple[Path, Path]:
     cwl_path = Path(urlparse(cwl_path).path)
     cwl_fragment = Path(cwl_fragment)
     return cwl_path, cwl_fragment
+
+
+def get_authorship_from_workflow(cwl_workflow: Workflow):
+    cwl_workflow.extension_fields

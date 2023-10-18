@@ -27,7 +27,7 @@ Steps
     * Inputs Template
     * Overrides Template
 """
-import gzip
+
 import json
 import os
 import re
@@ -36,22 +36,30 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urldefrag
 from zipfile import ZipFile
 
+from ruamel.yaml import CommentedSeq
+
 from classes.command import Command
 from classes.cwl_workflow import CWLWorkflow
-from utils.cwl_helper_utils import create_template_from_workflow_inputs, get_workflow_overrides_steps_dict, \
-    get_type_from_cwl_io_object
+from classes.icav2_bunch_classes import Bunch, BunchVersion, Bundle
+from utils.cwl_helper_utils import create_template_from_workflow_inputs, create_template_from_workflow_outputs, \
+    get_workflow_overrides_steps_dict, get_type_from_cwl_io_object
 from utils.cwl_workflow_helper_utils import zip_workflow, create_packed_workflow_from_zipped_workflow_path
+from utils.dockstore_helpers import append_workflow_to_dockstore_yaml, get_dockstore_yaml_path
 from utils.gh_helpers import get_gh_release_output_path, get_github_url, get_releases_url
+from utils.globals import ICAV2_DEFAULT_BASE_URL
+from utils.icav2_gh_helpers import read_config_yaml, write_config_yaml, get_icav2_config_yaml_path, \
+    get_project_id_from_project_name, get_project_name_from_project_id, get_pipeline_code_from_pipeline_id, \
+    get_tenant_access_token
 
 from utils.logging import get_logger
 
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 from mdutils import MdUtils
 from utils.miscell import get_name_version_tuple_from_cwl_file_path, \
     get_items_dir_from_cwl_file_path, cwl_id_to_path
 from utils.pydot_utils import get_step_path_from_step_obj
-from utils.repo import get_workflows_dir
+from utils.repo import get_workflows_dir, get_dockstore_dir, get_cwl_ica_repo_path
 from utils.subprocess_handler import run_subprocess_proc
 
 from cwl_utils.parser import load_document_by_uri
@@ -79,7 +87,8 @@ Environment Variables
     GITHUB_SERVER_URL     Name of server (https://github.com)
     GITHUB_REPOSITORY     This repository path (umccr/cwl-ica)
     GITHUB_TOKEN:         Secret GitHub token, used by gh cli to push release assets
-    GTIHUB_TAG:           The GitHub tag(s) that triggered this workflow
+    GITHUB_TAG:           The GitHub tag(s) that triggered this workflow
+    ICAV2_ACCESS_TOKEN_<TENANT_NAME>    The icav2 access token for each given tenant, used to generate pipelines / bundles in each desired tenant
     """
 
     DEFAULT_OUTPUT_PATH = "cwl-ica-catalogue.md"
@@ -90,13 +99,17 @@ Environment Variables
         super().__init__(command_argv)
 
         # Initialise values
-        self.cwl_file_path = None  # type: Optional[Path]
-        self.cwl_obj = None  # type: Optional[CWLWorkflow]
+        self.cwl_file_path: Optional[Path] = None
+        self.cwl_obj: Optional[CWLWorkflow] = None
 
-        self.github_tag = None  # type: Optional[str]
+        self.github_tag = None  # type: Optional[List[str]]
         self.release_name = None  # type: Optional[str]
         self.release_url = None  # type: Optional[str]
         self.is_draft_release = None  # type: Optional[bool]
+
+        # ICAv2 assets
+        self.bundle_tenants = None  # type: Optional[List[str]]
+        self.bundle_objs = None  # type: Optional[List[Bundle]]
 
         # Release assets
         self.zipped_workflow_path = None  # type: Optional[Path]
@@ -106,11 +119,15 @@ Environment Variables
         # Release artifacts
         self.release_artifacts_tmpdir = TemporaryDirectory()
         self.release_artifacts_path = None  # type: Optional[Path]
-        self.release_artifacts_branch = None  # type: Optional[str]
+        self.artifacts_branch = None  # type: Optional[str]
         self.md_file_obj = None  # type: Optional[MdUtils]
         self.md_path_tmpdir = TemporaryDirectory()
         self.md_path = None  # type: Optional[Path]
         self.workflow_image_paths = None  # type: Optional[List[Tuple[str, Path, str]]]
+
+        # Icav2
+        self.pipeline_ids_by_project_by_tenant = None  # type: Optional[Dict]
+        self.icav2_bundles_by_tenant = None  # type: Optional[Dict]
 
         # Check args
         self.check_args()
@@ -134,7 +151,7 @@ Environment Variables
         if cwl_file_path_arg is None:
             logger.error(f"Could not get --workflow-path arg {cwl_file_path_arg}")
             raise ArgumentError
-        self.cwl_file_path = Path(cwl_file_path_arg)
+        self.cwl_file_path = Path(cwl_file_path_arg).absolute()
 
         if not self.cwl_file_path.is_file():
             logger.error(f"Could not find file {self.cwl_file_path}")
@@ -143,7 +160,8 @@ Environment Variables
         # Get name, version from cwl file path
         name, version = get_name_version_tuple_from_cwl_file_path(
             self.cwl_file_path,
-            items_dir=get_items_dir_from_cwl_file_path(self.cwl_file_path))
+            items_dir=get_items_dir_from_cwl_file_path(self.cwl_file_path)
+        )
 
         self.cwl_obj = CWLWorkflow(
             cwl_file_path=self.cwl_file_path,
@@ -153,7 +171,7 @@ Environment Variables
         # Validate object
         self.cwl_obj()
 
-        # Check GITHUB_TAG env var exists
+        # Check GITHUB_TAG env var exist
         if os.environ.get("GITHUB_TAG", None) is not None:
             self.github_tag = os.environ["GITHUB_TAG"].split(",")
         else:
@@ -176,7 +194,7 @@ Environment Variables
         # Release name is cwl_file_path.name + __ + YYMMDDHHMMSS
         self.release_name = self.github_tag[1].replace("/", "__")
         self.release_url = self.get_release_url()
-        self.release_artifacts_branch = f"{self.github_tag[1]}--release-artifacts"
+        self.artifacts_branch = f"{self.github_tag[1]}--release-artifacts"
 
         # Get zipped workflow path
         self.release_artifacts_path = Path(self.release_artifacts_tmpdir.name) / "release-artifacts"
@@ -186,33 +204,55 @@ Environment Variables
         self.packed_workflow_path = self.release_artifacts_path / (self.release_name + ".packed.cwl.json.gz")
 
         # Get md path
-        self.md_path = Path(self.md_path_tmpdir.name) / "Release.md"
+        self.md_path = Path(self.md_path_tmpdir.name) / "ReleaseNotes.md"
 
     def __call__(self):
         """
-        Create the markdown file object
+        * Upload release assets (zip and packed workflow json) and then create release
+        * Checkout the release artifacts branch
+        * Generate the dockstore PR(s)
+            * One to update the .dockstore.yml file
+            * One to generate a tag for this workflow/version in dockstore with a packed cwl json
+        * Add artifacts to a PR branch (pictures for the markdown object)
+        * Create the commit for the dockstore workflow
+        * Create the commit used for the images in the PR
+        * Generate the v2 configuration yaml PR - generates pipelines and bundles (separate PR)
+        * Now build the markdown file object
+        * Then edit the release using the GH API
         :return:
         """
+        # Checkout release artifacts branch
+        self.checkout_release_artifacts_branch()
+
         # Create images
         self.workflow_image_paths = self.create_workflow_images()
 
-        # Create file object
-        self.create_markdown_file_object()
+        # Create release (with files but empty description)
+        self.upload_release_assets_and_create_release()
+
+        # Create packed workflow PR for dockstore artifacts
+        self.create_dockstore_commit()
 
         # Commit and Create release artifacts branch
-        self.create_and_commit_to_release_artifacts_branch()
+        self.create_and_commit_to_release_artifacts()
 
-        # Fast forward tags
+        # Generate bundles for icav2
+        self.create_and_commit_v2_bundles()
+
+        # Fast-forward tags
         self.fast_forward_tags()
 
         # Push commit
         self.push_branch_and_tags()
 
-        # Upload release
-        self.upload_release_assets_and_create_release()
-
         # Create release artifacts PR
         self.create_release_artifacts_pr()
+
+        # Create file object
+        self.create_markdown_file_object()
+
+        # Add description
+        self.update_release_description()
 
     def get_repo_url_from_relative_repo_path(self, relative_path: Path) -> str:
         """
@@ -230,13 +270,57 @@ Environment Variables
         """
         return get_gh_release_output_path() / self.release_name
 
-    def add_description(self):
+    def checkout_release_artifacts_branch(self):
+        """
+        Checkout the release artifacts branch
+        :return:
+        """
+        git_checkout_command = [
+            "git", "checkout",
+            "-b", self.artifacts_branch,
+            self.github_tag[0]
+        ]
+
+        git_checkout_proc_returncode, git_checkout_proc_stdout, git_checkout_proc_stderr = run_subprocess_proc(
+            git_checkout_command,
+            capture_output=True
+        )
+
+        if not git_checkout_proc_returncode == 0:
+            logger.error(f"Could not checkout branch {self.artifacts_branch}")
+            logger.error(f"Stdout was {git_checkout_proc_stdout}")
+            logger.error(f"Stderr was {git_checkout_proc_stderr}")
+
+    def update_release_description(self):
         """
         Add in the description text file with the following contents
 
         Please see <this url> for a detailed description of this workflow
         :return:
         """
+        # Edit GitHub release with md-path, that contains the bundle objects and dockstore links
+        gh_edit_release_command = [
+            "gh", "release", "edit",
+            self.github_tag[1],
+            "--notes-file", str(self.md_path)
+        ]
+
+        gh_returncode, gh_stdout, gh_stderr = run_subprocess_proc(
+            gh_edit_release_command,
+            capture_output=True
+        )
+
+        # Add the release notes as their own asset
+        gh_add_release_mdfile_command = [
+            "gh", "release", "upload",
+            self.github_tag[1],
+            str(self.md_path)
+        ]
+
+        gh_returncode, gh_stdout, gh_stderr = run_subprocess_proc(
+            gh_add_release_mdfile_command,
+            capture_output=True
+        )
 
     def get_release_url(self):
         return get_releases_url() + self.github_tag[1]
@@ -246,6 +330,7 @@ Environment Variables
         self.add_header_section()
         self.add_visual_section()
         self.add_inputs_template_section()
+        self.add_outputs_template_section()
         self.add_overrides_template_section()
         self.add_inputs_section()
         self.add_steps_section()
@@ -314,6 +399,71 @@ Environment Variables
             self.cwl_obj.cwl_obj.doc
         )
 
+        self.md_file_obj.new_header(level=2, title="Dockstore", add_table_of_contents='n')
+        self.md_file_obj.new_paragraph(
+            "[Dockstore Version Link](https://dockstore.org/workflows/github.com/{org_repo}/{workflow_name}:{workflow_version})".format(
+                org_repo=os.environ.get("GITHUB_REPOSITORY"),
+                workflow_name=self.github_tag[1].split("/")[0],
+                workflow_version=self.github_tag[1].split("/")[1]
+            )
+        )
+
+        if self.pipeline_ids_by_project_by_tenant is None:
+            pass
+        else:
+            self.md_file_obj.new_header(level=2, title="ICAv2", add_table_of_contents='n')
+
+            pipeline_project_dict: Dict
+            for tenant_name, tenant_bundle_list in self.icav2_bundles_by_tenant.items():
+                self.md_file_obj.new_header(level=3, title=f"Tenant: {tenant_name}", add_table_of_contents='n')
+
+                self.md_file_obj.new_paragraph("**Bundles Generated**")
+
+                for bundle_id in tenant_bundle_list:
+                    bundle_obj = next(
+                        filter(
+                            lambda bundle_obj_iter: bundle_obj_iter.bundle_id == bundle_id,
+                            self.bundle_objs
+                        )
+                    )
+
+                    # Header Is the Bundle Name
+                    self.md_file_obj.new_header(
+                        level=4,
+                        title=f"Bundle Name: {bundle_obj.bundle_name} / Bundle Version {bundle_obj.bundle_version}",
+                        add_table_of_contents='n'
+                    )
+
+                    self.md_file_obj.new_paragraph(f"> Description\n {bundle_obj.bundle_description}\n")
+                    self.md_file_obj.new_paragraph(f"> Version Description\n {bundle_obj.bundle_version_description}\n")
+
+                    self.md_file_obj.new_list([
+                        f"**Bundle ID**:           {bundle_id}",
+                        f"[**Bundle Link**]({bundle_obj.bundle_url})",
+                        f"**Pipeline Project ID**: {bundle_obj.pipeline_project_id}",
+                        f"**Pipeline Project Name**: {get_project_name_from_project_id(tenant_name, bundle_obj.pipeline_project_id)}",
+                        f"**Pipeline ID**: {bundle_obj.bundle_pipeline_id}",
+                        f"**Pipeline Code**: {get_pipeline_code_from_pipeline_id(bundle_obj.bundle_pipeline_id, get_tenant_access_token(tenant_name))}",
+                    ])
+
+                    if not len(bundle_obj.projects) == 0:
+                        self.md_file_obj.new_line("\n**Projects**\n")
+
+                        self.md_file_obj.new_list(
+                            bundle_obj.projects
+                        )
+
+                    if not len(bundle_obj.bunch_datasets) == 0:
+                        self.md_file_obj.new_line("\n**Datasets**\n")
+                        self.md_file_obj.new_list(
+                            list(
+                                map(
+                                    lambda dataset_obj: dataset_obj.dataset_name,
+                                    bundle_obj.bunch_datasets
+                                )
+                            )
+                        )
+
     def add_visual_section(self):
         """
         Add visual section
@@ -361,6 +511,23 @@ Environment Variables
         self.md_file_obj.insert_code(
             json.dumps(
                 create_template_from_workflow_inputs(self.cwl_obj.cwl_obj.inputs),
+                indent=4
+            )
+        )
+
+        self.md_file_obj.new_line("</details>\n")
+
+    def add_outputs_template_section(self):
+        self.md_file_obj.new_header(
+            level=2, title="Outputs Template", add_table_of_contents="n"
+        )
+
+        self.md_file_obj.new_line("<details>")
+        self.md_file_obj.new_line("<summary>Click to expand!</summary>\n")
+
+        self.md_file_obj.insert_code(
+            json.dumps(
+                create_template_from_workflow_outputs(self.cwl_obj.cwl_obj.outputs),
                 indent=4
             )
         )
@@ -559,23 +726,11 @@ Environment Variables
 
         return workflow_paths
 
-    def create_and_commit_to_release_artifacts_branch(self):
+    def create_and_commit_to_release_artifacts(self):
         """
         Create the release artifacts branch
         :return:
         """
-        # Create and checkout new branch
-        # FIXME use gh api for these three commands
-        git_checkout_command = [
-            "git", "checkout",
-            "-b", self.release_artifacts_branch
-        ]
-
-        git_checkout_proc = run_subprocess_proc(
-            git_checkout_command,
-            capture_output=True
-        )
-
         # Commit files
         git_add_command = [
             "git", "add", self.get_release_artifact_output_path()
@@ -620,7 +775,7 @@ Environment Variables
         git_push_command = [
             "git", "push",
             "--set-upstream", "origin",
-            self.release_artifacts_branch
+            self.artifacts_branch
         ]
         git_push_proc = run_subprocess_proc(
             git_push_command,
@@ -640,12 +795,27 @@ Environment Variables
         Create the release asset
         :return:
         """
+        # Ensure second tag exists first
+        git_tag_command = [
+            "git", "tag", "--force", self.github_tag[1]
+        ]
+        git_tag_proc = run_subprocess_proc(
+            git_tag_command,
+            capture_output=True
+        )
+        # And push it
+        git_push_tags_command = [
+            "git", "push", "--tags", "--force"
+        ]
+        git_push_tags_proc = run_subprocess_proc(
+            git_push_tags_command,
+            capture_output=True
+        )
 
         gh_create_release_command = [
             "gh", "release", "create",
             self.github_tag[1],
-            "--title", self.github_tag[1],
-            "--notes-file",  self.md_path,
+            "--title", self.github_tag[1]
         ]
 
         if self.is_draft_release:
@@ -663,6 +833,14 @@ Environment Variables
             capture_output=True
         )
 
+        if not gh_returncode == 0:
+            logger.error(
+                "Did not successfully create release"
+            )
+            logger.error(f"Stdout was {gh_stdout}")
+            logger.error(f"Stderr was {gh_stderr}")
+            raise ChildProcessError
+
     def create_release_artifacts_pr(self):
         """
         Create release artifacts PR
@@ -671,12 +849,261 @@ Environment Variables
         gh_pr_command = [
             "gh", "pr", "create",
             "--base", "main",  # FIXME - use dev if this is a pre-release
-            "--head", self.release_artifacts_branch,
-            "--title", f"Add in images for release {self.release_name}",
-            "--body", f"See {self.release_url} for more information"
+            "--head", self.artifacts_branch,
+            "--title", f"Images and configuration commits for release {self.release_name}",
+            "--body", f"See {self.release_url} for more information."
         ]
 
         gh_pr_proc = run_subprocess_proc(
             gh_pr_command,
+            capture_output=True
+        )
+
+    def create_dockstore_commit(self):
+        """
+        Appends the workflows section of the .dockstore.yml file in the top directory of the repository
+        with the following attributes.
+
+        If the item already exists in the dockstore yaml file, we append with a new version of the latest tag
+
+        - name: workflow__version ('.' substituted for '_' in version)
+          subclass: CWL
+          primaryDescriptorPath: path/to/.dockstore/<workflow>/<version>/workflow__version.dockstore.cwl.packed.json
+          readMePath: .github/catalog/<workflow>/<version>/workflow__version.md
+          authors:
+            - # From maintainer and authorship attributes of the file
+          latestTagAsDefault: true  # Not sure how this will affect things - is this the bottom tag?
+          filters:
+            tags:
+             - dockstore/<workflow>/<version>
+             - dockstore/<workflow>/<version>__<epoch>
+             - __append new version if new tag pushed__
+        :return:
+
+        We commit, tag, and create a PR for the dockstore.yml file
+        """
+
+        # Update Dockstore yaml file
+        append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, self.github_tag)
+
+        # Add files
+        git_add_command = [
+            "git", "add", get_dockstore_yaml_path(), get_dockstore_dir()
+        ]
+
+        git_add_proc = run_subprocess_proc(
+            git_add_command,
+            capture_output=True
+        )
+
+        # Commit
+        git_commit_command = [
+            "git", "commit",
+            "-m", f"Updated .dockstore.yml and packed json to include {self.cwl_file_path} with tags {', '.join(self.github_tag)}"
+        ]
+
+        git_commit_proc = run_subprocess_proc(
+            git_commit_command,
+            capture_output=True
+        )
+
+    def create_and_commit_v2_bundles(self):
+        """
+        This will create a bundle object from a bunch
+
+        The bundle object will be written back to the icav2 configuration yaml if a bunch exists for this workflow.
+
+        We need a PR to accept the bundle configuration that was generated and the projects it was added to.
+
+        In future, the bundle generation will trigger validation data workflows
+        :return:
+        """
+        # Iterate through bunches - see if any contain this cwl file path
+        bunches = list(
+            map(
+                lambda bunch_dict: Bunch.from_dict(bunch_dict),
+                read_config_yaml().get("bunches", [])
+            )
+        )
+
+        bunches_filtered = list(
+            filter(
+                lambda bunch_iter: bunch_iter.pipeline_path == self.cwl_file_path.relative_to(get_cwl_ica_repo_path()),
+                bunches
+            )
+        )
+
+        if len(bunches_filtered) == 0:
+            # No bunches to PR
+            return
+
+        # Create a pipeline for each tenant / pipeline project combination
+        # Pipelines are then generated for each combination and stored in a map
+        tenants = list(
+            set(
+                map(
+                    lambda bunch_iter: bunch_iter.tenant_name,
+                    bunches_filtered
+                )
+            )
+        )
+
+        create_cwl_workflow_from_github_release_command = [
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+            "projectpipelines",
+            "create-cwl-workflow-from-github-release",
+            self.release_url,
+            "--json"  # Return pipeline_id
+        ]
+
+        release_pipeline_command_prefix = [
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+            "projectpipelines",
+            "release",
+        ]
+
+        pipeline_ids_by_project_by_tenant = {}
+        icav2_bundles_by_tenant_by_project = {}
+
+        # Iterate over tenants
+        for tenant_name in tenants:
+            # Iterate over pipeline projects for this tenant
+            # One pipeline is made per project-name per tenant
+            # Bunches that use the same project-name in the same tenant will share pipeline ids
+            # This is intentional
+            pipeline_project_names_in_tenant = list(
+                set(
+                    map(
+                        lambda bunch_map_iter: bunch_map_iter.pipeline_project_name,
+                        filter(
+                            lambda bunch_filter_iter: bunch_filter_iter.tenant_name == tenant_name,
+                            bunches_filtered
+                        )
+                    )
+                )
+            )
+
+            pipeline_ids_by_project_by_tenant[tenant_name] = {}
+            icav2_bundles_by_tenant_by_project[tenant_name] = []
+
+            for pipeline_project_name in pipeline_project_names_in_tenant:
+                pipeline_project_id = get_project_id_from_project_name(tenant_name, pipeline_project_name)
+
+                # Create pipeline from GitHub release
+                proc_environ = os.environ.copy()
+
+                proc_environ.update(
+                    {
+                        "PYTHONPATH": "",
+                        "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
+                        "ICAV2_PROJECT_ID": pipeline_project_id,
+                        "ICAV2_ACCESS_TOKEN": get_tenant_access_token(tenant_name)
+                    }
+                )
+
+                create_cwl_workflow_from_github_release_returncode, \
+                create_cwl_workflow_from_github_release_stdout, \
+                create_cwl_workflow_from_github_release_stderr = run_subprocess_proc(
+                    create_cwl_workflow_from_github_release_command,
+                    env=proc_environ,
+                    capture_output=True
+                )
+
+                if not create_cwl_workflow_from_github_release_returncode == 0:
+                    logger.error(f"{create_cwl_workflow_from_github_release_stdout}")
+                    logger.error(f"{create_cwl_workflow_from_github_release_stderr}")
+
+                # Collect pipeline
+                pipeline_id = json.loads(create_cwl_workflow_from_github_release_stdout)["pipeline_id"]
+
+                # Release pipeline
+                release_pipeline_command = release_pipeline_command_prefix + [pipeline_id]
+
+                release_pipeline_returncode, \
+                release_pipeline_stdout, \
+                release_pipeline_stderr = run_subprocess_proc(
+                    release_pipeline_command,
+                    env=proc_environ,
+                    capture_output=True
+                )
+
+                if not release_pipeline_returncode == 0:
+                    logger.error(f"{release_pipeline_stdout}")
+                    logger.error(f"{release_pipeline_stderr}")
+
+                # Update pipeline list
+                pipeline_ids_by_project_by_tenant[tenant_name][pipeline_project_id] = pipeline_id
+
+        self.pipeline_ids_by_project_by_tenant = pipeline_ids_by_project_by_tenant
+
+        # Create bundles
+        bundle_objs = []
+
+        for bunch in bunches_filtered:
+            # Make a bundle for each bunch that contains the cwl file path
+            # May be multiple, reference bunches, validation bunches etc.
+
+            # Get latest bunch version
+            latest_bunch_version: BunchVersion = bunch.bunch_versions[-1]
+
+            pipeline_project_id = get_project_id_from_project_name(bunch.tenant_name, bunch.pipeline_project_name)
+
+            bundle_obj = latest_bunch_version.generate_bundle_from_bunch_version(
+                pipeline_commit_id=self.github_tag[1],
+                pipeline_release_url=self.release_url,
+                pipeline_id=pipeline_ids_by_project_by_tenant[bunch.tenant_name][pipeline_project_id],
+                pipeline_checksum=self.cwl_obj.md5sum,
+                pipeline_project_id=pipeline_project_id,
+                tenant_access_token=get_tenant_access_token(bunch.tenant_name),
+            )
+
+            bundle_objs.append(
+                bundle_obj
+            )
+
+            icav2_bundles_by_tenant_by_project[bunch.tenant_name].append(bundle_obj.bundle_id)
+
+        self.icav2_bundles_by_tenant = icav2_bundles_by_tenant_by_project
+        self.bundle_objs = bundle_objs
+
+        # Write out bunch objects to icav2 configuration yaml
+        config_yaml_obj = read_config_yaml()
+
+        if "bundles" not in config_yaml_obj.keys():
+            bundles_list_dict = CommentedSeq()
+            config_yaml_obj.yaml_set_comment_before_after_key(
+                key="bundles",
+                before="\nList of generated bundles"
+            )
+        else:
+            bundles_list_dict = config_yaml_obj.get("bundles")
+
+        # Append new bundle objs to list
+        for bundle in bundle_objs:
+            bundles_list_dict.append(bundle.to_dict())
+
+        config_yaml_obj["bundles"] = bundles_list_dict
+
+        write_config_yaml(config_yaml_obj)
+
+        # Add / commit file
+        git_add_command = [
+            "git", "add", get_icav2_config_yaml_path()
+        ]
+
+        git_add_proc = run_subprocess_proc(
+            git_add_command,
+            capture_output=True
+        )
+
+        git_commit_command = [
+            "git", "commit",
+            "-m", f"Updated config/icav2.yaml to include new bundles"
+        ]
+
+        git_commit_proc = run_subprocess_proc(
+            git_commit_command,
             capture_output=True
         )

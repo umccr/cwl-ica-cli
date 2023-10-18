@@ -375,20 +375,6 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                 # Print line back to file
                 print(line_strip)
 
-    # Find steps in workflow.cwl and workflows/ (subworkflows)
-    logger.info("Finding steps names with lengths greater than 23 characters")
-    workflow_list = []
-    workflow_dir = Path(output_tempdir / "workflows")
-    if workflow_dir.is_dir():
-        for path_item in workflow_dir.rglob("*"):
-            if path_item.is_file() and path_item.suffix == ".cwl":
-                workflow_list.append(path_item)
-    for workflow_item in workflow_list:
-        cwl_repo_workflow_path = Path(get_cwl_ica_repo_path()) / workflow_item.relative_to(output_tempdir)
-        workflow_name, workflow_version = get_name_version_tuple_from_cwl_file_path(cwl_repo_workflow_path, get_workflows_dir())
-        workflow_object = CWLWorkflow(workflow_name, workflow_version, cwl_repo_workflow_path)
-        check_workflow_step_lengths(workflow_object.cwl_obj, cwl_obj.cwl_file_path)
-
     # Revalidate directory with cwltool --validate
     logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")
     proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
@@ -442,4 +428,4 @@ def create_packed_workflow_from_zipped_workflow_path(zipped_path: Path, output_p
             capture_output=True
         )
 
-        pack_h.write(bytes(json.dumps(pack_stdout).encode()))
+        pack_h.write(bytes((json.dumps(json.loads(pack_stdout), indent=2, ensure_ascii=False) + "\n").encode()))

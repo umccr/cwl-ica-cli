@@ -346,3 +346,9 @@ def join_run_path_from_caller_path(caller_path: Path, run_path: Path) -> Path:
     ).resolve()
 
 
+def get_dockstore_dir() -> Path:
+    """
+    Get the abs path to the dockstore directory
+    :return:
+    """
+    return get_cwl_ica_repo_path() / ".dockstore"
