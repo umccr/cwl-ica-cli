@@ -166,14 +166,22 @@ Command:
     github-actions-create-catalogue              Create the catalogue markdown file
     github-actions-build-workflow-release-asset  Create the release asset and push to release
 
+    #################################
+    # V2 Integrations
+    #################################
+    icav2-add-tenant                             Add tenant name to icav2 config
+    icav2-add-project                            Add project name to icav2 config
+    icav2-add-dataset                            Add icav2 dataset to icav2 config
+    icav2-add-bunch                              Add bunch to icav2 config
+
     ##################################
     V2 Extensions
     ##################################
     icav2-zip-workflow                         Zip up a workflow ready to become a pipeline in icav2
-    icav2-deploy-pipeline                      Deploy a zipped workflow to icav2
-    icav2-launch-pipeline-analysis             Launch a workflow in v2
-    icav2-list-analysis-steps                  List steps of an icav2 analysis
-    icav2-get-analysis-step-logs               Get logs (stdout or stderr) of an analysis step
+    icav2-deploy-pipeline                      Deploy a zipped workflow to icav2  # Deprecated
+    icav2-launch-pipeline-analysis             Launch a workflow in v2  # Deprecated
+    icav2-list-analysis-steps                  List steps of an icav2 analysis  # Deprecated
+    icav2-get-analysis-step-logs               Get logs (stdout or stderr) of an analysis step  # Deprecated
 """
 
 from docopt import docopt
@@ -610,7 +618,25 @@ def _dispatch():
         # Call Command
         typescript_expression_dir_update()
 
-    # V2 add-ons
+    # V2 Integrations
+    elif cmd == "icav2-add-tenant":
+        from subcommands.v2.icav2_config_add_tenant import ICAv2AddTenant
+        icav2_add_tenant = ICAv2AddTenant(command_argv)
+        icav2_add_tenant()
+    elif cmd == "icav2-add-project":
+        from subcommands.v2.icav2_config_add_project import ICAv2AddProject
+        icav2_add_project = ICAv2AddProject(command_argv)
+        icav2_add_project()
+    elif cmd == "icav2-add-dataset":
+        from subcommands.v2.icav2_add_dataset import ICAv2AddDataset
+        icav2_add_dataset = ICAv2AddDataset(command_argv)
+        icav2_add_dataset()
+    elif cmd == "icav2-add-bunch":
+        from subcommands.v2.icav2_add_bunch import ICAv2AddBunch
+        icav2_add_bunch = ICAv2AddBunch(command_argv)
+        icav2_add_bunch()
+
+    # V2 Extensions
     elif cmd == "icav2-zip-workflow":
         from subcommands.v2.zip_v2_workflow import ZipV2Workflow
         # Initialise command

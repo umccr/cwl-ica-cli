@@ -156,9 +156,9 @@ class CWLSchemaObj:
             schema_path = self.cwl_file_path.parent.joinpath(
                 get_path_from_cwl_id(workflow_input.get("type").get("$import"))
             ).resolve()
-            return CWLSchemaObj.load_schema_from_uri(schema_path.as_uri()).get_inputs_template()
+            return CWLSchemaObj.load_schema_from_uri(schema_path.as_uri()).get_template()
 
-    def get_inputs_template(self) -> Dict:
+    def get_template(self) -> Dict:
         """
         Return get inputs from dict
         :return:
