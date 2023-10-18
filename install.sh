@@ -16,7 +16,7 @@ set -euo pipefail
 CWL_ICA_CONDA_ENV_NAME="cwl-ica"
 CWLTOOL_ICAV1_CONDA_ENV_NAME="cwltool-icav1"
 REQUIRED_CONDA_VERSION="4.9.0"
-STABLE_YARN_VERSION="3.2.3"
+STABLE_YARN_VERSION="stable"
 
 ##########
 # GET HELP
