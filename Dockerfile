@@ -1,4 +1,4 @@
-FROM docker.io/condaforge/mambaforge-pypy3:22.9.0-2
+FROM docker.io/condaforge/mambaforge-pypy3:23.3.1-1
 
 # Set args
 ARG CONDA_GROUP_NAME="cwl_ica_group"
@@ -6,14 +6,15 @@ ARG CONDA_GROUP_ID=1000
 ARG CONDA_USER_NAME="cwl_ica_user"
 ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
+ARG YQ_VERSION="v4.11.2"
 
 # Copy over source to . for user
 COPY . "/cwl-ica-src-temp/"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    echo Updating Apt 1>&2 && \
+    echo "Updating Apt" 1>&2 && \
     apt-get update -y -q && \
-    echo Installing jq, nodejs, rsync, graphviz and parallel 1>&2 && \
+    echo "Installing jq, nodejs, rsync, graphviz and parallel" 1>&2 && \
     apt-get install -y -q \
       jq \
       nodejs \
@@ -23,29 +24,40 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       gcc \
       python3-dev \
       curl && \
-    echo Cleaning up after apt installations 1>&2 && \
+    echo "Cleaning up after apt installations" 1>&2 && \
     apt-get clean -y && \
-    echo Installing yq 1>&2 && \
+    echo "Installing yq" 1>&2 && \
     wget --quiet \
-        --output-document /usr/bin/yq \
-        https://github.com/mikefarah/yq/releases/download/v4.11.2/yq_linux_amd64 && \
+      --output-document /usr/bin/yq \
+      "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" && \
     chmod +x /usr/bin/yq && \
     echo "Installing gh binary" && \
     curl --fail --silent --show-error --location \
-     "https://cli.github.com/packages/githubcli-archive-keyring.gpg" | \
+      "https://cli.github.com/packages/githubcli-archive-keyring.gpg" | \
     dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
     chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
     tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
     apt-get update -y -q && \
     apt install gh -y -q && \
-    echo Updating mamba 1>&2 && \
+    echo "Updating conda" 1>&2 && \
+    conda update --yes \
+      --name base \
+      --channel conda-forge \
+      --channel defaults \
+      conda && \
+    echo "Updating mamba" 1>&2 && \
     mamba update --yes \
       --quiet \
       --name base \
+      --channel conda-forge \
       --channel defaults \
       mamba && \
-    echo Adding user groups 1>&2 && \
+    echo "Cleaning conda" 1>&2 && \
+    conda clean --all --yes --quiet && \
+    echo "Cleaning mamba "1>&2 && \
+    mamba clean --all --yes --quiet && \
+    echo "Adding user groups" 1>&2 && \
     addgroup \
       --gid "${CONDA_GROUP_ID}" \
       "${CONDA_GROUP_NAME}" && \
