@@ -14,7 +14,7 @@ dependencies:
     - cwl-utils
     - pytest
     - humanfriendly
-    - libica==2.1.0
+    - libica==2.3.0
     - pyyaml
     - requests
     - verboselogs
