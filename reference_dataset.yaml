@@ -1,0 +1,15 @@
+dataset_name: dragen_hash_table_v9_r3_alt_masked_cnv_hla_rna
+dataset_description: |
+  A tarred version of the v9 r3 hash table for dragen 4.2.4
+  This reference is a custom reference by UMCCR. It was built using the following parameters with the dragen version 4.2.4
+  /opt/edico/bin/dragen \
+  --build-hash-table true \
+  --enable-cnv true \
+  --ht-build-hla-hashtable true \
+  --ht-build-rna-hashtable true \
+  --ht-mask-bed /opt/edico/fasta_mask/hg38_alt_mask.bed \
+  --ht-reference /data/cwl-stage-dir/stgfde7c711-e25f-42ce-b700-bbdaf23bcd2c/hg38.fa
+
+  Where hg38.fa was downloaded from s3.amazonaws.com/stratus-documentation-us-east-1-public/dragen/reference/Homo_sapiens/hg38.fa
+data:
+  - icav2://umccr-test-byob-2/reference_data/dragen_hash_tables/v9-r3/hg38-alt_masked-cnv-hla-rna/hg38-alt_masked.cnv.hla.rna-9-r3.0-1.tar.gz

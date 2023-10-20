@@ -1,0 +1,24 @@
+tenant_name: umccr-test
+bunch_name: dragen_somatic_with_germline_pipeline_production__4_2_4
+bunch_description: |
+  Contains the UMCCR dragen-somatic-with-germline pipeline and the appropriate reference data for dragen version 4.2.4
+  
+  The reference data is the dragen hash table for hg38.
+  Version for v9-r3 with alt-masked, cnv, hla, rna enabled features
+
+bunch_version: v9_r3
+bunch_version_description: |
+  v9r3 is the hash table build.
+
+workflow_path: workflows/dragen-somatic-with-germline-pipeline/4.2.4/dragen-somatic-with-germline-pipeline__4.2.4.cwl
+pipeline_project_name: pipelines-test
+datasets:
+ - dragen_hash_table_v9_r3_alt_masked_cnv_hla_rna
+projects:
+  - staging-test
+  - production-test
+
+categories:
+ - dragen
+ - somatic
+ - production

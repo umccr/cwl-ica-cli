@@ -21,6 +21,7 @@ from utils.miscell import encode_compressed_base64, decode_compressed_base64
 
 logger = get_logger()
 
+
 class ICATaskRun:
     """
     The ICA Task Run object
@@ -38,13 +39,13 @@ class ICATaskRun:
         self.ica_task_run_instance_id = ica_task_run_instance_id
         self.task_step_name = task_step_name
         if task_name is not None:
-          self.task_name = task_name
-          self.task_cpus = task_cpus
-          self.task_memory = task_memory
-          self.task_start_time = task_start_time
-          self.task_stop_time = task_stop_time
-          self.task_duration = task_duration
-          self.task_metrics = task_metrics
+            self.task_name = task_name
+            self.task_cpus = task_cpus
+            self.task_memory = task_memory
+            self.task_start_time = task_start_time
+            self.task_stop_time = task_stop_time
+            self.task_duration = task_duration
+            self.task_metrics = task_metrics
         else:
             api_response = self.get_task_object(project_token)
             self.task_name = self.get_task_name(api_response)
@@ -162,7 +163,6 @@ class ICATaskRun:
 
         return pod_metrics_df
 
-
     @staticmethod
     def get_pod_metrics_file(api_response):
         """
@@ -171,7 +171,8 @@ class ICATaskRun:
         """
         # Get the dir by taking the dir of the stdout file, then add 'pod-metrics-0.log' as the basename
         stdout_url_obj = urlparse(api_response.logs[0].stdout)
-        return stdout_url_obj.scheme + "://" + stdout_url_obj.netloc + str(Path(stdout_url_obj.path).parent / Path("pod-metrics-0.log"))
+        return stdout_url_obj.scheme + "://" + stdout_url_obj.netloc + str(
+            Path(stdout_url_obj.path).parent / Path("pod-metrics-0.log"))
 
     def get_pod_metrics_file_url(self, pod_metrics_file, project_token):
         """
@@ -359,15 +360,13 @@ class ICATaskRun:
             raise ICATaskRunCreationError
 
         return cls(
-                   ica_task_run_instance_id=task_run_dict.get("ica_task_run_instance_id", None),
-                   task_step_name=task_run_dict.get("task_step_name"),
-                   task_name=task_run_dict.get("task_name"),
-                   task_cpus=int(task_run_dict.get("task_cpus")),
-                   task_memory=int(task_run_dict.get("task_memory")),
-                   task_start_time=int(task_run_dict.get("task_start_time")),
-                   task_stop_time=int(task_run_dict.get("task_stop_time")),
-                   task_duration=int(task_run_dict.get("task_duration")),
-                   task_metrics=cls.decompress_metrics(task_run_dict.get("task_metrics"))
-                   )
-
-
+            ica_task_run_instance_id=task_run_dict.get("ica_task_run_instance_id", None),
+            task_step_name=task_run_dict.get("task_step_name"),
+            task_name=task_run_dict.get("task_name"),
+            task_cpus=int(task_run_dict.get("task_cpus")),
+            task_memory=int(task_run_dict.get("task_memory")),
+            task_start_time=int(task_run_dict.get("task_start_time")),
+            task_stop_time=int(task_run_dict.get("task_stop_time")),
+            task_duration=int(task_run_dict.get("task_duration")),
+            task_metrics=cls.decompress_metrics(task_run_dict.get("task_metrics"))
+        )
