@@ -38,7 +38,7 @@ runs:
                              })"
         git_tag_non_latest="$(basename "${git_tag_non_latest}")"
         # Set git tag as output for this step
-        echo "::set-output name=git_tag_non_latest::${git_tag_non_latest}"
+        echo "git_tag_non_latest=${git_tag_non_latest}" >> "${GITHUB_OUTPUT}"
     - id: update-python-alternatives
       shell: bash
       run: |
