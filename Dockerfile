@@ -22,6 +22,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       gcc \
       python3-dev \
       curl \
+      build-essential \
       unzip && \
     echo "Cleaning up after apt installations" 1>&2 && \
     apt-get clean -y && \
