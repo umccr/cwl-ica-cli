@@ -7,7 +7,7 @@ ARG CONDA_USER_NAME="cwl_ica_user"
 ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
-ARG ICAV2_PLUGINS_CLI_VERSION="v2.15.1"
+ARG ICAV2_PLUGINS_CLI_VERSION="v2.15.2"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -106,7 +106,6 @@ RUN ( \
       wget --quiet \
         --output-document "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
         "https://github.com/umccr/icav2-cli-plugins/releases/download/${ICAV2_PLUGINS_CLI_VERSION}/icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
-      echo "Got to here" 1>&2 && \
       unzip -qq "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
       bash "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}/install.sh" "--no-autocompletion" && \
       rm -rf "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}" "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
