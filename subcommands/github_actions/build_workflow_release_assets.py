@@ -996,7 +996,7 @@ Environment Variables
 
                 proc_environ.update(
                     {
-                        "PYTHONPATH": "",
+                        "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
                         "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
                         "ICAV2_PROJECT_ID": pipeline_project_id,
                         "ICAV2_ACCESS_TOKEN": get_tenant_access_token(tenant_name)

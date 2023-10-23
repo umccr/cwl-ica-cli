@@ -6,10 +6,8 @@ ARG CONDA_GROUP_ID=1000
 ARG CONDA_USER_NAME="cwl_ica_user"
 ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
-ARG YQ_VERSION="v4.11.2"
-
-# Copy over source to . for user
-COPY . "/cwl-ica-src-temp/"
+ARG YQ_VERSION="v4.35.2"
+ARG ICAV2_PLUGINS_CLI_VERSION="v2.15.1"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -23,7 +21,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       parallel \
       gcc \
       python3-dev \
-      curl && \
+      curl \
+      unzip && \
     echo "Cleaning up after apt installations" 1>&2 && \
     apt-get clean -y && \
     echo "Installing yq" 1>&2 && \
@@ -40,6 +39,12 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
     apt-get update -y -q && \
     apt install gh -y -q && \
+    echo "Installing aws cli" 1>&2 && \
+    wget --quiet "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+      --output-document "awscliv2.zip" && \
+    unzip -qq awscliv2.zip && \
+    ./aws/install && \
+    rm -rf aws/ awscliv2.zip && \
     echo "Updating conda" 1>&2 && \
     conda update --yes \
       --name base \
@@ -64,7 +69,13 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     adduser \
       --disabled-password \
       --gid "${CONDA_GROUP_ID}" \
-      --uid "${CONDA_USER_ID}" "${CONDA_USER_NAME}" && \
+      --uid "${CONDA_USER_ID}" "${CONDA_USER_NAME}"
+
+
+# Copy over source to . for user
+COPY . "/cwl-ica-src-temp/"
+
+RUN \
     cp -r "/cwl-ica-src-temp/." "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
     chown -R "${CONDA_USER_ID}:${CONDA_GROUP_ID}" "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
     rm -rf  "/cwl-ica-src-temp/"
@@ -87,6 +98,20 @@ RUN echo "Adding in package and env paths to conda arc" 1>&2 && \
 # Set environment variables for user
 ENV CONDA_PREFIX="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}"
 ENV CONDA_DEFAULT_ENV="${CONDA_ENV_NAME}"
+
+RUN ( \
+      cd "/home/${CONDA_USER_NAME}" && \
+      echo "Installing ICAv2 CLI Plugins" 1>&2 && \
+      wget --quiet \
+        --output-document "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
+        "https://github.com/umccr/icav2-cli-plugins/releases/download/${ICAV2_PLUGINS_CLI_VERSION}/icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
+      echo "Got to here" 1>&2 && \
+      unzip -qq "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
+      bash "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}/install.sh" "--no-autocompletion" && \
+      rm -rf "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}" "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
+    )
+
 ENV PATH="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
+ENV ICAV2_CLI_PLUGINS_HOME="/home/${CONDA_USER_NAME}/.icav2-cli-plugins/"
 
 CMD "cwl-ica"
