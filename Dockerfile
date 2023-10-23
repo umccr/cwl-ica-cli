@@ -8,6 +8,7 @@ ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
 ARG ICAV2_PLUGINS_CLI_VERSION="v2.15.2"
+ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.10"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -102,11 +103,16 @@ ENV CONDA_DEFAULT_ENV="${CONDA_ENV_NAME}"
 
 RUN ( \
       cd "/home/${CONDA_USER_NAME}" && \
+      echo "Creating python3.10 environment for icav2 cli plugins" 1>&2 && \
+      mamba create --yes \
+        --name "${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}" \
+        python=3.10 && \
       echo "Installing ICAv2 CLI Plugins" 1>&2 && \
       wget --quiet \
         --output-document "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
         "https://github.com/umccr/icav2-cli-plugins/releases/download/${ICAV2_PLUGINS_CLI_VERSION}/icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
       unzip -qq "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
+      PATH="/home/${CONDA_USER_NAME}/.conda/envs/${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}/bin:${PATH}" \
       bash "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}/install.sh" "--no-autocompletion" && \
       rm -rf "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}" "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
     )
