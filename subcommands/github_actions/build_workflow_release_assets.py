@@ -291,6 +291,7 @@ Environment Variables
             logger.error(f"Could not checkout branch {self.artifacts_branch}")
             logger.error(f"Stdout was {git_checkout_proc_stdout}")
             logger.error(f"Stderr was {git_checkout_proc_stderr}")
+            raise ChildProcessError
 
     def update_release_description(self):
         """
