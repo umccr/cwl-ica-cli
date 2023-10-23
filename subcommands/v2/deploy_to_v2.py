@@ -6,6 +6,7 @@ Deploy a zipped workflow to icav2
 Provide a default storage size and a project-name / project id and you're done!
 
 Return a pipeline ID
+
 """
 
 import os
@@ -23,6 +24,8 @@ from typing import Optional
 
 logger = get_logger()
 
+
+# FIXME - deprecate this command, use icav2 projectpipeline create-cwl-workflow-from-zip instead
 
 class DeployV2Workflow(Command):
     """Usage:

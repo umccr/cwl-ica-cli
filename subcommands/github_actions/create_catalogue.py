@@ -30,6 +30,7 @@ from os.path import relpath
 
 logger = get_logger()
 
+
 class CreateCatalogue(Command):
     """Usage:
     cwl-ica [options] github-actions-create-catalogue help

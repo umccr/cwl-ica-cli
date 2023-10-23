@@ -42,6 +42,8 @@ from utils.subprocess_handler import run_subprocess_proc
 
 logger = get_logger()
 
+# FIXME - harmonize with build-workflow-release-assets commands and undeprecate
+
 
 class ZipV2Workflow(Command):
     """Usage:
@@ -242,20 +244,6 @@ Example:
 
                     # Print line back to file
                     print(line_strip)
-
-        # Find steps in workflow.cwl and workflows/ (subworkflows)
-        logger.info("Finding steps names with lengths greater than 23 characters")
-        workflow_list = []
-        workflow_dir = Path(output_tempdir / "workflows")
-        if workflow_dir.is_dir():
-            for path_item in workflow_dir.rglob("*"):
-                if path_item.is_file() and path_item.suffix == ".cwl":
-                    workflow_list.append(path_item)
-        for workflow_item in workflow_list:
-            cwl_repo_workflow_path = Path(get_cwl_ica_repo_path()) / workflow_item.relative_to(output_tempdir)
-            workflow_name, workflow_version = get_name_version_tuple_from_cwl_file_path(cwl_repo_workflow_path, get_workflows_dir())
-            workflow_object = CWLWorkflow(workflow_name, workflow_version, cwl_repo_workflow_path)
-            check_workflow_step_lengths(workflow_object.cwl_obj, self.cwl_file_path)
 
         # Revalidate directory with cwltool --validate
         logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")
