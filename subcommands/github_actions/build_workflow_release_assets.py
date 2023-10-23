@@ -36,6 +36,7 @@ from json import JSONDecodeError
 from tempfile import TemporaryDirectory
 from urllib.parse import urldefrag
 from zipfile import ZipFile
+from time import sleep
 
 from ruamel.yaml import CommentedSeq
 
@@ -291,6 +292,7 @@ Environment Variables
             logger.error(f"Could not checkout branch {self.artifacts_branch}")
             logger.error(f"Stdout was {git_checkout_proc_stdout}")
             logger.error(f"Stderr was {git_checkout_proc_stderr}")
+            raise ChildProcessError
 
     def update_release_description(self):
         """
@@ -732,25 +734,60 @@ Environment Variables
         Create the release artifacts branch
         :return:
         """
+        git_diff_command = [
+            "git", "diff", "--name-only", "--quiet"
+        ]
+
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if not git_diff_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_stdout.strip() == "":
+            logger.info("No artifacts to commit - skipping")
+            return
+
+        # Quick respite for the filesystem
+        sleep(1)
+
         # Commit files
         git_add_command = [
             "git", "add", self.get_release_artifact_output_path()
         ]
 
-        git_add_proc = run_subprocess_proc(
+        git_add_returncode, git_add_stdout, git_add_stderr = run_subprocess_proc(
             git_add_command,
             capture_output=True
         )
+
+        if not git_add_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git add")
+            logger.error(f"Stdout: {git_add_stdout}")
+            logger.error(f"Stderr: {git_add_stderr}")
+            raise ChildProcessError
+
 
         git_commit_command = [
             "git", "commit",
             "-m", f"Uploading visual images for {self.release_name} release"
         ]
 
-        git_commit_proc = run_subprocess_proc(
+        git_commit_returncode, git_commit_stdout, git_commit_stderr = run_subprocess_proc(
             git_commit_command,
             capture_output=True
         )
+
+        if not git_commit_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git acommit")
+            logger.error(f"Stdout: {git_commit_stdout}")
+            logger.error(f"Stderr: {git_commit_stderr}")
+            raise ChildProcessError
 
     def fast_forward_tags(self):
         """
@@ -762,34 +799,51 @@ Environment Variables
             git_tag_command = [
                 "git", "tag", "--force", tag
             ]
-            git_tag_proc = run_subprocess_proc(
+            git_tag_returncode, git_tag_stdout, git_tag_stderr = run_subprocess_proc(
                 git_tag_command,
                 capture_output=True
             )
+
+            if not git_tag_returncode == 0:
+                logger.error(f"Got a non-zero exit code when running git tag")
+                logger.error(f"Stdout: {git_tag_stdout}")
+                logger.error(f"Stderr: {git_tag_stderr}")
+                raise ChildProcessError
 
     def push_branch_and_tags(self):
         """
         Push branch and tags
         :return:
         """
-        # FIXME could be redundant if we can use gh api in previous step
         git_push_command = [
             "git", "push",
             "--set-upstream", "origin",
             self.artifacts_branch
         ]
-        git_push_proc = run_subprocess_proc(
+        git_push_returncode, git_push_stdout, git_push_stderr = run_subprocess_proc(
             git_push_command,
             capture_output=True
         )
 
+        if not git_push_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git push")
+            logger.error(f"Stdout: {git_push_stdout}")
+            logger.error(f"Stderr: {git_push_stderr}")
+            raise ChildProcessError
+
         git_push_tags_command = [
             "git", "push", "--tags", "--force"
         ]
-        git_push_tags_proc = run_subprocess_proc(
+        git_push_tags_returncode, git_push_tags_stdout, git_push_tags_stderr = run_subprocess_proc(
             git_push_tags_command,
             capture_output=True
         )
+
+        if not git_push_tags_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git push tags")
+            logger.error(f"Stdout: {git_push_tags_stdout}")
+            logger.error(f"Stderr: {git_push_tags_stderr}")
+            raise ChildProcessError
 
     def upload_release_assets_and_create_release(self):
         """
@@ -800,18 +854,31 @@ Environment Variables
         git_tag_command = [
             "git", "tag", "--force", self.github_tag[1]
         ]
-        git_tag_proc = run_subprocess_proc(
+        git_tag_returncode, git_tag_stdout, git_tag_stderr = run_subprocess_proc(
             git_tag_command,
             capture_output=True
         )
+
+        if not git_tag_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git tag")
+            logger.error(f"Stdout: {git_tag_stdout}")
+            logger.error(f"Stderr: {git_tag_stderr}")
+            raise ChildProcessError
+
         # And push it
         git_push_tags_command = [
             "git", "push", "--tags", "--force"
         ]
-        git_push_tags_proc = run_subprocess_proc(
+        git_push_tags_returncode, git_push_tags_stdout, git_push_tags_stderr = run_subprocess_proc(
             git_push_tags_command,
             capture_output=True
         )
+
+        if not git_push_tags_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git tag")
+            logger.error(f"Stdout: {git_push_tags_stdout}")
+            logger.error(f"Stderr: {git_push_tags_stderr}")
+            raise ChildProcessError
 
         gh_create_release_command = [
             "gh", "release", "create",
@@ -855,10 +922,19 @@ Environment Variables
             "--body", f"See {self.release_url} for more information."
         ]
 
-        gh_pr_proc = run_subprocess_proc(
+        gh_pr_returncode, gh_pr_stdout, gh_pr_stderr = run_subprocess_proc(
             gh_pr_command,
             capture_output=True
         )
+
+        if not gh_pr_returncode == 0:
+            logger.error(
+                "Did not successfully create release"
+            )
+            logger.error(f"Stdout was {gh_pr_stdout}")
+            logger.error(f"Stderr was {gh_pr_stderr}")
+            raise ChildProcessError
+
 
     def create_dockstore_commit(self):
         """
@@ -887,15 +963,43 @@ Environment Variables
         # Update Dockstore yaml file
         append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, self.github_tag)
 
+        git_diff_command = [
+            "git", "diff", "--name-only", "--quiet"
+        ]
+
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if not git_diff_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_stdout.strip() == "":
+            logger.info("No artifacts to commit - skipping")
+            return
+
+        # Quick respite for the filesystem
+        sleep(1)
+
         # Add files
         git_add_command = [
             "git", "add", get_dockstore_yaml_path(), get_dockstore_dir()
         ]
 
-        git_add_proc = run_subprocess_proc(
+        git_add_returncode, git_add_stdout, git_add_stderr = run_subprocess_proc(
             git_add_command,
             capture_output=True
         )
+
+        if not git_add_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git add")
+            logger.error(f"Stdout: {git_add_stdout}")
+            logger.error(f"Stderr: {git_add_stderr}")
+            raise ChildProcessError
 
         # Commit
         git_commit_command = [
@@ -903,10 +1007,16 @@ Environment Variables
             "-m", f"Updated .dockstore.yml and packed json to include {self.cwl_file_path} with tags {', '.join(self.github_tag)}"
         ]
 
-        git_commit_proc = run_subprocess_proc(
+        git_commit_returncode, git_commit_stdout, git_commit_stderr = run_subprocess_proc(
             git_commit_command,
             capture_output=True
         )
+
+        if not git_commit_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git commit")
+            logger.error(f"Stdout: {git_commit_stdout}")
+            logger.error(f"Stderr: {git_commit_stderr}")
+            raise ChildProcessError
 
     def create_and_commit_v2_bundles(self):
         """
@@ -1100,22 +1210,56 @@ Environment Variables
 
         write_config_yaml(config_yaml_obj)
 
+        git_diff_command = [
+            "git", "diff", "--name-only", "--quiet"
+        ]
+
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if not git_diff_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_stdout.strip() == "":
+            logger.info("No artifacts to commit - skipping")
+            return
+
+        # Quick respite for the filesystem
+        sleep(1)
+
         # Add / commit file
         git_add_command = [
             "git", "add", get_icav2_config_yaml_path()
         ]
 
-        git_add_proc = run_subprocess_proc(
+        git_add_returncode, git_add_stdout, git_add_stderr = run_subprocess_proc(
             git_add_command,
             capture_output=True
         )
+
+        if not git_add_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git add")
+            logger.error(f"Stdout: {git_add_stdout}")
+            logger.error(f"Stderr: {git_add_stderr}")
+            raise ChildProcessError
 
         git_commit_command = [
             "git", "commit",
             "-m", f"Updated config/icav2.yaml to include new bundles"
         ]
 
-        git_commit_proc = run_subprocess_proc(
+        git_commit_returncode, git_commit_stdout, git_commit_stderr = run_subprocess_proc(
             git_commit_command,
             capture_output=True
         )
+
+        if not git_commit_returncode == 0:
+            logger.error(f"Got a non-zero exit code when running git commit")
+            logger.error(f"Stdout: {git_commit_stdout}")
+            logger.error(f"Stderr: {git_commit_stderr}")
+            raise ChildProcessError

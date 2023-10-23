@@ -577,6 +577,7 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
     if not link_pipeline_returncode == 0:
         logger.error(f"{link_pipeline_stdout}")
         logger.error(f"{link_pipeline_stderr}")
+        raise ChildProcessError
 
 
 def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
@@ -615,6 +616,7 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
     if not link_data_returncode == 0:
         logger.error(f"{link_data_stdout}")
         logger.error(f"{link_data_stderr}")
+        raise ChildProcessError
 
 
 def release_bundle(bundle_id: str, icav2_access_token: str):
@@ -652,6 +654,7 @@ def release_bundle(bundle_id: str, icav2_access_token: str):
     if not release_bundle_returncode == 0:
         logger.error(f"{release_bundle_stdout}")
         logger.error(f"{release_bundle_stderr}")
+        raise ChildProcessError
 
 
 def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: str):
@@ -691,6 +694,7 @@ def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: s
     if not add_bundle_to_project_returncode == 0:
         logger.error(f"{add_bundle_to_project_stdout}")
         logger.error(f"{add_bundle_to_project_stderr}")
+        raise ChildProcessError
 
 
 def get_projects_from_v2_config_yaml() -> List[Dict]:
