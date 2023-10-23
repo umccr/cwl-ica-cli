@@ -32,6 +32,7 @@ import json
 import os
 import re
 from argparse import ArgumentError
+from json import JSONDecodeError
 from tempfile import TemporaryDirectory
 from urllib.parse import urldefrag
 from zipfile import ZipFile
@@ -1014,9 +1015,19 @@ Environment Variables
                 if not create_cwl_workflow_from_github_release_returncode == 0:
                     logger.error(f"{create_cwl_workflow_from_github_release_stdout}")
                     logger.error(f"{create_cwl_workflow_from_github_release_stderr}")
+                    raise ChildProcessError
 
                 # Collect pipeline
-                pipeline_id = json.loads(create_cwl_workflow_from_github_release_stdout)["pipeline_id"]
+                try:
+                    pipeline_id_json_dict = json.loads(create_cwl_workflow_from_github_release_stdout)
+                except JSONDecodeError:
+                    logger.error(f"Could not get release from {create_cwl_workflow_from_github_release_stdout}")
+                    raise JSONDecodeError
+
+                if 'pipeline_id' not in pipeline_id_json_dict:
+                    logger.error(f"Could not get pipeline id key {pipeline_id_json_dict}")
+                    raise KeyError
+                pipeline_id = pipeline_id_json_dict.get("pipeline_id")
 
                 # Release pipeline
                 release_pipeline_command = release_pipeline_command_prefix + [pipeline_id]
@@ -1032,6 +1043,7 @@ Environment Variables
                 if not release_pipeline_returncode == 0:
                     logger.error(f"{release_pipeline_stdout}")
                     logger.error(f"{release_pipeline_stderr}")
+                    raise ChildProcessError
 
                 # Update pipeline list
                 pipeline_ids_by_project_by_tenant[tenant_name][pipeline_project_id] = pipeline_id
