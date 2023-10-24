@@ -9,6 +9,7 @@ ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
 ARG ICAV2_PLUGINS_CLI_VERSION="v2.15.2"
 ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.10"
+ARG CURL_VERSION="7.81.0"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -24,7 +25,15 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       python3-dev \
       curl \
       build-essential \
-      unzip && \
+      automake \
+      autoconf \
+      libtool \
+      unzip \
+      nghttp2 \
+      libnghttp2-dev \
+      libssl-dev \
+      wget \
+      autoconf && \
     echo "Cleaning up after apt installations" 1>&2 && \
     apt-get clean -y && \
     echo "Installing yq" 1>&2 && \
@@ -47,6 +56,23 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     unzip -qq awscliv2.zip && \
     ./aws/install && \
     rm -rf aws/ awscliv2.zip && \
+    echo "Removing existing installation of curl" && \
+    apt-get purge -y -q --auto-remove curl && \
+    echo "Installing curl" 1>&2 && \
+    ( \
+      wget "https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz" && \
+      tar -xzf "curl-${CURL_VERSION}.tar.gz" && \
+      cd "curl-${CURL_VERSION}" && \
+      autoreconf -fi && \
+      ./configure \
+        --prefix=/usr \
+        --with-ssl \
+        --with-nghttp2 && \
+      make -j4 && \
+      make install && \
+      ldconfig \
+    ) && \
+    rm -rf curl-${CURL_VERSION}/ curl-${CURL_VERSION}.tar.gz && \
     echo "Updating conda" 1>&2 && \
     conda update --yes \
       --name base \
