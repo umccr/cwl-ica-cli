@@ -407,7 +407,7 @@ Environment Variables
             "[Dockstore Version Link](https://dockstore.org/workflows/github.com/{org_repo}/{workflow_name}:{workflow_version})".format(
                 org_repo=os.environ.get("GITHUB_REPOSITORY"),
                 workflow_name=self.github_tag[1].split("/")[0],
-                workflow_version=self.github_tag[1].split("/")[1]
+                workflow_version=self.github_tag[1].split("/")[1].replace(".", "_")
             )
         )
 

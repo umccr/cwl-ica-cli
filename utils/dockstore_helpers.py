@@ -49,6 +49,10 @@ def read_dockstore_yaml() -> List[Dockstore]:
 def write_dockstore_yaml(workflows_list: List[Dockstore]):
     yaml_obj = YAML()
 
+    # Set indentation
+    yaml_obj.block_seq_indent = 2
+    yaml_obj.sequence_indent = 4
+
     dockstore_yaml_path = get_dockstore_yaml_path()
 
     data = {
@@ -104,7 +108,7 @@ def append_workflow_to_dockstore_yaml(workflow_path: Path, gzipped_packed_workfl
     except StopIteration:
         dockstore_obj = Dockstore(
             create=True,
-            name=workflow_path.name.replace(".cwl", ""),
+            name=workflow_path.name.replace(".cwl", "").replace(".", "_"),
             cwl_file_path=workflow_path,
             subclass="CWL",
             primary_descriptor_path=dockstore_packed_output_path,
