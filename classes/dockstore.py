@@ -83,7 +83,7 @@ class Dockstore:
             items_dir=get_workflows_dir()
         )
 
-        self.readme_path = f"{get_github_url()}/blob/main/.github/catalogue/docs/workflows/{name}/{version}/{name}__{version}.md"
+        self.readme_path = f"/.github/catalogue/docs/workflows/{name}/{version}/{name}__{version}.md"
 
     def update_authors_from_cwl_file_path(self):
         """
@@ -140,7 +140,7 @@ class Dockstore:
         return {
             "name": self.name,
             "subclass": "CWL",
-            "primaryDescriptorPath": str(self.primary_descriptor_path),
+            "primaryDescriptorPath": "/" + str(self.primary_descriptor_path),
             "readMePath": str(self.readme_path),
             "authors": self.authors,
             "filters": {
