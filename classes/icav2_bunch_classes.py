@@ -1062,6 +1062,9 @@ class Bundle:
         # Get bundle id
         self.bundle_id = bundle_obj.id
 
+        # Set bundle url
+        self.bundle_url = f"https://ica.illumina.com/ica/bundles/{self.bundle_id}/bundleDetails"
+
         # Add workflow to bundle
         add_pipeline_to_bundle(self.bundle_id, self.bundle_pipeline_id, icav2_access_token)
 
