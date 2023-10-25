@@ -406,8 +406,8 @@ Environment Variables
         self.md_file_obj.new_paragraph(
             "[Dockstore Version Link](https://dockstore.org/workflows/github.com/{org_repo}/{workflow_name}:{workflow_version})".format(
                 org_repo=os.environ.get("GITHUB_REPOSITORY"),
-                workflow_name=self.github_tag[1].split("/")[0],
-                workflow_version=self.github_tag[1].split("/")[1].replace(".", "_")
+                workflow_name=workflow_path_name_to_dockstore_name(self.cwl_file_path.name),
+                workflow_version=self.github_tag[1]
             )
         )
 

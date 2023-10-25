@@ -6,6 +6,7 @@ Functions for dockstore
 import gzip
 from typing import List
 import json
+import re
 
 from ruamel.yaml import CommentedMap, YAML
 
@@ -108,7 +109,7 @@ def append_workflow_to_dockstore_yaml(workflow_path: Path, gzipped_packed_workfl
     except StopIteration:
         dockstore_obj = Dockstore(
             create=True,
-            name=workflow_path.name.replace(".cwl", "").replace(".", "_"),
+            name=workflow_path_name_to_dockstore_name(workflow_path.name),
             cwl_file_path=workflow_path,
             subclass="CWL",
             primary_descriptor_path=dockstore_packed_output_path,
@@ -121,6 +122,17 @@ def append_workflow_to_dockstore_yaml(workflow_path: Path, gzipped_packed_workfl
 
     write_packed_workflow_to_dockstore_dir(gzipped_packed_workflow_path, dockstore_packed_output_path)
 
+
+def workflow_path_name_to_dockstore_name(workflow_path_name: str):
+    """
+    No dots allowed, or double hyphens / underscores
+    :param workflow_path_name:
+    :return:
+    """
+    name_with_no_periods = workflow_path_name.replace(".cwl", "").replace(".", "_")
+
+    # Hyphens and underscores are restriced to a single character
+    return re.sub(r"([_-])+", r"\1", name_with_no_periods)
 
 def write_packed_workflow_to_dockstore_dir(gzipped_input_packed_workflow_path: Path, dockstore_packed_output_path: Path):
     """
