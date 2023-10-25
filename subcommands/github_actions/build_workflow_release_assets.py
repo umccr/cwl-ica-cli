@@ -734,29 +734,10 @@ Environment Variables
         Create the release artifacts branch
         :return:
         """
-        git_diff_command = [
-            "git", "diff", "--name-only", "--quiet"
-        ]
+        # Quick respite for the filesystem before checking git changes
+        sleep(3)
 
-        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
-            git_diff_command,
-            capture_output=True
-        )
-
-        if not git_diff_returncode == 0:
-            logger.error(f"Got a non-zero exit code when running git diff")
-            logger.error(f"Stdout: {git_diff_stdout}")
-            logger.error(f"Stderr: {git_diff_stderr}")
-            raise ChildProcessError
-
-        if git_diff_stdout.strip() == "":
-            logger.info("No artifacts to commit - skipping")
-            return
-
-        # Quick respite for the filesystem
-        sleep(1)
-
-        # Commit files
+        # Add outputs
         git_add_command = [
             "git", "add", self.get_release_artifact_output_path()
         ]
@@ -772,7 +753,28 @@ Environment Variables
             logger.error(f"Stderr: {git_add_stderr}")
             raise ChildProcessError
 
+        # Now check changes
+        git_diff_command = [
+            "git", "diff", "--name-only", "--cached", "--quiet"
+        ]
 
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if git_diff_returncode not in [0, 1]:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_returncode == 0:
+            logger.info("No release artifacts to commit - skipping")
+            return
+        # Exit code 1 means there were changes to check
+
+        # Commit files
         git_commit_command = [
             "git", "commit",
             "-m", f"Uploading visual images for {self.release_name} release"
@@ -963,27 +965,8 @@ Environment Variables
         # Update Dockstore yaml file
         append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, self.github_tag)
 
-        git_diff_command = [
-            "git", "diff", "--name-only", "--quiet"
-        ]
-
-        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
-            git_diff_command,
-            capture_output=True
-        )
-
-        if not git_diff_returncode == 0:
-            logger.error(f"Got a non-zero exit code when running git diff")
-            logger.error(f"Stdout: {git_diff_stdout}")
-            logger.error(f"Stderr: {git_diff_stderr}")
-            raise ChildProcessError
-
-        if git_diff_stdout.strip() == "":
-            logger.info("No artifacts to commit - skipping")
-            return
-
-        # Quick respite for the filesystem
-        sleep(1)
+        # Quick respite for the filesystem before checking for changes
+        sleep(3)
 
         # Add files
         git_add_command = [
@@ -1000,6 +983,27 @@ Environment Variables
             logger.error(f"Stdout: {git_add_stdout}")
             logger.error(f"Stderr: {git_add_stderr}")
             raise ChildProcessError
+
+        # Check if there were any differences
+        git_diff_command = [
+            "git", "diff", "--name-only", "--cached", "--quiet"
+        ]
+
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if git_diff_returncode not in [0, 1]:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_returncode == 0:
+            logger.info("No dockstore changes to commit - skipping")
+            return
+        # Exit code 1 means there where changes to commit
 
         # Commit
         git_commit_command = [
@@ -1210,27 +1214,8 @@ Environment Variables
 
         write_config_yaml(config_yaml_obj)
 
-        git_diff_command = [
-            "git", "diff", "--name-only", "--quiet"
-        ]
-
-        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
-            git_diff_command,
-            capture_output=True
-        )
-
-        if not git_diff_returncode == 0:
-            logger.error(f"Got a non-zero exit code when running git diff")
-            logger.error(f"Stdout: {git_diff_stdout}")
-            logger.error(f"Stderr: {git_diff_stderr}")
-            raise ChildProcessError
-
-        if git_diff_stdout.strip() == "":
-            logger.info("No artifacts to commit - skipping")
-            return
-
-        # Quick respite for the filesystem
-        sleep(1)
+        # Allow the file system to catch up on changes
+        sleep(3)
 
         # Add / commit file
         git_add_command = [
@@ -1248,6 +1233,29 @@ Environment Variables
             logger.error(f"Stderr: {git_add_stderr}")
             raise ChildProcessError
 
+        # Check if there are any differences
+        git_diff_command = [
+            "git", "diff", "--name-only", "--cached", "--quiet"
+        ]
+
+        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
+            git_diff_command,
+            capture_output=True
+        )
+
+        if git_diff_returncode not in [0, 1]:
+            logger.error(f"Got a non-zero exit code when running git diff")
+            logger.error(f"Stdout: {git_diff_stdout}")
+            logger.error(f"Stderr: {git_diff_stderr}")
+            raise ChildProcessError
+
+        if git_diff_returncode == 0:
+            logger.info("No bundle configurations to commit - skipping")
+            return
+
+        # Exit code 1 when using --quiet parameter means changes have been found
+
+        # Now commit
         git_commit_command = [
             "git", "commit",
             "-m", f"Updated config/icav2.yaml to include new bundles"
