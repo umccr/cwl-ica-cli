@@ -33,10 +33,6 @@ class Dockstore:
     * add_to_dockstore_yaml
       # Determines if an entry already exists for this workflow / version combination.
       # If so, extends the existing tags.
-
-      # FIXME - currently referring to cwl-ica repo path, should be pointing to .dockstore/ path
-      # FIXME - should also push as a TAG, separate to dockstore config branch??
-
     """
 
     def __init__(
@@ -157,7 +153,7 @@ class Dockstore:
         # Calculate cwl file path
         cwl_file_path = \
             get_workflows_dir() / \
-            Path(dockstore_dict.get("primaryDescriptorPath")).relative_to(".dockstore")
+            Path(dockstore_dict.get("primaryDescriptorPath")).relative_to("/.dockstore")
 
         return cls(
             create=False,
