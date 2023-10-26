@@ -963,7 +963,13 @@ Environment Variables
         """
 
         # Update Dockstore yaml file
-        append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, self.github_tag)
+        dockstore_tags = list(
+            map(
+                lambda tag: f"dockstore/{tag}",
+                self.github_tag
+            )
+        )
+        append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, dockstore_tags)
 
         # Quick respite for the filesystem before checking for changes
         sleep(3)
