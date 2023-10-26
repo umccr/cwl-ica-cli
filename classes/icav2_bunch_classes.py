@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections import OrderedDict
 from pathlib import Path
 from typing import Optional, List, Dict
@@ -872,7 +873,9 @@ class BunchVersion:
 
         name, version = get_name_version_tuple_from_cwl_file_path(abs_pipeline_path, workflows_path)
 
-        version_suffix = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        # Just get the timestamp from the version suffix
+        # dragen-somatic-with-germline-pipeline/4.2.4__20231025233121
+        version_suffix = os.environ["GITHUB_TAG"].split(",")[-1].rsplit("__", 1)[-1]
 
         bundle_obj = Bundle(
             create=True,

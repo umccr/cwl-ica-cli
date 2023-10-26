@@ -46,7 +46,7 @@ from classes.icav2_bunch_classes import Bunch, BunchVersion, Bundle
 from utils.cwl_helper_utils import create_template_from_workflow_inputs, create_template_from_workflow_outputs, \
     get_workflow_overrides_steps_dict, get_type_from_cwl_io_object
 from utils.cwl_workflow_helper_utils import zip_workflow, create_packed_workflow_from_zipped_workflow_path
-from utils.dockstore_helpers import append_workflow_to_dockstore_yaml, get_dockstore_yaml_path
+from utils.dockstore_helpers import append_workflow_to_dockstore_yaml, get_dockstore_yaml_path, workflow_path_name_to_dockstore_name
 from utils.gh_helpers import get_gh_release_output_path, get_github_url, get_releases_url
 from utils.globals import ICAV2_DEFAULT_BASE_URL
 from utils.icav2_gh_helpers import read_config_yaml, write_config_yaml, get_icav2_config_yaml_path, \
