@@ -136,7 +136,7 @@ class Dockstore:
         return {
             "name": self.name,
             "subclass": "CWL",
-            "primaryDescriptorPath": "/" + str(self.primary_descriptor_path),
+            "primaryDescriptorPath": "/" + str(self.primary_descriptor_path).lstrip("/"),
             "readMePath": str(self.readme_path),
             "authors": self.authors,
             "filters": {
