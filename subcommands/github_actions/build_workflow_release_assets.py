@@ -799,10 +799,25 @@ Environment Variables
         # FIXME use gh api for these commands
         for tag in self.github_tag:
             git_tag_command = [
-                "git", "tag", "--force", tag
+                "git", "tag",
+                "--annotate",
+                "--message", f"Release of {self.release_name}"
+                "--force", tag
             ]
+
+            # Set configuration so user is associated with the tags
+            proc_environ = os.environ.copy()
+
+            proc_environ.update(
+                {
+                    "GIT_AUTHOR_NAME": proc_environ.get("_GIT_AUTHOR_NAME"),
+                    "GIT_AUTHOR_EMAIL": proc_environ.get("_GIT_AUTHOR_EMAIL")
+                }
+            )
+
             git_tag_returncode, git_tag_stdout, git_tag_stderr = run_subprocess_proc(
                 git_tag_command,
+                env=proc_environ,
                 capture_output=True
             )
 
@@ -937,7 +952,6 @@ Environment Variables
             logger.error(f"Stderr was {gh_pr_stderr}")
             raise ChildProcessError
 
-
     def create_dockstore_commit(self):
         """
         Appends the workflows section of the .dockstore.yml file in the top directory of the repository
@@ -954,8 +968,8 @@ Environment Variables
           latestTagAsDefault: true  # Not sure how this will affect things - is this the bottom tag?
           filters:
             tags:
-             - dockstore/<workflow>/<version>
-             - dockstore/<workflow>/<version>__<epoch>
+             - <workflow>/<version>
+             - <workflow>/<version>__<epoch>
              - __append new version if new tag pushed__
         :return:
 
@@ -963,13 +977,7 @@ Environment Variables
         """
 
         # Update Dockstore yaml file
-        dockstore_tags = list(
-            map(
-                lambda tag: f"dockstore/{tag}",
-                self.github_tag
-            )
-        )
-        append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, dockstore_tags)
+        append_workflow_to_dockstore_yaml(self.cwl_file_path, self.packed_workflow_path, self.github_tag)
 
         # Quick respite for the filesystem before checking for changes
         sleep(3)
