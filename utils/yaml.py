@@ -6,7 +6,6 @@ https://stackoverflow.com/questions/51103498/using-ruamel-yaml-to-keep-multiline
 """
 
 
-from ruamel import yaml
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import PreservedScalarString
 import textwrap

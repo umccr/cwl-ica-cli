@@ -9,7 +9,7 @@ from typing import Optional, Dict, List, Union
 from pathlib import Path
 from urllib.parse import urlparse
 
-from ruamel import yaml
+from ruamel.yaml import YAML
 
 from utils.cwl_helper_utils import get_path_from_cwl_id
 from utils.repo import \
@@ -191,10 +191,10 @@ class CWLSchemaObj:
     def load_schema_from_uri(cls, uri_input):
         file_path: Path = Path(urlparse(uri_input).path)
 
-        yaml_handler = yaml.YAML()
+        yaml = YAML()
 
         with open(file_path, "r") as schema_h:
-            schema_obj = yaml_handler.load(schema_h)
+            schema_obj = yaml.load(schema_h)
 
         return cls(RecordSchema(schema_obj), file_path)
 
