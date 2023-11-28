@@ -9,7 +9,7 @@ from copy import deepcopy
 from typing import List, Dict, Union, Optional, Any, cast, Tuple
 from pathlib import Path
 
-from ruamel import yaml
+from ruamel.yaml import YAML
 
 from classes.cwl import CWL
 

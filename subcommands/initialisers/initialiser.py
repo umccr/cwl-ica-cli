@@ -10,7 +10,7 @@ from classes.command import Command
 from classes.project import Project
 from classes.project_production import ProductionProject
 from utils.logging import get_logger
-from ruamel import yaml
+from ruamel.yaml import YAML
 from utils.repo import get_project_yaml_path, read_yaml, get_tenant_yaml_path
 import os
 from utils.errors import CheckArgumentError, ItemVersionExistsError, ItemDirectoryNotFoundError
@@ -312,8 +312,10 @@ class Initialiser(Command):
         Read an item.yaml like tool.yaml or workflow.yaml
         :return:
         """
+        yaml = YAML()
+
         with open(self.get_item_yaml(), 'r') as item_yaml_h:
-            self.items_list = yaml.main.round_trip_load(item_yaml_h)[self.item_type_key]
+            self.items_list = yaml.load(item_yaml_h)[self.item_type_key]
 
     def add_item_to_items_list(self):
         """

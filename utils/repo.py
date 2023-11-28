@@ -8,7 +8,7 @@ import os
 
 from utils.globals import CWL_ICA_REPO_PATH_ENV_VAR, GITHUB_DEFAULT_BRANCH
 from pathlib import Path
-from ruamel import yaml
+from ruamel.yaml import YAML
 from utils.errors import CWLICARepoAssetNotFoundError, CWLICARepoNotFoundError
 from utils.logging import get_logger
 
@@ -298,8 +298,10 @@ def get_gh_run_graphs_dir(non_existent_ok=True) -> Path:
 
 def read_yaml(yaml_file):
     # Read in the cwl file from a yaml
+    yaml = YAML()
+
     with open(yaml_file, "r") as yaml_h:
-        yaml_obj = yaml.main.round_trip_load(yaml_h, preserve_quotes=True)
+        yaml_obj = yaml.load(yaml_h, preserve_quotes=True)
 
     return yaml_obj
 

@@ -205,8 +205,10 @@ class Sync(Command):
         Read an item.yaml like tool.yaml or workflow.yaml
         :return:
         """
+        yaml = YAML()
+
         with open(self.get_item_yaml(), 'r') as item_yaml_h:
-            self.items_list = yaml.main.round_trip_load(item_yaml_h)[self.item_type_key]
+            self.items_list = yaml.load(item_yaml_h)[self.item_type_key]
 
     def get_item_from_item_list(self):
         """

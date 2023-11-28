@@ -40,8 +40,9 @@ class CWLSchema(CWL):
 
     def import_cwl_yaml(self):
         # Read in the cwl file from a yaml
+        yaml = YAML()
         with open(self.cwl_file_path, "r") as cwl_h:
-            yaml_obj = yaml.main.round_trip_load(cwl_h, preserve_quotes=True)
+            yaml_obj = yaml.load(cwl_h, preserve_quotes=True)
 
         self.cwl_obj = RecordSchema(yaml_obj).type
 
