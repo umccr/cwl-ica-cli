@@ -88,6 +88,6 @@ def check_tokens_dir(tokens_dir: Path):
     :return:
     """
     # Check directory permissions
-    if tokens_dir.stat().st_mode != 0o700:
+    if oct(tokens_dir.stat().st_mode)[-3:] != "700":
         logger.error(f"Got the wrong permissions for the tokens directory {tokens_dir}")
         raise PermissionError
