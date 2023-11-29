@@ -41,7 +41,7 @@ def build_cwl_dot(cwl_item: CWL, dot_out_path: Path):
     with open(str(dot_out_path), 'w') as write_h:
         build_dot_returncode, _, build_dot_stderr = run_subprocess_proc(
             [
-                "cwltool", "--debug",
+                "cwltool", "--debug", "--no-doc-cache",
                 "--print-dot", cwl_packed_temp_file.name
             ],
             stdout=write_h, stderr=subprocess.PIPE

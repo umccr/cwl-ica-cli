@@ -133,7 +133,7 @@ def collect_objects_by_print_deps(cwl_path: Path) -> List:
 
     returncode, stdout, stderr = run_subprocess_proc(
         [
-            "cwltool", "--print-deps", str(cwl_path)
+            "cwltool", "--no-doc-cache", "--print-deps", str(cwl_path)
         ],
         capture_output=True
     )
@@ -396,7 +396,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")
     proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
         [
-            "cwltool", "--validate", str(output_tempdir / "workflow.cwl")
+            "cwltool", "--no-doc-cache", "--validate", str(output_tempdir / "workflow.cwl")
         ],
         cwd=str(output_tempdir),
         capture_output=True
@@ -442,7 +442,7 @@ def create_packed_workflow_from_zipped_workflow_path(zipped_path: Path, output_p
         # Pack workflow
         pack_returncode, pack_stdout, pack_stderr = run_subprocess_proc(
             [
-                "cwltool", "--pack", extracted_main_workflow_path
+                "cwltool", "--no-doc-cache", "--pack", extracted_main_workflow_path
             ],
             capture_output=True
         )

@@ -101,7 +101,7 @@ def create_packed_schema_json(cwl_yaml_path: Path) -> Dict:
             "outputs: {}\n"
         )
 
-    cwltool_pack_proc: CompletedProcess = run(["cwltool", "--pack", cwl_tool_file.name], capture_output=True)
+    cwltool_pack_proc: CompletedProcess = run(["cwltool", "--no-doc-cache", "--pack", cwl_tool_file.name], capture_output=True)
 
     if not cwltool_pack_proc.returncode == 0:
         logger.error(f"cwltool failed with error '{cwltool_pack_proc.stderr.decode()}'")
