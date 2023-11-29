@@ -44,8 +44,8 @@ Example:
         """
 
         # Get yamls
-
-        configuration_path = get_configuration_path()
+        # Check we can get the configuration path
+        _ = get_configuration_path()
         project_yaml_path = get_project_yaml_path(non_existent_ok=True)
         tenant_yaml_path = get_tenant_yaml_path(non_existent_ok=True)
         category_yaml_path = get_category_yaml_path(non_existent_ok=True)
@@ -67,7 +67,8 @@ Example:
 
             # Now try load it
             try:
-                yaml_obj = read_yaml(yaml_file)
+                # Try load the yaml file
+                _ = read_yaml(yaml_file)
                 logger.info(f"Loaded {yaml_file} successfully")
             except YAMLError:
                 logger.error(f"Could not load {yaml_file}. Please amend the file")
@@ -82,5 +83,4 @@ Example:
         Checks done in callback - just config configuration directory exists
         :return:
         """
-
         self.config_path = get_configuration_path()

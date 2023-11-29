@@ -7,12 +7,10 @@ Pulls in a cwl expression object and runs create_object() on it.
 
 from subcommands.creators.create_from_template import CreateFromTemplate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_expressions_dir
 from classes.cwl_expression import CWLExpression
 from utils.errors import CheckArgumentError
-import os
 
 logger = get_logger()
 
@@ -27,19 +25,22 @@ class CreateExpressionFromTemplate(CreateFromTemplate):
 
 Description:
     We initialise a expression with all of the bells / schema and whistles.
-    This creates a file under <CWL_ICA_REPO_PATH>/expressions/<expression_name>/<expression_version>/<expression_name>__<expression_version>.cwl
+    This creates a file under
+      <CWL_ICA_REPO_PATH>/expressions/<expression_name>/<expression_version>/<expression_name>__<expression_version>.cwl
 
     The expression will have the bare minimum inputs and is ready for you to edit.
-    This command does NOT register the expression under expression.yaml, should you change your mind, you can easily just delete the file.
+    This command does NOT register the expression under expression.yaml, should you change your mind, you can easily
+      just delete the file.
     Remember that for each input and output that you add in a label attribute and a doc attribute.
 
     For readability purposes we recommend that you place the 'id' attribute of each input and output as the yaml key.
-    Remember, that the username isn't necessarily the creator of the software, but the person building the CWLExpression file.
+    Remember, that the username isn't necessarily the creator of the software, but the person building the CWLExpression
 
     The --username must be first registered in <CWL_ICA_REPO_PATH>/config/user.yaml.
     You may use the command "cwl-ica configure-user" to do that.
 
-    We make sure that --expression-name and --expression-version are appropriate names for folders / files, no special characters or spaces.
+    We make sure that --expression-name and --expression-version are appropriate names for folders / files,
+    no special characters or spaces.
 
     Make sure that the --expression-version argument is in x.y.z format.  If additional patch is required use
     x.y.z__<patch_string>.
@@ -54,8 +55,10 @@ EnvironmentVariables:
     CWL_ICA_DEFAULT_USER                           Saves having to use --username
 
 Example
-    cwl-ica create-expression-from-template --expression-name samexpressions-fastq --expression-version 1.10.0  --username "Alexis Lucattini"
-    cwl-ica create-expression-from-template --expression-name create-fastq-list-csv  --expression-version 0.1.1__py3.7_pd1.2.2  --username "Alexis Lucattini"
+    cwl-ica create-expression-from-template --expression-name samexpressions-fastq --expression-version 1.10.0 \\
+      --username "Alexis Lucattini"
+    cwl-ica create-expression-from-template --expression-name create-fastq-list-csv --expression-version 0.1.1 \\
+      --username "Alexis Lucattini"
     """
 
     def __init__(self, command_argv):

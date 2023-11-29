@@ -7,7 +7,6 @@ Pulls in a cwl tool object and runs create_object() on it.
 
 from subcommands.creators.create_from_template import CreateFromTemplate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_workflows_dir
 from classes.cwl_workflow import CWLWorkflow
@@ -29,7 +28,9 @@ Description:
     This creates a file under <CWL_ICA_REPO_PATH>/workflows/<workflow_name>/<workflow_version>/<workflow_name>__<workflow_version>.cwl
 
     The workflow will have the bare minimum inputs and is ready for you to edit.
-    This command does NOT register the tool under workflow.yaml, should you change your mind, you can easily just delete the file.
+    This command does NOT register the tool under workflow.yaml,
+    should you change your mind, you can easily just delete the file.
+
     Remember that for each input and output that you add in a label attribute and a doc attribute.
 
     For readability purposes we recommend that you place the 'id' attribute of each input and output as the yaml key.
@@ -38,7 +39,8 @@ Description:
     The --username must be first registered in <CWL_ICA_REPO_PATH>/config/user.yaml.
     You may use the command "cwl-ica configure-user" to do that.
 
-    We make sure that --workflow-name and --workflow-version are appropriate names for folders / files, no special characters or spaces.
+    We make sure that --workflow-name and --workflow-version are appropriate names for folders / files,
+    no special characters or spaces.
 
     Make sure that the --workflow-version argument is in x.y.z format.  If additional patch is required use
     x.y.z__<patch_string>.

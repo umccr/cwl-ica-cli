@@ -13,9 +13,12 @@ from utils.repo import get_workflows_dir, get_workflow_yaml_path
 from utils.errors import CheckArgumentError, ItemNotFoundError
 from pathlib import Path
 from classes.item_workflow import ItemWorkflow
-from utils.miscell import get_name_version_tuple_from_cwl_file_path, \
-    get_items_dir_from_cwl_file_path, get_markdown_file_from_cwl_path, get_graph_path_from_cwl_path, get_raw_url_from_path, \
+from utils.miscell import (
+    get_name_version_tuple_from_cwl_file_path,
+    get_items_dir_from_cwl_file_path, get_markdown_file_from_cwl_path,
+    get_graph_path_from_cwl_path, get_raw_url_from_path,
     cwl_id_to_path
+)
 from utils.repo import read_yaml
 import re
 from utils.pydot_utils import get_step_path_from_step_obj
@@ -46,7 +49,8 @@ EnvironmentVariables:
     GITHUB_REPOSITORY                          This GitHub repository, probably 'umccr/cwl-ica'
 
 Example
-    cwl-ica github-actions-create-workflow-markdown --workflow-path workflows/dragen-germline/3.7.5/dragen-germline__3.7.5.cwl"
+    cwl-ica github-actions-create-workflow-markdown \\
+      --workflow-path workflows/dragen-germline/3.7.5/dragen-germline__3.7.5.cwl"
     """
 
     def __init__(self, command_argv):
@@ -128,7 +132,6 @@ Example
         # Get the cwl name
         self.cwl_name = cwl_id_to_path(self.cwl_obj.id)
 
-
     def import_item_obj(self):
         """
         Import the item object
@@ -159,8 +162,10 @@ Example
         for step_obj in self.cwl_obj.steps:
             # Get the step path
             step_path = get_step_path_from_step_obj(step_obj, self.cwl_file_path)
-            step_name, step_version = get_name_version_tuple_from_cwl_file_path(step_path,
-                                                                                get_items_dir_from_cwl_file_path(step_path))
+            step_name, step_version = get_name_version_tuple_from_cwl_file_path(
+                step_path,
+                get_items_dir_from_cwl_file_path(step_path)
+            )
             step_markdown_path = get_markdown_file_from_cwl_path(step_path).absolute()
             # Append to lists
             step_names.append(step_name)
@@ -179,9 +184,13 @@ Example
             else:
                 step_markdown_text = f"{step_name} {step_version}"
             # Add the item to the list
-            md_file_obj.new_line("- " + md_file_obj.new_inline_link(link=relpath(step_markdown_path, self.markdown_path.parent),
-                                                                    text=step_markdown_text),
-                                 wrap_width=0)
+            md_file_obj.new_line(
+                "- " + md_file_obj.new_inline_link(
+                    link=relpath(step_markdown_path, self.markdown_path.parent),
+                    text=step_markdown_text
+                ),
+                wrap_width=0
+            )
 
         md_file_obj.new_line("\n")
 
@@ -222,12 +231,26 @@ Example
 
             # Add in links to step
             md_file_obj.new_header(level=4, title="Links", add_table_of_contents='n')
-            md_file_obj.new_line(md_file_obj.new_inline_link(link=relpath(step_path.absolute(), self.markdown_path.parent),
-                                                             text="CWL File Path"),
-                                 wrap_width=0)
-            md_file_obj.new_line(md_file_obj.new_inline_link(link=relpath(step_markdown_path.absolute(), self.markdown_path.parent),
-                                                             text=step_markdown_text),
-                                 wrap_width=0)
+            md_file_obj.new_line(
+                md_file_obj.new_inline_link(
+                    link=relpath(
+                        step_path.absolute(),
+                        self.markdown_path.parent
+                    ),
+                    text="CWL File Path"
+                ),
+                wrap_width=0
+            )
+            md_file_obj.new_line(
+                md_file_obj.new_inline_link(
+                    link=relpath(
+                        step_markdown_path.absolute(),
+                        self.markdown_path.parent
+                    ),
+                    text=step_markdown_text
+                ),
+                wrap_width=0
+            )
 
             # Check if a workflow
             if step_type == "workflow":
@@ -235,12 +258,19 @@ Example
                 graph_path = get_graph_path_from_cwl_path(step_path)
                 # Add in svg graph link!
                 md_file_obj.new_header(level=4, title="Subworkflow overview", add_table_of_contents='n')
-                md_file_obj.new_line(md_file_obj.new_inline_link(link=get_raw_url_from_path(graph_path),
-                                            text=md_file_obj.new_inline_image(path=relpath(graph_path.absolute(),
-                                                                                           self.markdown_path.absolute().parent),
-                                                                              text=graph_path.name),
-                                            ),
-                                     wrap_width=0)
+                md_file_obj.new_line(
+                    md_file_obj.new_inline_link(
+                        link=get_raw_url_from_path(graph_path),
+                        text=md_file_obj.new_inline_image(
+                            path=relpath(
+                                graph_path.absolute(),
+                                self.markdown_path.absolute().parent
+                            ),
+                            text=graph_path.name
+                        ),
+                    ),
+                    wrap_width=0
+                )
 
             # Add a break between steps
             md_file_obj.new_line("\n")
@@ -259,10 +289,18 @@ Example
 
         # Create the md file visual header
         md_file_obj.new_header(level=2, title="Visual Workflow Overview", add_table_of_contents='n')
-        md_file_obj.new_line(md_file_obj.new_inline_link(link=get_raw_url_from_path(svg_path),
-                                                         text=md_file_obj.new_inline_image(path=relpath(svg_path.absolute(), self.markdown_path.absolute().parent),
-                                                                                           text=svg_path.name)),
-                             wrap_width=0)
+        md_file_obj.new_line(
+            md_file_obj.new_inline_link(
+                link=get_raw_url_from_path(svg_path),
+                text=md_file_obj.new_inline_image(
+                    path=relpath(
+                        svg_path.absolute(),
+                        self.markdown_path.absolute().parent
+                    ),
+                    text=svg_path.name)
+            ),
+            wrap_width=0
+        )
 
         if svg_path.is_file() and self.is_markdown_md5sum_match():
             # The workflow hasn't changed, we don't need to create the dot file
@@ -299,4 +337,3 @@ Example
         build_cwl_workflow_image_from_dot(temp_dot_file.name, svg_path, ratio_value)
 
         return md_file_obj
-

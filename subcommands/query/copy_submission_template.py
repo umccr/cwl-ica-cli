@@ -69,7 +69,6 @@ class CopySubmissionTemplate(Command):
         # Then get project name
         self.launch_project_name = self.get_project_name_from_project_id()
 
-
     def __call__(self):
         """
         Just run through this
@@ -81,7 +80,6 @@ class CopySubmissionTemplate(Command):
 
         logger.info(f"Writing wrapper script to {self.output_shell_path}")
         self.write_shell_script()
-
 
     def check_args(self):
         """
@@ -126,10 +124,10 @@ class CopySubmissionTemplate(Command):
         :return:
         """
         run_objs: List[ICAWorkflowRun] = [
-                                          ICAWorkflowRun.from_dict(workflow_run_dict)
-                                          for workflow_run_dict in read_yaml(get_run_yaml_path())["runs"]
-                                          if workflow_run_dict.get("ica_workflow_run_instance_id") == self.run_instance_id
-                                          ]
+            ICAWorkflowRun.from_dict(workflow_run_dict)
+            for workflow_run_dict in read_yaml(get_run_yaml_path())["runs"]
+            if workflow_run_dict.get("ica_workflow_run_instance_id") == self.run_instance_id
+        ]
 
         if len(run_objs) == 0:
             logger.error(f"Could not find --ica-workflow-run-instance-id arg '{self.run_instance_id}' in run yaml")

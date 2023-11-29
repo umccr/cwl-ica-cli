@@ -7,14 +7,8 @@ Updates the default user through the conda env var CWL_ICA_DEFAULT_USER
 from classes.command import Command
 from utils.conda import get_conda_activate_dir
 from utils.logging import get_logger
-from docopt import docopt
 from pathlib import Path
-import re
-import requests
-from urllib.parse import urlparse
-from ruamel.yaml import YAML, RoundTripDumper, dump as yaml_dump
 from argparse import ArgumentError
-from utils.globals import CWL_ICA_REPO_PATH_ENV_VAR
 from utils.repo import get_tenant_yaml_path, read_yaml
 from utils.errors import CheckArgumentError, TenantNotFoundError
 

@@ -6,7 +6,6 @@ Validate a cwl tool
 
 from subcommands.validators.validate import Validate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_workflows_dir
 from classes.cwl_workflow import CWLWorkflow

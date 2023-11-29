@@ -123,7 +123,10 @@ class ListRuns(Command):
                     continue
                 for version in item.versions:
                     # Filter by file path
-                    if (self.name is not None and not self.name == item.name) or (self.version is not None and not self.version == version.name):
+                    if (
+                            (self.name is not None and not self.name == item.name) or
+                            (self.version is not None and not self.version == version.name)
+                    ):
                         continue
                     # Filter by project
                     if run.ica_workflow_id == item.ica_workflow_id and run.ica_workflow_version_name:
@@ -138,15 +141,29 @@ class ListRuns(Command):
         :return:
         """
         # Initialise dataframe
-        self.df = pd.DataFrame(columns=["run_id", "launch_project_name", "project_name", "workflow_id", "workflow_version_name", "start_time", "end_time", "duration"])
+        self.df = pd.DataFrame(
+            columns=[
+                "run_id",
+                "launch_project_name",
+                "project_name",
+                "workflow_id",
+                "workflow_version_name",
+                "start_time",
+                "end_time",
+                "duration"
+            ]
+        )
 
         for run in self.ica_runs_list:
             self.df = self.df.append({
                 "run_id": run.ica_workflow_run_instance_id,
-                "launch_project_name": [project.name
-                                        for project in get_projects_list_with_token(get_base_url(), self.projects_list[0].get_project_token())
-                                        if project.id == run.ica_project_launch_context_id
-                                        ][0],
+                "launch_project_name": [
+                    project.name
+                    for project in get_projects_list_with_token(
+                        get_base_url(), self.projects_list[0].get_project_token()
+                    )
+                    if project.id == run.ica_project_launch_context_id
+                ][0],
                 "project_name": [project.project_name
                                  for project in self.projects_list
                                  for ica_item in project.get_items_by_item_type(self.item_type)

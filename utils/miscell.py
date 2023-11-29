@@ -22,7 +22,6 @@ from deepdiff import DeepDiff
 import json
 from typing import Dict, Any
 from datetime import datetime
-from tempfile import TemporaryDirectory
 from string import ascii_letters, digits
 from utils.errors import InvalidNameError
 import re
@@ -145,7 +144,6 @@ def set_tenants_list(tenants_arg):
     """
     # Pull in tenants list
     all_tenants_list = read_yaml(get_tenant_yaml_path())['tenants']
-    new_tenants_list = []
 
     # Check if tenants list is defined
     if tenants_arg is None:
@@ -311,6 +309,7 @@ def decode_compressed_base64(compressed_string):
              b64decode(compressed_string)
            ).decode('ascii')
 
+
 def get_markdown_file_from_cwl_path(cwl_path: Path) -> Path:
     """
     From the cwl file path, get the path to the markdown file path
@@ -320,7 +319,12 @@ def get_markdown_file_from_cwl_path(cwl_path: Path) -> Path:
     # Get the relative path
     relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
-    return get_cwl_ica_repo_path() / ".github/catalogue/docs" / relative_cwl_path.parent / (relative_cwl_path.stem + ".md")
+    return (
+        get_cwl_ica_repo_path() /
+        ".github/catalogue/docs" /
+        relative_cwl_path.parent /
+        (relative_cwl_path.stem + ".md")
+    )
 
 
 def get_blob_url_to_markdown_file_from_cwl_path(cwl_path: Path) -> str:
@@ -367,7 +371,12 @@ def get_graph_path_from_cwl_path(cwl_path: Path) -> Path:
     # Get the relative path
     relative_cwl_path = cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path())
 
-    return get_cwl_ica_repo_path() / ".github/catalogue/images" / relative_cwl_path.parent / (relative_cwl_path.stem + ".svg")
+    return (
+        get_cwl_ica_repo_path() /
+        ".github/catalogue/images" /
+        relative_cwl_path.parent /
+        (relative_cwl_path.stem + ".svg")
+    )
 
 
 def cwl_id_to_path(cwl_id: str) -> Path:
@@ -435,10 +444,6 @@ def strip_trailing_slash_from_url(url: str) -> str:
         fragment=""
     )
     return new_url_obj.geturl()
-
-    url_obj._replace
-
-    return url_obj.geturl()
 
 
 def get_current_time_in_release_format() -> str:

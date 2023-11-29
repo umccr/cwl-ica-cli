@@ -137,7 +137,6 @@ class Validate(Command):
             ))
             raise InvalidVersionError
 
-
     def validate_obj(self):
         """
         Call the cwl_obj to validate it

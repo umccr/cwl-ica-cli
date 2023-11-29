@@ -14,7 +14,6 @@ from pathlib import Path
 from cwl_utils.parser.latest import \
     ExpressionTool, LoadingOptions  # For creation of tool
 from ruamel.yaml.comments import CommentedMap as OrderedDict
-from ruamel import yaml
 from utils.yaml import dump_cwl_yaml as dump_yaml, to_multiline_string
 
 logger = get_logger()
@@ -52,7 +51,9 @@ class CWLExpression(CWL):
         # Check inputs exist
         if inputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for inputs
         input_validation_passing, issue_count = self.check_docs(inputs, issue_count)
@@ -62,7 +63,9 @@ class CWLExpression(CWL):
         # Check outputs exist
         if outputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for outputs
         output_validation_passing, warning_count = self.check_docs(outputs, warning_count)
@@ -120,8 +123,10 @@ class CWLExpression(CWL):
 
         # Expect 'author' in last of keys
         if 'https://schema.org/author' not in self.cwl_packed_obj.keys():
-            logger.error("Could not find attribute \"https://schema.org/author\" in the packed version of the cwl file. "
-                         "Please ensure you have set the authorship in the tool.")
+            logger.error(
+                "Could not find attribute \"https://schema.org/author\" in the packed version of the cwl file. "
+                "Please ensure you have set the authorship in the tool."
+            )
         else:
             self.validate_authorship_attr(self.cwl_packed_obj['https://schema.org/author'])
 
@@ -130,7 +135,6 @@ class CWLExpression(CWL):
         if not validation_passing:
             logger.error(f"There were a total of {issue_count} issues.")
             raise CWLValidationError
-
 
     def create_object(self, user_obj):
         """
@@ -190,7 +194,3 @@ class CWLExpression(CWL):
 
         with open(self.cwl_file_path, 'w') as cwl_h:
             dump_yaml(write_obj, cwl_h)
-
-
-
-

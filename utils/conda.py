@@ -62,7 +62,12 @@ def get_conda_tokens_dir():
     :return:
     """
 
-    return Path(get_conda_prefix()) / "etc" / "ica" / "tokens"
+    tokens_path = Path(get_conda_prefix()) / "etc" / "ica" / "tokens"
+    if not tokens_path.is_dir():
+        create_tokens_dir(tokens_path)
+    else:
+        check_tokens_dir(tokens_path)
+    return tokens_path
 
 
 def create_tokens_dir(tokens_dir: Path):
@@ -76,9 +81,13 @@ def create_tokens_dir(tokens_dir: Path):
         tokens_dir.mkdir(mode=0o700, parents=True)
 
 
-def check_tokens_dir(tokens_dir):
+def check_tokens_dir(tokens_dir: Path):
     """
     Make sure tokens dir is modifications 700
     :param tokens_dir:
     :return:
     """
+    # Check directory permissions
+    if tokens_dir.stat().st_mode != 0o700:
+        logger.error(f"Got the wrong permissions for the tokens directory {tokens_dir}")
+        raise PermissionError

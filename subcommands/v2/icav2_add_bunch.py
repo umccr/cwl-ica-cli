@@ -20,7 +20,7 @@ from utils.icav2_helpers import get_regions, get_icav2_configuration
 from utils.logging import get_logger
 from argparse import ArgumentError
 from utils.errors import CheckArgumentError
-from typing import Optional, List, Dict, Union
+from typing import Optional, List, Dict, Union, Type
 
 logger = get_logger()
 
@@ -177,9 +177,20 @@ Example:
         except ArgumentError:
             self._help(fail=True)
 
-    def check_arg_in_input_yaml_and_cli(self, arg_name: str, input_yaml_data: Dict, required=False, arg_type=Union[str|List|Path], attr_name: Optional[str]=None, yaml_key: Optional[str]=None, env=None):
+    def check_arg_in_input_yaml_and_cli(
+            self,
+            arg_name: str,
+            input_yaml_data: Dict,
+            required: False,
+            arg_type: Union[Type[str] | Type[List] | Type[Path]],
+            attr_name: Optional[str] = None,
+            yaml_key: Optional[str] = None,
+            env=None
+    ):
         """
         For a given argument, check that it's been specified either on the cli or in the input yaml
+        :param env:
+        :param yaml_key:
         :param arg_name:
         :param required:
         :param arg_type:
@@ -447,7 +458,6 @@ Example:
                     if project not in registered_project_list:
                         logger.error(f"Cannot create bunch, project {project} is not the available project list")
                         raise CheckArgumentError
-
 
             # Generate bunch object
             self.bunch = Bunch(

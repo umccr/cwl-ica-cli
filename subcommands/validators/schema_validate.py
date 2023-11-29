@@ -6,7 +6,6 @@ Validate a cwl schema
 
 from subcommands.validators.validate import Validate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_schemas_dir
 from classes.cwl_schema import CWLSchema

@@ -30,14 +30,18 @@ Options:
     --username=<the username>                 Required, the name of the maintainer
 
 Example:
-    cwl-ica add-maintainer-to-expression --expression-path "expressions/bwa-index/1.10.1/bwa-index__1.10.1.cwl" --username "Alexis Lucattini"
+    cwl-ica add-maintainer-to-expression \\
+      --expression-path "expressions/bwa-index/1.10.1/bwa-index__1.10.1.cwl" \\
+      --username "Alexis Lucattini"
     """
 
     def __init__(self, command_argv):
         # Call super class
-        super(AddMaintainerToExpression, self).__init__(command_argv,
-                                                  item_dir=get_expressions_dir(),
-                                                  item_type="expression")
+        super(AddMaintainerToExpression, self).__init__(
+            command_argv,
+            item_dir=get_expressions_dir(),
+            item_type="expression"
+        )
 
     def check_args(self):
         """

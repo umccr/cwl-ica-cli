@@ -59,13 +59,15 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(ToolSync, self).__init__(command_argv,
-                                       update_projects=True,
-                                       item_dir=get_tools_dir(),
-                                       item_yaml_path=get_tool_yaml_path(),
-                                       item_type_key="tools",
-                                       item_type="tool",
-                                       item_suffix="cwl")
+        super(ToolSync, self).__init__(
+            command_argv,
+            update_projects=True,
+            item_dir=get_tools_dir(),
+            item_yaml_path=get_tool_yaml_path(),
+            item_type_key="tools",
+            item_type="tool",
+            item_suffix="cwl"
+        )
 
     def check_args(self):
         """

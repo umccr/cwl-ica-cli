@@ -1,9 +1,7 @@
 import websocket
 from websocket._exceptions import WebSocketTimeoutException, WebSocketBadStatusException
-from websocket import create_connection
 from pathlib import Path
 from bs4 import BeautifulSoup
-from contextlib import closing
 
 from utils.logging import get_logger
 

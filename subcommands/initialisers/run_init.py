@@ -10,10 +10,14 @@ from utils.logging import get_logger
 from utils.repo import read_yaml, get_project_yaml_path, get_run_yaml_path
 from utils.yaml import dump_yaml
 from os import environ
-from utils.errors import CheckArgumentError, ProjectNotFoundError, ICAWorkflowRunExistsError, ItemNotFoundError, ICAWorkflowRunNotFoundError
+from utils.errors import (
+    CheckArgumentError, ProjectNotFoundError,
+    ICAWorkflowRunExistsError, ItemNotFoundError, ICAWorkflowRunNotFoundError
+)
 from classes.project import Project
 
 logger = get_logger()
+
 
 class RegisterRunInstance(Command):
     """
@@ -54,7 +58,6 @@ class RegisterRunInstance(Command):
         # Check the runs yaml
         self.check_runs_yaml()
 
-
     def __call__(self):
         """
         Write out the run to run.yaml
@@ -67,7 +70,9 @@ class RegisterRunInstance(Command):
         self.write_run_yaml()
 
         # Write out the project yaml
-        logger.info(f"Adding run instance '{self.ica_workflow_run_instance_id} to project '{self.project_name}' in project.yaml")
+        logger.info(
+            f"Adding run instance '{self.ica_workflow_run_instance_id} to project '{self.project_name}' in project.yaml"
+        )
         self.write_projects_yaml()
 
     def set_objs(self):
@@ -225,8 +230,3 @@ class RegisterRunInstance(Command):
             logger.error("Could not get the workflow run instance arg")
             raise CheckArgumentError
         self.ica_workflow_run_instance_id = self.args.get("--ica-workflow-run-instance-id")
-
-
-
-
-

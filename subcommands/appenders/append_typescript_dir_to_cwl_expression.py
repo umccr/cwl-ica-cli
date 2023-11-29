@@ -7,9 +7,7 @@ Subclass of initialiser
 from subcommands.appenders.append_typescript_dir import AppendTypeScriptDir
 from utils.logging import get_logger
 from pathlib import Path
-from classes.item_version_expression import ItemVersionExpression
-from classes.item_expression import ItemExpression
-from utils.repo import get_expression_yaml_path, get_expressions_dir
+from utils.repo import get_expressions_dir
 from utils.errors import CheckArgumentError
 
 
@@ -28,11 +26,12 @@ Description:
 
 
 Options:
-    --expression-path=<the expression path>                         Required, the path to the cwl expression
-    --xtrace                                                        Optional, add xtrace option to initialise_typescript_expression_directory.sh
+    --expression-path=<the expression path>   Required, the path to the cwl expression
+    --xtrace                                  Optional, add xtrace option to initialise_typescript_expression_directory
 
 Example:
-    cwl-ica append-typescript-directory-to-cwl-expression-tool --expression-path "expressions/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
+    cwl-ica append-typescript-directory-to-cwl-expression-tool \\
+      --expression-path "expressions/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
     """
 
     def __init__(self, command_argv):

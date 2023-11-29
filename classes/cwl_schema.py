@@ -7,7 +7,6 @@ Based mostly on the cwl-utils package
 import re
 from copy import deepcopy
 from typing import List, Dict
-from urllib.parse import urlparse
 
 from ruamel.yaml import YAML
 
@@ -16,10 +15,8 @@ from utils.cwl_helper_utils import split_cwl_id_to_path_and_fragment
 from utils.logging import get_logger
 from utils.errors import CWLSchemaError
 from tempfile import NamedTemporaryFile
-import os
 from pathlib import Path
 from ruamel.yaml.comments import CommentedMap as OrderedDict
-from ruamel import yaml
 import json
 from cwl_utils.parser.latest import \
     RecordSchema
@@ -42,7 +39,7 @@ class CWLSchema(CWL):
         # Read in the cwl file from a yaml
         yaml = YAML()
         with open(self.cwl_file_path, "r") as cwl_h:
-            yaml_obj = yaml.load(cwl_h, preserve_quotes=True)
+            yaml_obj = yaml.load(cwl_h)
 
         self.cwl_obj = RecordSchema(yaml_obj).type
 
@@ -134,10 +131,12 @@ class CWLSchema(CWL):
             "fields": self.cwl_obj.fields,
         })
 
-        with YAML(output=self.cwl_file_path) as cwl_h:
-            yaml.indent = 4
-            yaml.block_seq_indent = 2
-            cwl_h.dump(write_obj)
+        yaml = YAML()
+        yaml.indent = 4
+        yaml.block_seq_indent = 2
+
+        with open(self.cwl_file_path, 'w') as cwl_h:
+            yaml.dump(write_obj, cwl_h)
 
     def check_docs(self, cwl_attr_list, issue_count):
         """

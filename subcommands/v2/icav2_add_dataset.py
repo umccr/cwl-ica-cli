@@ -174,7 +174,9 @@ Example:
 
         # Get input yaml objects
         if self.input_yaml is not None:
-            self.dataset_name, self.dataset_description, self.data_list_obj = get_dataset_from_input_yaml(self.input_yaml)
+            self.dataset_name, self.dataset_description, self.data_list_obj = (
+                get_dataset_from_input_yaml(self.input_yaml)
+            )
         else:
             self.data_list_obj = []
 
@@ -214,7 +216,8 @@ Example:
         config = read_config_yaml()
         if config is not None:
             datasets = config.get("datasets", None)
-            if datasets is not None and self.dataset_name in list(map(lambda dataset: dataset.get("dataset_name"), datasets)):
+            dataset_names_list = list(map(lambda dataset: dataset.get("dataset_name"), datasets))
+            if datasets is not None and self.dataset_name in dataset_names_list:
                 logger.error("Dataset name already in icav2.yaml")
                 raise CheckArgumentError
 
@@ -300,5 +303,3 @@ Example:
     def __call__(self):
         logger.info("Writing dataset to config")
         self.dataset.to_v2_config_yaml()
-
-

@@ -3,13 +3,10 @@
 """
 Again CWL helpers that have been WET Types all over the shop.
 """
-import re
 from copy import deepcopy
-#from types import UnionType
-from typing import List, Dict, Union, Optional, Any, cast, Tuple
+from typing import List, Dict, Union, Tuple
 from pathlib import Path
-
-from ruamel.yaml import YAML
+from utils.logging import get_logger
 
 from classes.cwl import CWL
 
@@ -56,14 +53,16 @@ from cwl_utils.parser.cwl_v1_2 import \
 from cwl_utils.parser.latest import \
     WorkflowInputParameter, \
     WorkflowOutputParameter, \
-    shortname, \
-    RecordSchema
+    shortname
 
 from cwl_utils.parser import \
     Workflow, \
     WorkflowStep, \
     CommandLineTool, \
     load_document_by_uri
+
+logger = get_logger()
+
 
 RecordSchema = Union[
     RecordSchema_v1_0,
@@ -129,10 +128,6 @@ WorkflowParameter = Union[
     WorkflowInputParameter,
     WorkflowOutputParameter
 ]
-
-from utils.logging import get_logger
-
-logger = get_logger()
 
 
 def get_include_items(cwl_item: CWL) -> List[Path]:
@@ -274,7 +269,7 @@ def get_workflow_output_type_from_enum_schema(workflow_output: WorkflowOutputPar
     return get_workflow_output_type_from_enum_schema(workflow_output)
 
 
-def get_workflow_type_from_array_schema(workflow_parameter: WorkflowInputParameter):
+def get_workflow_type_from_array_schema(workflow_parameter: WorkflowParameter):
     """
     Workflow input type is an array schema
     items attribute may be a file uri
@@ -349,7 +344,7 @@ def get_workflow_output_type_from_array_type(workflow_output: WorkflowOutputPara
     """
     Workflow input is type list -
     likely that the first input is 'null'
-    :param workflow_input:
+    :param workflow_output:
     :return:
     """
     return get_workflow_type_from_array_type(workflow_output)
@@ -358,7 +353,7 @@ def get_workflow_output_type_from_array_type(workflow_output: WorkflowOutputPara
 def get_workflow_parameter_type_from_str_type(workflow_parameter: WorkflowParameter):
     """
         Workflow input type is a string type
-        :param workflow_input:
+        :param workflow_parameter:
         :return: A list with the following attributes
           {
 
@@ -519,7 +514,9 @@ def get_type_from_cwl_io_object(cwl_item: Union[WorkflowInputParameter, Workflow
                 i_o_type = i_o_type.items
                 recursion_level += 1
             else:
-                logger.warning(f"Could not handle input/output of type {type(i_o_type)} with items of type {type(i_o_type.items)}")
+                logger.warning(
+                    f"Could not handle input/output of type {type(i_o_type)} with items of type {type(i_o_type.items)}"
+                )
                 break
 
     # Check if item is an enum schema
@@ -580,5 +577,7 @@ def split_cwl_id_to_path_and_fragment(cwl_id: str) -> Tuple[Path, Path]:
     return cwl_path, cwl_fragment
 
 
+# TODO
 def get_authorship_from_workflow(cwl_workflow: Workflow):
-    cwl_workflow.extension_fields
+    raise NotImplementedError
+    # cwl_workflow.extension_fields

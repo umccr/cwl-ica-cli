@@ -11,8 +11,8 @@ If non-production, workflow is created, version is created in project.yaml but n
 """
 
 from classes.command import Command
-from ruamel import yaml
 from utils.repo import read_yaml, get_project_yaml_path
+from ruamel.yaml import YAML
 from utils.logging import get_logger
 from classes.project import Project
 from classes.project_production import ProductionProject
@@ -29,7 +29,15 @@ class AddToProject(Command):
     This calls very similar functions to initialiser but assumes that item already exists in 'item.yaml'
     """
 
-    def __init__(self, command_argv, item_dir=None, item_yaml_path=None, item_type_key=None, item_type=None, item_suffix="cwl"):
+    def __init__(
+            self,
+            command_argv,
+            item_dir=None,
+            item_yaml_path=None,
+            item_type_key=None,
+            item_type=None,
+            item_suffix="cwl"
+    ):
         # Call super class
         super(AddToProject, self).__init__(command_argv)
 
@@ -104,7 +112,9 @@ class AddToProject(Command):
         self.cwl_obj = self.item_version.cwl_obj
 
         # Add item to project
-        logger.info(f"Adding {self.item_type} \"{self.name}/{self.version}\" to project \"{self.project.project_name}\"")
+        logger.info(
+            f"Adding {self.item_type} \"{self.name}/{self.version}\" to project \"{self.project.project_name}\""
+        )
         self.project.add_item_to_project(self.item_type_key, self.cwl_obj,
                                          access_token=self.project.get_project_token(),
                                          categories=self.item.categories)

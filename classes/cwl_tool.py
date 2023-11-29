@@ -4,10 +4,10 @@
 A subclass of cwl, this function implements the validate and create for a cwl object
 Based mostly on the cwl-utils package
 """
-from typing import List, Union
+from typing import Union
 
 from classes.cwl import CWL
-from utils.cwl_utils_typing_helpers import ResourceRequirementType, DockerRequirementType, RequirementType
+from utils.cwl_utils_typing_helpers import ResourceRequirementType, DockerRequirementType
 from utils.logging import get_logger
 from utils.errors import CWLValidationError, CWLPackagingError
 from tempfile import NamedTemporaryFile
@@ -17,7 +17,6 @@ from cwl_utils.parser.latest \
     import CommandLineTool, LoadingOptions  # For creation of tool
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 from utils.yaml import dump_cwl_yaml as dump_yaml, to_multiline_string
-from string import ascii_lowercase
 logger = get_logger()
 
 
@@ -32,7 +31,6 @@ class CWLTool(CWL):
     EXPECTED_HINT_LIST = [
         ResourceRequirementType, DockerRequirementType
     ]
-
 
     def __init__(self, cwl_file_path, name, version, create=False, user_obj=None):
         # Call super class
@@ -61,7 +59,9 @@ class CWLTool(CWL):
         # Check inputs exist
         if inputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for inputs
         input_validation_passing, issue_count = self.check_docs(inputs, issue_count)
@@ -71,7 +71,9 @@ class CWLTool(CWL):
         # Check outputs exist
         if outputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for outputs
         output_validation_passing, issue_count = self.check_docs(outputs, issue_count)
@@ -86,13 +88,15 @@ class CWLTool(CWL):
         # This will cause a fail when we pack the file
         if not len(intersection_input_output) == 0:
             issue_count += 1
-            logger.error("Issue {issue_num}: The following cwl attributes are found in "
-                         "both the 'inputs' and 'outputs' section.\n"
-                         "This will cause an issue for a packed cwl file:\n"
-                         "{intersecting_ids}".format(
-                issue_num=issue_count,
-                intersecting_ids=", ".join(["'%s'" % _id for _id in intersection_input_output])
-            ))
+            logger.error(
+                "Issue {issue_num}: The following cwl attributes are found in "
+                "both the 'inputs' and 'outputs' section.\n"
+                "This will cause an issue for a packed cwl file:\n"
+                "{intersecting_ids}".format(
+                    issue_num=issue_count,
+                    intersecting_ids=", ".join(["'%s'" % _id for _id in intersection_input_output])
+                )
+            )
 
         # Check input ids and output ids are merely a combination of [a-z and _]
         for input_id in input_ids:

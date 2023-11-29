@@ -257,7 +257,7 @@ class ICATaskRun:
                 continue
 
             # Get the usage attributes
-            if not "usage" in container.keys():
+            if "usage" not in container.keys():
                 continue
 
             usage = container.get('usage')

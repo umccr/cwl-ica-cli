@@ -42,13 +42,15 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(SchemaSync, self).__init__(command_argv,
-                                             update_projects=False,
-                                             item_dir=get_schemas_dir(),
-                                             item_yaml_path=get_schema_yaml_path(),
-                                             item_type_key="schemas",
-                                             item_type="schema",
-                                             item_suffix="cwl")
+        super(SchemaSync, self).__init__(
+            command_argv,
+            update_projects=False,
+            item_dir=get_schemas_dir(),
+            item_yaml_path=get_schema_yaml_path(),
+            item_type_key="schemas",
+            item_type="schema",
+            item_suffix="cwl"
+        )
 
     def check_args(self):
         """

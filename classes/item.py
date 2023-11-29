@@ -55,7 +55,6 @@ class Item:
     def check_dir(self):
         """
         Check that the directory exists for this 'item' class
-        :param root_dir:
         :return:
         """
 

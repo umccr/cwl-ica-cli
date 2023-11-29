@@ -33,12 +33,14 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(SyncGitHubActionsExpression, self).__init__(command_argv,
-                                                    item_dir=get_expressions_dir(),
-                                                    item_yaml_path=get_expression_yaml_path(),
-                                                    item_type_key="expressions",
-                                                    item_type="expression",
-                                                    item_suffix="cwl")
+        super(SyncGitHubActionsExpression, self).__init__(
+            command_argv,
+            item_dir=get_expressions_dir(),
+            item_yaml_path=get_expression_yaml_path(),
+            item_type_key="expressions",
+            item_type="expression",
+            item_suffix="cwl"
+        )
 
     def __call__(self):
         # Iterate through each item, determine if to update or not
@@ -66,7 +68,6 @@ Example:
         :return:
         """
         return None
-
 
     @staticmethod
     def get_project_ica_item_list(project):

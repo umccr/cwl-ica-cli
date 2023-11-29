@@ -32,6 +32,8 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super().__init__(command_argv,
-                         item_type_key="tools",
-                         item_type="tool")
+        super().__init__(
+            command_argv,
+            item_type_key="tools",
+            item_type="tool"
+        )

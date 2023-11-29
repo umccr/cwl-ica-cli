@@ -35,9 +35,11 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(AddMaintainerToWorkflow, self).__init__(command_argv,
-                                                  item_dir=get_workflows_dir(),
-                                                  item_type="workflow")
+        super(AddMaintainerToWorkflow, self).__init__(
+            command_argv,
+            item_dir=get_workflows_dir(),
+            item_type="workflow"
+        )
 
     def check_args(self):
         """

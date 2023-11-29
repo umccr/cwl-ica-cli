@@ -66,11 +66,13 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super().__init__(command_argv,
-                         item_type_key="tools",
-                         item_type="tool",
-                         item_dir=get_tools_dir(),
-                         item_yaml_path=get_tool_yaml_path())
+        super().__init__(
+            command_argv,
+            item_type_key="tools",
+            item_type="tool",
+            item_dir=get_tools_dir(),
+            item_yaml_path=get_tool_yaml_path()
+        )
 
     def get_item_arg(self) -> Path:
         """

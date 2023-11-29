@@ -7,12 +7,10 @@ Pulls in a cwl tool object and runs create_object() on it.
 
 from subcommands.creators.create_from_template import CreateFromTemplate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_tools_dir
 from classes.cwl_tool import CWLTool
 from utils.errors import CheckArgumentError
-import os
 
 logger = get_logger()
 

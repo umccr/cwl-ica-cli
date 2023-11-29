@@ -36,7 +36,9 @@ def get_cwl_ica_repo_path():
 
     # Check repo path is a directory
     if not cwl_ica_repo_path.is_dir():
-        logger.error(f"Found env var \"{CWL_ICA_REPO_PATH_ENV_VAR}\" but the directory \"{cwl_ica_repo_path}\" does not exist.")
+        logger.error(
+            f"Found env var \"{CWL_ICA_REPO_PATH_ENV_VAR}\" but the directory \"{cwl_ica_repo_path}\" does not exist."
+        )
         raise CWLICARepoNotFoundError
 
     return cwl_ica_repo_path
@@ -283,16 +285,15 @@ def get_gh_dir() -> Path:
     return get_cwl_ica_repo_path() / ".github/"
 
 
-def get_gh_catalogue_dir(non_existent_ok=True) -> Path:
+def get_gh_catalogue_dir() -> Path:
     """
     Get the github actions catalogue directory - handy when running GH as will point to full url paths
-    :param non_existent_ok:
     :return:
     """
     return get_gh_dir() / "catalogue"
 
 
-def get_gh_run_graphs_dir(non_existent_ok=True) -> Path:
+def get_gh_run_graphs_dir() -> Path:
     return get_gh_catalogue_dir() / "images/runs"
 
 
@@ -301,7 +302,7 @@ def read_yaml(yaml_file):
     yaml = YAML()
 
     with open(yaml_file, "r") as yaml_h:
-        yaml_obj = yaml.load(yaml_h, preserve_quotes=True)
+        yaml_obj = yaml.load(yaml_h)
 
     return yaml_obj
 

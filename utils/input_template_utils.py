@@ -3,25 +3,21 @@
 """
 Some handy scripts for creating input templates - particularly for yaml inputs
 """
-import logging
-
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 from ruamel.yaml.comments import CommentedSeq as OrderedList
 
-from bin.create_typescript_interface_from_schema import create_packed_schema_json
 from utils.logging import get_logger
 from utils.errors import CWLTypeNotFoundError
-from utils.globals import BLOCK_YAML_INDENTATION_LEVEL, YAML_INDENTATION_LEVEL
+from utils.globals import YAML_INDENTATION_LEVEL
 import re
 from typing import Dict, List
-from pathlib import Path
 from cwl_utils.parser.latest import \
     SecondaryFileSchema
 
 logger = get_logger()
 
 
-def create_input_dict(cwl_inputs: Dict, cwl_file_path: Path) -> OrderedDict:
+def create_input_dict(cwl_inputs: Dict) -> OrderedDict:
     """
     Create a commented map object from the input template.
     Will have the three top keys
@@ -31,10 +27,6 @@ def create_input_dict(cwl_inputs: Dict, cwl_file_path: Path) -> OrderedDict:
     engine_parameters:
 
     :param cwl_inputs:
-    :param cwl_file_path:
-    :param output_file_path:
-    :param name:
-    :param engine_parameters:
     :return:
     """
 
@@ -44,7 +36,6 @@ def create_input_dict(cwl_inputs: Dict, cwl_file_path: Path) -> OrderedDict:
         """
         For each cwl input, append a commented map of the input object
         """
-        # FIXME - secondary items causing issues https://github.com/umccr/cwl-ica-cli/issues/1
         if cwl_input_dict.get("cwl_type", None) is None:
             logger.error("CWL Input object is in the wrong format, no 'cwl_type' found.")
             raise KeyError
@@ -64,16 +55,20 @@ def create_input_dict(cwl_inputs: Dict, cwl_file_path: Path) -> OrderedDict:
             )
             # Add note to item that it could be of multiple types
             try:
-                input_dict.get("input").yaml_add_eol_comment(key=cwl_input_id,
-                                                             comment=f"Could also be of type [{', '.join(type_ for type_ in cwl_input_dict.get('cwl_type')[1:])}]")
+                input_dict.get("input").yaml_add_eol_comment(
+                    key=cwl_input_id,
+                    comment=f"Could also be of type [{', '.join(type_ for type_ in cwl_input_dict.get('cwl_type')[1:])}]"
+                )
             except TypeError:
                 logger.warning(f"Cannot add eol to input {cwl_input_id}")
         else:
             if cwl_input_dict.get("cwl_type") == "schema":
                 # Create a pre comment
-                input_dict.yaml_set_comment_before_after_key(key=cwl_input_id,
-                                                             before=f"// {'Optional' if cwl_input_dict.get('optional') else 'Required'} Input: {cwl_input_dict.get('label')} //",
-                                                             indent=YAML_INDENTATION_LEVEL)
+                input_dict.yaml_set_comment_before_after_key(
+                    key=cwl_input_id,
+                    before=f"// {'Optional' if cwl_input_dict.get('optional') else 'Required'} Input: {cwl_input_dict.get('label')} //",
+                    indent=YAML_INDENTATION_LEVEL
+                )
                 input_dict = get_commented_map_for_schema_input_object(
                     input_dict,
                     input_object=cwl_input_dict.get("schema_obj").get("fields"),
@@ -99,26 +94,12 @@ def create_input_dict(cwl_inputs: Dict, cwl_file_path: Path) -> OrderedDict:
 
     return input_dict
 
-    # Write out dumper manually
-    #with open(str(output_file_path), 'w') as yaml_h:
-    #    # Dump out the name
-    #    round_trip_dump(OrderedDict({"name": name}), yaml_h)
-    #    # Iterate throughout the inputs, dump each item in the yaml dict separately
-    #    # Very hacky, but the best option we had at the time
-    #    yaml_h.write("input:\n")
-    #    for input_id, input_item in input_dict.items():
-    #        for line in round_trip_dump(OrderedDict({input_id: input_item}), indent=4).splitlines(True):
-    #            if cwl_inputs[input_id]["optional"]:
-    #                yaml_h.write("    # " + line)
-    #            else:
-    #                yaml_h.write("    " + line)
-    #    # Create the engine parameters
-    #    round_trip_dump(OrderedDict({"engineParameters": engine_parameters}), yaml_h)
 
-
-def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, cwl_type: str, is_array: int = 0,
-                                       label: str = None, doc: str = None, optional: bool = False, symbols: List = None,
-                                       secondary_files: List[SecondaryFileSchema] = None, indentation_level: int = 0) -> OrderedDict:
+def get_commented_map_for_input_object(
+        input_dict: OrderedDict, input_id: str, cwl_type: str, is_array: int = 0,
+        label: str = None, doc: str = None, optional: bool = False, symbols: List = None,
+        secondary_files: List[SecondaryFileSchema] = None, indentation_level: int = 0
+) -> OrderedDict:
     """
     For an input object, return a commented map based on the input type
     :param indentation_level:
@@ -153,16 +134,20 @@ def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, c
 
         # input_dict.yaml
         # Create a eol comment (Informing user to fix a_string to something else)
-        input_dict.yaml_set_comment_before_after_key(key=input_id,
-                                                     before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
-                                                     indent=indentation_level)
+        input_dict.yaml_set_comment_before_after_key(
+            key=input_id,
+            before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
+            indent=indentation_level
+        )
         input_dict.yaml_add_eol_comment(key=input_id, comment="FIXME")
 
     # Schemas
     elif cwl_type in ["record"]:
-        input_dict.yaml_set_comment_before_after_key(key=input_id,
-                                                     before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
-                                                     indent=indentation_level)
+        input_dict.yaml_set_comment_before_after_key(
+            key=input_id,
+            before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
+            indent=indentation_level
+        )
         input_dict.yaml_add_eol_comment(key=input_id, comment="FIXME")
         input_dict[input_id] = get_commented_map_for_schema_input_object(
             input_dict=input_dict,
@@ -178,9 +163,11 @@ def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, c
     # Enumerates
     elif cwl_type in ["enum"]:
         # Create a pre comment
-        input_dict.yaml_set_comment_before_after_key(key=input_id,
-                                                     before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
-                                                     indent=indentation_level)
+        input_dict.yaml_set_comment_before_after_key(
+            key=input_id,
+            before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
+            indent=indentation_level
+        )
         if cwl_type == "enum":
             input_dict[input_id] = symbols[0]
             try:
@@ -210,13 +197,17 @@ def get_commented_map_for_input_object(input_dict: OrderedDict, input_id: str, c
             ]
 
         # Create a pre comment
-        input_dict.yaml_set_comment_before_after_key(key=input_id,
-                                                     before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
-                                                     indent=indentation_level)
+        input_dict.yaml_set_comment_before_after_key(
+            key=input_id,
+            before=f"// {'Optional' if optional else 'Required'} Input: {label} //",
+            indent=indentation_level
+        )
 
         # Create an eol comment (Informing user to fix location to something else)
-        input_dict[input_id].yaml_add_eol_comment(key="location",
-                                                  comment="FIXME")
+        input_dict[input_id].yaml_add_eol_comment(
+            key="location",
+            comment="FIXME"
+        )
 
     else:
         logger.error(f"{cwl_type} is not a known type")
@@ -288,23 +279,7 @@ def get_commented_map_for_schema_input_object(
                     indentation_level=indentation_level
                 )
             else:
-                # if field_items.get("type").get("$import") is not None:
-                #     # We have an external nested schema
-                #     schema_import_path = schema_file_path.parent.joinpath(
-                #         field_items.get("type").get("$import")
-                #     ).absolute().resolve()
-                #     logging.info("Importing external schema")
-                #     #print(create_packed_schema_json(schema_import_path))
-                #     input_dict[input_id] = get_commented_map_for_schema_input_object(
-                #         input_dict[input_id],
-                #         input_id=field_name,
-                #         input_object=create_packed_schema_json(schema_import_path).get("fields"),
-                #         schema_file_path=schema_file_path,
-                #         label=field_items.get("label"),
-                #         doc=field_items.get("doc"),
-                #         indentation_level=indentation_level + 4
-                #     )
-
+                # We have a nested schema
                 if field_items.get("type").get("fields") is None:
                     logger.warning(f"Don't know what this is. type has keys {field_items.get('type').keys()}")
                     logger.warning(f"Type is '{field_items.get('type')}'")
@@ -321,9 +296,11 @@ def get_commented_map_for_schema_input_object(
                         indentation_level=indentation_level + 4
                     )
                     # Create a pre comment
-                    input_dict[input_id].yaml_set_comment_before_after_key(key=field_name,
-                                                                           before=f"// {'Optional' if optional else 'Required'} Input: {field_name} //",
-                                                                           indent=indentation_level)
+                    input_dict[input_id].yaml_set_comment_before_after_key(
+                        key=field_name,
+                        before=f"// {'Optional' if optional else 'Required'} Input: {field_name} //",
+                        indent=indentation_level
+                    )
         elif isinstance(field_items.get("type"), str) and field_items.get("type") == "record":
             input_dict[input_id] = get_commented_map_for_schema_input_object(
                 input_dict=input_dict[input_id],
@@ -336,9 +313,11 @@ def get_commented_map_for_schema_input_object(
                 optional=field_items.get("optional")
             )
             # Create a pre comment
-            input_dict[input_id].yaml_set_comment_before_after_key(key=field_name,
-                                                                   before=f"// {'Optional' if field_items.get('optional') else 'Required'} Input: {field_name} //",
-                                                                   indent=indentation_level)
+            input_dict[input_id].yaml_set_comment_before_after_key(
+                key=field_name,
+                before=f"// {'Optional' if field_items.get('optional') else 'Required'} Input: {field_name} //",
+                indent=indentation_level
+            )
         elif isinstance(field_items.get("type"), str):
             array_depth = 0
             while field_items.get("type").endswith("[]"):
@@ -378,9 +357,3 @@ def is_schema_input(input_object) -> bool:
     if '#' in input_object.items:
         return True
     return False
-
-
-
-
-
-

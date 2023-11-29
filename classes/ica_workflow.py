@@ -23,7 +23,7 @@ from pathlib import Path
 from ruamel.yaml.comments import CommentedMap as OrderedDict
 import libica.openapi.libwes
 from libica.openapi.libwes.rest import ApiException
-from utils.ica_utils import get_base_url, get_region_from_base_url
+from utils.ica_utils import get_base_url
 
 from utils.logging import get_logger
 from utils.errors import ICAWorkflowError, ICAWorkflowCreationError
@@ -44,11 +44,12 @@ class ICAWorkflow:
 
     def __init__(self, name, path, ica_workflow_name=None, ica_workflow_id=None, versions=None, categories=None):
         """
-        :param workflow_name:
-        :param workflow_path:
+        :param name:
+        :param path:
         :param ica_workflow_id:
         :param ica_workflow_name:
-        :param workflow_versions_dict:
+        :param ica_workflow_id:
+        :param versions:
         :param categories:
         """
 
@@ -73,7 +74,9 @@ class ICAWorkflow:
                     path=workflow_version.get("path", None),
                     ica_workflow_id=self.ica_workflow_id,
                     ica_workflow_version_name=workflow_version.get("ica_workflow_version_name", None),
-                    modification_time=ICAWorkflowVersion.modification_time_to_datetime(workflow_version.get("modification_time", None)),
+                    modification_time=ICAWorkflowVersion.modification_time_to_datetime(
+                        workflow_version.get("modification_time", None)
+                    ),
                     run_instances=workflow_version.get("run_instances", [])
                 ))
 
@@ -129,9 +132,11 @@ class ICAWorkflow:
         with libica.openapi.libwes.ApiClient(configuration) as api_client:
             # Create an instance of the API class
             api_instance = libica.openapi.libwes.WorkflowsApi(api_client)
-            body = libica.openapi.libwes.CreateWorkflowRequest(name=self.ica_workflow_name,
-                                                               categories=self.categories if self.categories is not None else [],
-                                                               acl=acl)
+            body = libica.openapi.libwes.CreateWorkflowRequest(
+                name=self.ica_workflow_name,
+                categories=self.categories if self.categories is not None else [],
+                acl=acl
+            )
             try:
                 # Get the details of a workflow version
                 api_response = api_instance.create_workflow(body=body)
@@ -170,8 +175,10 @@ class ICAWorkflow:
     def update_ica_workflow_item(self, access_token, name=None, acl=None, categories=None):
         """
         Update a ica workflow, allowing only for changes for a name or acl
+        :param access_token:
         :param name:
         :param acl:
+        :param categories:
         :return:
         """
 
@@ -224,12 +231,7 @@ class ICAWorkflow:
     def from_dict(cls, workflow_dict):
         """
         Create a ICAWorkflowVersion object from a dictionary
-        :param name:
-        :param path:
-        :param ica_workflow_name:
-        :param ica_workflow_id:
-        :param versions:
-        :param categories:
+        :param workflow_dict
         :return:
         """
 
@@ -244,10 +246,11 @@ class ICAWorkflow:
             logger.error("\"path\" attribute not found, cannot create ICAWorkflow")
             raise ICAWorkflowCreationError
 
-        return cls(name=workflow_dict.get("name", None),
-                   path=workflow_dict.get("path", None),
-                   ica_workflow_name=workflow_dict.get("ica_workflow_name", None),
-                   ica_workflow_id=workflow_dict.get("ica_workflow_id", None),
-                   versions=workflow_dict.get("versions", None),
-                   categories=workflow_dict.get("categories", None))
-
+        return cls(
+            name=workflow_dict.get("name", None),
+            path=workflow_dict.get("path", None),
+            ica_workflow_name=workflow_dict.get("ica_workflow_name", None),
+            ica_workflow_id=workflow_dict.get("ica_workflow_id", None),
+            versions=workflow_dict.get("versions", None),
+            categories=workflow_dict.get("categories", None)
+        )

@@ -8,7 +8,9 @@ from copy import deepcopy
 from typing import Optional, Dict, List, Union
 from pathlib import Path
 from urllib.parse import urlparse
+from cwl_utils.parser import Workflow
 
+from utils.logging import get_logger
 from ruamel.yaml import YAML
 
 from utils.cwl_helper_utils import get_path_from_cwl_id
@@ -31,10 +33,6 @@ SchemaDefRequirement = Union[
     SchemaDefRequirement_v1_1,
     SchemaDefRequirement_v1_2
 ]
-
-from cwl_utils.parser import Workflow
-
-from utils.logging import get_logger
 
 logger = get_logger()
 

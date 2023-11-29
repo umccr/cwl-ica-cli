@@ -6,9 +6,8 @@ Create a new category in category.yaml
 
 from classes.command import Command
 from utils.logging import get_logger
-from argparse import ArgumentError
 from ruamel.yaml.comments import CommentedMap as OrderedDict
-from utils.repo import get_category_yaml_path, read_yaml, get_cwl_ica_repo_path, get_project_yaml_path
+from utils.repo import get_category_yaml_path, read_yaml
 from utils.errors import CategoryExistsError, CheckArgumentError
 from utils.yaml import dump_yaml, to_multiline_string
 
@@ -32,7 +31,8 @@ Options:
 
 Example:
     cwl-ica category-init --category-name "dragen" --category-description "Tool / Workflow uses dragen"
-    cwl-ica category-init --category-name "Alignment" --category-description "Tool / Workflow aligns read-level data as bams"
+    cwl-ica category-init --category-name "Alignment" \\
+      --category-description "Tool / Workflow aligns read-level data as bams"
     """
 
     def __init__(self, command_argv):

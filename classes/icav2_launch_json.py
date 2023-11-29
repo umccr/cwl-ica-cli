@@ -8,9 +8,8 @@ from libica.openapi.v2.model.cwl_analysis_input import CwlAnalysisInput
 
 import json
 
-from utils.globals import ICAV2_DEFAULT_ANALYSIS_STORAGE_SIZE
 from utils.icav2_helpers import convert_icav2_uris_to_data_ids, get_icav2_configuration, \
-    get_analysis_storage_id_from_analysis_storage_size, get_activation_id, get_set_analysis_storage_id_from_pipeline, \
+    get_activation_id, get_set_analysis_storage_id_from_pipeline, \
     get_data_obj_from_project_id_and_path, create_data_obj_from_project_id_and_path
 from utils.logging import get_logger
 from pathlib import Path
@@ -152,7 +151,7 @@ class ICAv2LaunchJson:
         self.engine_parameters: ICAv2EngineParameters = ICAv2EngineParameters.from_dict(engine_parameters)
 
         # Other parts we set up later
-        self.input_json_deferenced: Optional[Dict] = None
+        self.input_json_dereferenced: Optional[Dict] = None
         self.data_ids: Optional[List[str]] = None
         self.mount_paths: Optional[List[AnalysisInputDataMount]] = None
 
@@ -164,7 +163,7 @@ class ICAv2LaunchJson:
         self.engine_parameters.populate_empty_engine_parameters(
             project_id,
             pipeline_id,
-            self.input_json_deferenced,
+            self.input_json_dereferenced,
             self.mount_paths,
             get_icav2_configuration()
         )
@@ -194,12 +193,12 @@ class ICAv2LaunchJson:
             return
         # Otherwise set the value in the cwltool:overrides attribute of the input json
         self.input_json["cwltool:overrides"] = input_json_cwltooloverrides
-        # If weve already gone and dereferenced, we set that then too
-        if self.input_json_deferenced is not None:
-            self.input_json_deferenced["cwltool:overrides"] = input_json_cwltooloverrides
+        # If we've already gone and dereferenced, we set that then too
+        if self.input_json_dereferenced is not None:
+            self.input_json_dereferenced["cwltool:overrides"] = input_json_cwltooloverrides
 
     def deference_input_json(self):
-        self.input_json_deferenced, self.mount_paths = convert_icav2_uris_to_data_ids(
+        self.input_json_dereferenced, self.mount_paths = convert_icav2_uris_to_data_ids(
             self.input_json,
             configuration=get_icav2_configuration()
         )
@@ -243,7 +242,7 @@ class ICAv2LaunchJson:
             activation_code_detail_id=self.engine_parameters.activation_id,
             analysis_input=CwlAnalysisInput(
                 object_type="JSON",
-                input_json=json.dumps(self.input_json_deferenced),
+                input_json=json.dumps(self.input_json_dereferenced),
                 mounts=self.mount_paths,
                 data_ids=self.data_ids
             ),

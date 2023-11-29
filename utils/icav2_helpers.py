@@ -62,7 +62,12 @@ from utils.logging import get_logger
 logger = get_logger()
 
 
-def create_workflow_from_zip_path(zip_path: Path, project_id: str, analysis_storage_id: str, configuration: Configuration) -> Tuple[str, str]:
+def create_workflow_from_zip_path(
+        zip_path: Path,
+        project_id: str,
+        analysis_storage_id: str,
+        configuration: Configuration
+) -> Tuple[str, str]:
     # Create tempdir
     extraction_tempdir = TemporaryDirectory()
 
@@ -524,11 +529,11 @@ def convert_icav2_uris_to_data_ids(input_obj: Union[str, int, bool, Dict, List],
 
                 return input_obj, mount_list
         else:
-            input_obj_new = {}
+            input_obj_new_dict = {}
             for key, value in input_obj.items():
-                input_obj_new[key], mount_list_new = convert_icav2_uris_to_data_ids(value, configuration)
+                input_obj_new_dict[key], mount_list_new = convert_icav2_uris_to_data_ids(value, configuration)
                 mount_list.extend(mount_list_new)
-            return input_obj_new, mount_list
+            return input_obj_new_dict, mount_list
 
 
 def get_activation_id(project_id: str, pipeline_id: str, input_json: Dict,
@@ -832,5 +837,6 @@ def check_project_has_data_sharing_enabled(project_id: str) -> bool:
         api_response: Project = api_instance.get_project(project_id)
     except libica.openapi.v2.ApiException as e:
         logger.error("Exception when calling ProjectApi->get_project: %s\n" % e)
+        raise ApiException
 
     return api_response.data_sharing_enabled

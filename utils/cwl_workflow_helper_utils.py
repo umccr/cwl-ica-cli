@@ -32,7 +32,7 @@ from utils.cwl_schema_helper_utils import get_schemas, add_additional_schemas_to
     get_schema_mappings
 from utils.cwl_utils_typing_helpers import ResourceRequirementType, DockerRequirementType
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
-from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path, get_tools_dir, get_workflows_dir
+from utils.repo import join_run_path_from_caller_path, get_cwl_ica_repo_path, get_tools_dir
 from utils.logging import get_logger
 from utils.subprocess_handler import run_subprocess_proc
 
@@ -59,7 +59,10 @@ def get_step_mappings(steps: List[WorkflowStep], workflow_path: Path) -> List[Di
     return step_mappings
 
 
-def collect_locations_from_secondary_file_print_deps_recursively(secondary_file_print_deps: Dict, cwl_path: Path) -> List[Path]:
+def collect_locations_from_secondary_file_print_deps_recursively(
+        secondary_file_print_deps: Dict,
+        cwl_path: Path
+) -> List[Path]:
     """
     Used to collect secondary files recursively
     :param secondary_file_print_deps:
@@ -86,7 +89,7 @@ def collect_locations_from_secondary_file_print_deps_recursively(secondary_file_
                     "format": "https://www.iana.org/assignments/media-types/application/cwl",
                     "secondaryFiles": [
                       ....
-
+    :param cwl_path
     :return: Array
       [
         "../../../schemas/bclconvert-run-configuration/2.0.0--4.0.3/bclconvert-run-configuration__2.0.0--4.0.3.yaml"
@@ -207,7 +210,10 @@ def check_workflow_step_lengths(cwl_workflow: Workflow, cwl_file_path: Path):
 
         # Skip if step.run is not a tool
         try:
-            get_name_version_tuple_from_cwl_file_path(cwl_file_path.absolute().parent.joinpath(Path(step.run)).absolute().resolve(), get_tools_dir())
+            get_name_version_tuple_from_cwl_file_path(
+                cwl_file_path.absolute().parent.joinpath(Path(step.run)).absolute().resolve(),
+                get_tools_dir()
+            )
         except ValueError:
             continue
 
@@ -219,7 +225,6 @@ def check_workflow_step_lengths(cwl_workflow: Workflow, cwl_file_path: Path):
 
 def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     # Collect all the workflow objects
-    #all_workflow_objects = collect_objects_recursively(cwl_obj)
     all_workflow_paths = collect_objects_by_print_deps(cwl_obj.cwl_file_path)
 
     # Create a temporary directory
@@ -271,7 +276,10 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                     )
             for schema_mapping in schema_mappings:
                 line_match_schema = MATCH_SCHEMA_LINE_REGEX_OBJ.match(line_strip.lstrip())
-                if line_match_schema is not None and urlparse(line_match_schema.group(4)).path == schema_mapping.get("schema_name"):
+                if (
+                    line_match_schema is not None and
+                    urlparse(line_match_schema.group(4)).path == schema_mapping.get("schema_name")
+                ):
                     line_strip = line_strip.replace(
                         urlparse(line_match_schema.group(2)).path,
                         str(schema_mapping.get('schema_path'))
@@ -281,7 +289,10 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                 if line_match_include is not None and urlparse(line_match_include.group(1)).path == include_mapping:
                     line_strip = line_strip.replace(
                         urlparse(line_match_include.group(1)).path,
-                        os.path.relpath((Path(cwl_obj.cwl_file_path.parent) / include_mapping).resolve(), get_cwl_ica_repo_path())
+                        os.path.relpath(
+                            (Path(cwl_obj.cwl_file_path.parent) / include_mapping).resolve(),
+                            get_cwl_ica_repo_path()
+                        )
                     )
             print(line_strip)
 
@@ -310,25 +321,29 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                         if path_item_cwl_obj.hints is None:
                             continue
                         for hint in path_item_cwl_obj.hints:
-                            if isinstance(hint, ResourceRequirementType) and \
-                                    hint.extension_fields is not None and \
-                                    "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() \
-                                    and hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == "standard" and \
-                                    resource_mapping.get("v1") in line_strip: \
-                                    line_strip = line_strip.replace(
-                                        resource_mapping.get("v1"),
-                                        resource_mapping.get("v2")
-                                    )
+                            if (
+                                isinstance(hint, ResourceRequirementType) and
+                                hint.extension_fields is not None and
+                                "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() and
+                                hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == "standard" and
+                                resource_mapping.get("v1") in line_strip
+                            ):
+                                line_strip = line_strip.replace(
+                                    resource_mapping.get("v1"),
+                                    resource_mapping.get("v2")
+                                )
                     # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
                     for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
                         if path_item_cwl_obj.hints is None:
                             continue
                         for hint in path_item_cwl_obj.hints:
-                            if isinstance(hint, ResourceRequirementType) and \
-                                    hint.extension_fields is not None and \
-                                    "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() and \
-                                    hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == resource_mapping.get("v1") and \
-                                    resource_mapping.get("v1") in line_strip:
+                            if (
+                                isinstance(hint, ResourceRequirementType) and
+                                hint.extension_fields is not None and
+                                "https://platform.illumina.com/rdf/ica/resources/type" in hint.extension_fields.keys() and
+                                hint.extension_fields.get("https://platform.illumina.com/rdf/ica/resources/type") == resource_mapping.get("v1") and
+                                resource_mapping.get("v1") in line_strip
+                            ):
                                 line_strip = line_strip.replace(
                                     resource_mapping.get("v1"),
                                     resource_mapping.get("v2")
@@ -336,8 +351,9 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                     # Deal with https://github.com/umccr-illumina/ica_v2/issues/130
                     if path_item_cwl_obj.hints is not None:
                         for hint in path_item_cwl_obj.hints:
-                            if isinstance(hint, ResourceRequirementType) and \
-                                hint.extension_fields is not None and \
+                            if (
+                                isinstance(hint, ResourceRequirementType) and
+                                hint.extension_fields is not None and
                                 len(
                                     list(
                                         filter(
@@ -345,11 +361,12 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
                                             hint.extension_fields.keys()
                                         )
                                     )
-                                ) > 0:
-                                    line_strip = line_strip.replace(
-                                        "ilmn-tes:resources/",
-                                        "ilmn-tes:resources:"
-                                    )
+                                ) > 0
+                            ):
+                                line_strip = line_strip.replace(
+                                    "ilmn-tes:resources/",
+                                    "ilmn-tes:resources:"
+                                )
 
                     # Deal with https://github.com/umccr-illumina/dragen/issues/48
                     for container_mapping in ICAV2_CONTAINER_MAPPINGS:
@@ -387,8 +404,8 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
 
     if not proc_returncode == 0:
         logger.error(f"cwltool --validate resulted in an error after 'zipping' of workflow "
-                     f"please run cwltool --debug --validate {str(output_tempdir / 'workflow.cwl')} to investigate further"
-                     f"leaving {str(output_tempdir)} as is")
+                     f"please run cwltool --debug --validate {str(output_tempdir / 'workflow.cwl')} "
+                     f"to investigate further, leaving {str(output_tempdir)} as is")
         raise ChildProcessError
 
     # Check zip file doesn't exist
@@ -414,9 +431,11 @@ def create_packed_workflow_from_zipped_workflow_path(zipped_path: Path, output_p
         logger.error(f"Could not write to {output_path}, parent directory does not exist")
         raise NotADirectoryError
 
-    with gzip.open(output_path, "wb") as pack_h, \
-        TemporaryDirectory() as unzip_tmpdir, \
-        ZipFile(zipped_path, "r") as workflow_zip:
+    with (
+        gzip.open(output_path, "wb") as pack_h,
+        TemporaryDirectory() as unzip_tmpdir,
+        ZipFile(zipped_path, "r") as workflow_zip
+    ):
         # Unzip workflow to tmp dir
         workflow_zip.extractall(unzip_tmpdir)
         extracted_main_workflow_path = Path(unzip_tmpdir) / zipped_path.stem / "workflow.cwl"

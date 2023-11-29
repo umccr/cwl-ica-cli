@@ -163,7 +163,7 @@ Example:
 
         return md_file_obj
 
-    def get_section(self, section_name:str, md_file_obj: MdUtils, items) -> MdUtils:
+    def get_section(self, section_name: str, md_file_obj: MdUtils, items) -> MdUtils:
         """
         Get the expressions, tools or workflows section
         :param section_name:

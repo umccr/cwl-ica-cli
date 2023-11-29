@@ -29,11 +29,14 @@ class CreateTypeScriptExpressionFromTemplate(CreateFromTemplate):
 
 Description:
     We initialise a .ts file under the directory <CWL_ICA_REPO_PATH>/typescript-expressions/<typescript_expression_name>/<typescript_expression_version>/<typescript_expression_name>__<typescript_expression_version>.ts
-    We also use yarn v3 to create a project in this directory. Please read up on the instructions on installing yarn in the TypeScript section of this repos' wiki
+    We also use yarn v3 to create a project in this directory.
+
+    Please read up on the instructions on installing yarn in the TypeScript section of this repos' wiki
 
     The file is empty apart from the username component being populated at the top of the file as the author.
 
-    TypeScript Expressions cannot be 'registered' in the same way that other CWL components can be, although this may change at a later stage
+    TypeScript Expressions cannot be 'registered' in the same way that other CWL components can be,
+    although this may change at a later stage
 
     It is best to use this command to create 'common' JavaScript expressions for tools / workflows that may share
     common requirements.

@@ -26,10 +26,13 @@ class ItemSchema(Item):
 
     def __init__(self, name, path, versions=None, categories=None):
         # Initialise super
-        super(ItemSchema, self).__init__(name, path,
-                                       root_dir=get_schemas_dir(),
-                                       versions=versions,
-                                       categories=categories)
+        super(ItemSchema, self).__init__(
+            name,
+            path,
+            root_dir=get_schemas_dir(),
+            versions=versions,
+            categories=categories
+        )
 
     def get_versions(self, versions):
         """

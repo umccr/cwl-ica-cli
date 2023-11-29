@@ -3,7 +3,7 @@
 """
 The project class is extremely useful for performing ica actions on a project
 These include adding an item to a project - whether that actually be syncing with the project
-or just registering and putting in later, for a user or github actions to sync projects
+or just registering and putting in later, for a user or GitHub actions to sync projects
 We also introduce the subclass ProductionProject that only updates workflows on a merge with the main branch
 ProductionProject ica workflow versions hold a 7 digit git commit id suffix at the end of them.
 """
@@ -18,9 +18,11 @@ from classes.cwl import CWL
 from utils.logging import get_logger
 from utils.errors import InvalidTokenError, CWLApiKeyNotFoundError, \
     WorkflowVersionExistsError, ProjectCreationError, CWLAccessTokenNotFoundError, ItemNotFoundError
-from utils.ica_utils import get_base_url, get_jwt_token_obj, get_token_memberships, \
-    get_token_expiry, check_token_expiry, get_api_key, create_token_from_api_key_with_role, get_region_from_base_url,\
-    store_token
+from utils.ica_utils import (
+    get_base_url, get_jwt_token_obj, get_token_memberships,
+    get_token_expiry, check_token_expiry, get_api_key, create_token_from_api_key_with_role,
+    get_region_from_base_url, store_token
+)
 from utils.yaml import to_multiline_string
 
 logger = get_logger()
@@ -43,12 +45,31 @@ class Project:
 
     is_production = False  # True in ProductionProject class
 
-    def __init__(self, project_name, project_id, project_abbr, project_api_key_name, project_description, linked_projects, tenant_id, tools, workflows):
+    def __init__(
+        self,
+        project_name,
+        project_id,
+        project_abbr,
+        project_api_key_name,
+        project_description,
+        linked_projects,
+        tenant_id,
+        tools,
+        workflows
+    ):
         """
         Collect the project from the project list if defined,
         otherwise read in the project from the project yaml path
+        :param project_name:
+        :param project_id:
+        :param project_abbr:
+        :param project_api_key_name:
+        :param project_description:
+        :param linked_projects:
+        :param tenant_id:
+        :param tools:
+        :param workflows:
         """
-
         # Easy initialise of project name
         self.project_name = project_name
 
@@ -69,6 +90,7 @@ class Project:
     def get_project_obj_from_project_list(project_name, project_list):
         """
         Returns the project object based on the project name
+        :param project_name:
         :param project_list:
         :return:
         """
@@ -106,7 +128,12 @@ class Project:
         valid_access_token = False
         from_env = False
         logger.debug("Looking for project token in environment variables")
-        cwl_ica_access_token = os.environ.get("CWL_ICA_ACCESS_TOKEN_{}".format(self.project_name.upper().replace("-", "_")), None)
+        cwl_ica_access_token = os.environ.get(
+            "CWL_ICA_ACCESS_TOKEN_{}".format(
+                self.project_name.upper().replace("-", "_")
+            ),
+            None
+        )
         token_path = Path(get_conda_tokens_dir()) / Path(f"{self.project_name}.txt")
 
         if cwl_ica_access_token is None and token_path.is_file():
@@ -198,6 +225,8 @@ class Project:
 
         :param item_key: Either 'tools' or 'workflows'
         :param cwl_obj: The item of type CWL that has a CWL Packed object.
+        :param access_token:
+        :param categories:
                          From here we can collect the md5sum and the definition json ready for upload
         :return:
         """
@@ -229,7 +258,11 @@ class Project:
                 categories=categories if categories is not None else []
             )
             # Create a workflow id -> this also must happen for a production project
-            this_project_ica_item.create_workflow_id(access_token, self.project_id, linked_projects=self.linked_projects)
+            this_project_ica_item.create_workflow_id(
+                access_token,
+                self.project_id,
+                linked_projects=self.linked_projects
+            )
 
             # We should also now append our project item to our list
             project_ica_items_list.append(this_project_ica_item)
@@ -243,18 +276,21 @@ class Project:
                 raise WorkflowVersionExistsError
         else:
             # Create a new workflow version obj
-            project_ica_item_version = ICAWorkflowVersion(name=cwl_obj.version,
-                                                          path=Path(cwl_obj.cwl_file_path.parent.name) /
-                                                               Path(cwl_obj.cwl_file_path.name),
-                                                          ica_workflow_id=this_project_ica_item.ica_workflow_id,
-                                                          ica_workflow_version_name=cwl_obj.version,
-                                                          modification_time=None,
-                                                          run_instances=None)
+            project_ica_item_version = ICAWorkflowVersion(
+                name=cwl_obj.version,
+                path=Path(cwl_obj.cwl_file_path.parent.name) / Path(cwl_obj.cwl_file_path.name),
+                ica_workflow_id=this_project_ica_item.ica_workflow_id,
+                ica_workflow_version_name=cwl_obj.version,
+                modification_time=None,
+                run_instances=None
+            )
             # Append workflow
             this_project_ica_item.versions.append(project_ica_item_version)
             # Create a new workflow version
-            project_ica_item_version.create_workflow_version(cwl_obj.cwl_packed_obj, access_token,
-                                                             project_id=self.project_id, linked_projects=self.linked_projects)
+            project_ica_item_version.create_workflow_version(
+                cwl_obj.cwl_packed_obj, access_token,
+                project_id=self.project_id, linked_projects=self.linked_projects
+            )
 
     def sync_item_version_with_project(self, ica_workflow_version, md5sum, cwl_packed_obj, force=False) -> bool:
         """
@@ -270,10 +306,12 @@ class Project:
         # Now compare the item version and ica workflow version
         if self.compare_item_version_and_ica_workflow_version(ica_workflow_version, md5sum):
             # Update ica workflow
-            return ica_workflow_version.sync_workflow_version(cwl_packed_obj, self.get_project_token(),
-                                                              project_id=self.project_id,
-                                                              linked_projects=self.linked_projects,
-                                                              force=force)
+            return ica_workflow_version.sync_workflow_version(
+                cwl_packed_obj, self.get_project_token(),
+                project_id=self.project_id,
+                linked_projects=self.linked_projects,
+                force=force
+            )
 
     # Compare item version and ICA workflow version
     @staticmethod
@@ -286,8 +324,14 @@ class Project:
         if ica_workflow_version.get_workflow_version_md5sum() == md5sum:
             logger.info("Workflow is up-to-date, skipping")
             # Compare modification times
-            if not ica_workflow_version.get_workflow_version_modification_time() == ica_workflow_version.modification_time:
-                logger.warning("Workflow definintion matches but modification time stamp is out-of-date, updating modification time stamp")
+            if not (
+                    ica_workflow_version.get_workflow_version_modification_time() ==
+                    ica_workflow_version.modification_time
+            ):
+                logger.warning(
+                    "Workflow definintion matches but modification time stamp is out-of-date, "
+                    "updating modification time stamp"
+                )
                 ica_workflow_version.modification_time = ica_workflow_version.get_workflow_version_modification_time()
             return False
 
@@ -362,4 +406,3 @@ class Project:
                    tenant_id=project_dict.get("tenant_id", None),
                    tools=project_dict.get("tools", None),
                    workflows=project_dict.get("workflows", None))
-

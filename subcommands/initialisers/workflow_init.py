@@ -53,13 +53,15 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(WorkflowInitialiser, self).__init__(command_argv,
-                                              update_projects=True,
-                                              item_dir=get_workflows_dir(),
-                                              item_yaml_path=get_workflow_yaml_path(non_existent_ok=True),
-                                              item_type_key="workflows",
-                                              item_type="workflow",
-                                              item_suffix="cwl")
+        super(WorkflowInitialiser, self).__init__(
+            command_argv,
+            update_projects=True,
+            item_dir=get_workflows_dir(),
+            item_yaml_path=get_workflow_yaml_path(non_existent_ok=True),
+            item_type_key="workflows",
+            item_type="workflow",
+            item_suffix="cwl"
+        )
 
     def __call__(self):
         # Call the super class' call function
@@ -112,10 +114,12 @@ Example:
         This also calls create_item_version and assigns item_version attribute
         :return:
         """
-        return ItemWorkflow(name=self.name,
-                        path=Path(self.name),
-                        versions=[self.create_item_version_object()],
-                        categories=self.categories_list)
+        return ItemWorkflow(
+            name=self.name,
+            path=Path(self.name),
+            versions=[self.create_item_version_object()],
+            categories=self.categories_list
+        )
 
     @staticmethod
     def get_item_obj_from_dict(item_dict):
@@ -131,10 +135,12 @@ Example:
         Create the item version for self.item and assign to item_version
         :return:
         """
-        item_version = ItemVersionWorkflow(name=self.version,
-                                       path=Path(self.version) / Path(self.cwl_file_path.resolve().name),
-                                       md5sum=None,
-                                       cwl_file_path=self.cwl_file_path)
+        item_version = ItemVersionWorkflow(
+            name=self.version,
+            path=Path(self.version) / Path(self.cwl_file_path.resolve().name),
+            md5sum=None,
+            cwl_file_path=self.cwl_file_path
+        )
 
         # We need to call the 'item version' to collect the md5sum attribute
         item_version()

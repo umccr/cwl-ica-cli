@@ -8,7 +8,7 @@ from utils.icav2_gh_helpers import add_project_to_config_yaml, check_project_in_
 from utils.logging import get_logger
 from argparse import ArgumentError
 from utils.errors import CheckArgumentError
-from typing import Optional, Dict, List
+from typing import Optional
 
 
 logger = get_logger()
@@ -87,5 +87,3 @@ Example:
     def __call__(self):
         logger.info("Add project to icav2.yaml")
         add_project_to_config_yaml(self.tenant_name, self.project_name, self.project_id)
-
-

@@ -66,7 +66,9 @@ class CWLWorkflow(CWL):
         # Check inputs exist
         if inputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read inputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for inputs
         self.check_docs(inputs, issue_count)
@@ -87,7 +89,9 @@ class CWLWorkflow(CWL):
         # Check outputs exist
         if outputs is None:
             issue_count += 1
-            logger.error(f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\"")
+            logger.error(
+                f"Issue {issue_count}: Could not read outputs section for cwl workflow \"{self.cwl_file_path}\""
+            )
             validation_passing = False
         # Check docs for outputs
         self.check_docs(outputs, issue_count)
@@ -107,11 +111,14 @@ class CWLWorkflow(CWL):
             intersection_input_output_steps = list(set(list_a).intersection(set(list_b)))
 
             if not len(intersection_input_output_steps) == 0:
-                logger.error("The following cwl attributes are found in multiple of the 'inputs', 'steps' and 'outputs' section.\n"
-                             "This will cause an issue for a packed cwl file:\n"
-                             "{intersecting_ids}".format(
-                                 intersecting_ids=", ".join(["'%s'" % _id for _id in intersection_input_output_steps])
-                             ))
+                logger.error(
+                    "The following cwl attributes are found in multiple of the 'inputs', 'steps' "
+                    "and 'outputs' section.\n"
+                    "This will cause an issue for a packed cwl file:\n"
+                    "{intersecting_ids}".format(
+                        intersecting_ids=", ".join(["'%s'" % _id for _id in intersection_input_output_steps])
+                    )
+                )
                 issue_count += 1
 
         # Check input ids and output ids are merely a combination of [a-z and _]
@@ -131,22 +138,24 @@ class CWLWorkflow(CWL):
         self.run_cwltool_validate(self.cwl_file_path)
 
         # Pack workflow
-        self.tmp_packed_file = NamedTemporaryFile(prefix=f"{self.cwl_file_path.name}",
-                                                  suffix="packed.json",
-                                                  delete=False)
+        self.temp_packed_file = NamedTemporaryFile(
+            prefix=f"{self.cwl_file_path.name}",
+            suffix="packed.json",
+            delete=False
+        )
 
         try:
             # Pack into tmp file
-            self.run_cwltool_pack(self.tmp_packed_file)
+            self.run_cwltool_pack(self.temp_packed_file)
 
             # Validate packed file
-            self.run_cwltool_validate(Path(self.tmp_packed_file.name))
+            self.run_cwltool_validate(Path(self.temp_packed_file.name))
 
             # Get packed file object
-            self.cwl_packed_obj = self.read_packed_file(self.tmp_packed_file)
+            self.cwl_packed_obj = self.read_packed_file(self.temp_packed_file)
 
             # Generate packed md5sum
-            self.md5sum = self.get_packed_md5sum(self.tmp_packed_file)
+            self.md5sum = self.get_packed_md5sum(self.temp_packed_file)
         except (CWLValidationError, CWLPackagingError):
             validation_passing = False
 
@@ -260,4 +269,9 @@ class CWLWorkflow(CWL):
         with TemporaryDirectory() as tmpdir:
             dot_tmp_output_path = Path(tmpdir) / (self.cwl_file_path.stem + ".dot")
             build_cwl_dot(self, dot_tmp_output_path)
-            build_cwl_workflow_image_from_dot(dot_tmp_output_path, output_image_path, ratio_value, output_image_path.suffix.lstrip("."))
+            build_cwl_workflow_image_from_dot(
+                dot_tmp_output_path,
+                output_image_path,
+                ratio_value,
+                output_image_path.suffix.lstrip(".")
+            )

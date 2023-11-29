@@ -89,7 +89,7 @@ def append_workflow_to_dockstore_yaml(workflow_path: Path, gzipped_packed_workfl
     try:
         dockstore_obj = next(
             filter(
-                lambda dockstore_obj_iter: dockstore_obj_iter.cwl_file_path == workflow_path,
+                lambda dockstore_obj_iter_: dockstore_obj_iter_.cwl_file_path == workflow_path,
                 dockstore_obj_list
             )
         )
@@ -133,6 +133,7 @@ def workflow_path_name_to_dockstore_name(workflow_path_name: str):
 
     # Hyphens and underscores are restriced to a single character
     return re.sub(r"([_-])+", r"\1", name_with_no_periods)
+
 
 def write_packed_workflow_to_dockstore_dir(gzipped_input_packed_workflow_path: Path, dockstore_packed_output_path: Path):
     """

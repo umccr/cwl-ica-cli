@@ -13,17 +13,15 @@ cwl object:
 """
 
 from pathlib import Path
-from ruamel import yaml
 from os import environ
 from utils.globals import ICAV1_CWLTOOL_VERSION, ICAV1_CWLTOOL_CONDA_ENV_NAME, LATEST_CWLTOOL_CONDA_ENV_NAME, \
     LATEST_CWLTOOL_VERSION
 from utils.logging import get_logger
-from utils.errors import CWLPackagingError, CWLValidationError, CWLImportError, InvalidAuthorshipError
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from utils.errors import CWLPackagingError, CWLValidationError, InvalidAuthorshipError
+from tempfile import NamedTemporaryFile
 import json
 from utils.subprocess_handler import run_subprocess_proc
 from hashlib import md5
-from ruamel.yaml.comments import CommentedMap as OrderedDict
 from string import ascii_lowercase, digits
 import cwl_utils.parser as parser
 
@@ -246,7 +244,6 @@ class CWL:
             logger.error(f"cwltool validate failed when run in conda environment {LATEST_CWLTOOL_CONDA_ENV_NAME} "
                          f"with cwltool version {LATEST_CWLTOOL_VERSION}")
             raise CWLValidationError
-
 
     @staticmethod
     def read_packed_file(packed_file: NamedTemporaryFile):

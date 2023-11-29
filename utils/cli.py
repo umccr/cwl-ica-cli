@@ -519,7 +519,6 @@ def _dispatch():
         # Call command
         create_workflow_template_obj()
 
-
     # Github actions
     elif cmd == "github-actions-sync-schemas":
         from subcommands.sync.sync_github_actions_schema import SyncGitHubActionsSchema

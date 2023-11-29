@@ -70,28 +70,40 @@ Example:
         :return:
         """
 
-        # Iterate through project tools and workflows and add update ica workflows and ica workflow versions with new 'acl'
-        for item_list in [ self.src_project_obj.ica_tools_list, self.src_project_obj.ica_workflows_list ]:
+        # Iterate through project tools and workflows and
+        # add update ica workflows and ica workflow versions with new 'acl'
+        for item_list in [self.src_project_obj.ica_tools_list, self.src_project_obj.ica_workflows_list]:
 
-          for ica_item_obj in item_list:
-              logger.info(f"Updating acl of workflow '{ica_item_obj.ica_workflow_id}'")
-              # Get existing acl - update existing acl
-              workflow_response = ica_item_obj.get_workflow_object(access_token=self.src_project_obj.get_project_token())
-              acl_list = workflow_response.acl + [f"cid:{self.target_project_id}"]
-              ica_item_obj.update_ica_workflow_item(access_token=self.src_project_obj.get_project_token(), acl=acl_list)
+            for ica_item_obj in item_list:
+                logger.info(f"Updating acl of workflow '{ica_item_obj.ica_workflow_id}'")
+                # Get existing acl - update existing acl
+                workflow_response = ica_item_obj.get_workflow_object(
+                    access_token=self.src_project_obj.get_project_token()
+                )
+                acl_list = workflow_response.acl + [f"cid:{self.target_project_id}"]
+                ica_item_obj.update_ica_workflow_item(
+                    access_token=self.src_project_obj.get_project_token(),
+                    acl=acl_list
+                )
 
-              # Update item versions
-              for ica_item_version in ica_item_obj.versions:
-                  logger.info(f"Updating acl of workflow '{ica_item_obj.ica_workflow_id}' version '{ica_item_version.name}'")
-                  # Get existing item version
-                  workflow_version_response = ica_item_version.get_workflow_version_object(access_token=self.src_project_obj.get_project_token())
+                # Update item versions
+                for ica_item_version in ica_item_obj.versions:
+                    logger.info(
+                        f"Updating acl of workflow '{ica_item_obj.ica_workflow_id}' version '{ica_item_version.name}'"
+                    )
+                    # Get existing item version
+                    workflow_version_response = ica_item_version.get_workflow_version_object(
+                        access_token=self.src_project_obj.get_project_token()
+                    )
 
-                  # Update acl list
-                  acl_list = workflow_version_response.acl + [f"cid:{self.target_project_id}"]
+                    # Update acl list
+                    acl_list = workflow_version_response.acl + [f"cid:{self.target_project_id}"]
 
-                  # Update ica workflow item
-                  ica_item_version.update_workflow_version(access_token=self.src_project_obj.get_project_token(),
-                                                           acl=acl_list)
+                    # Update ica workflow item
+                    ica_item_version.update_workflow_version(
+                        access_token=self.src_project_obj.get_project_token(),
+                        acl=acl_list
+                    )
 
         # Update project yaml
         # Workflow versions now have an updated time stamp
@@ -148,7 +160,10 @@ Example:
 
         # Check target project isn't already in linked projects
         if target_project_arg in self.src_project_obj.linked_projects:
-            logger.error(f"Target project \"{target_project_arg}\" is already a linked project to \"{self.src_project_obj.project_name}\"")
+            logger.error(
+                f"Target project \"{target_project_arg}\" is already "
+                f"linked project to \"{self.src_project_obj.project_name}\""
+            )
 
         # Set the target project value
         self.target_project_id = target_project_arg
@@ -170,5 +185,3 @@ Example:
 
         with open(get_project_yaml_path(), "w") as project_h:
             dump_yaml({"projects": new_all_projects_list}, project_h)
-
-
