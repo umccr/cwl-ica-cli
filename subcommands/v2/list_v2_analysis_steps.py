@@ -7,23 +7,16 @@ This is entirely the wrong spot for this, but the code was already all here!
 
 """
 
-from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 
-from utils.icav2_helpers import get_project_id_from_project_name, \
-    get_icav2_configuration, is_project_id_format, \
-    get_analysis_storage_id_from_analysis_storage_size, \
-    get_pipeline_id_from_pipeline_code, get_data_obj_from_project_id_and_path, \
-    create_data_obj_from_project_id_and_path, \
-    launch_workflow, get_workflow_steps, filter_analysis_steps
-
-from datetime import datetime
+from utils.icav2_helpers import (
+    get_project_id_from_project_name,
+    get_icav2_configuration, is_project_id_format,
+    get_workflow_steps, filter_analysis_steps
+)
 
 from classes.command import Command
-from classes.icav2_launch_json import ICAv2LaunchJson
 from utils.logging import get_logger
-from pathlib import Path
 from argparse import ArgumentError
-from utils.globals import ICAv2AnalysisStorageSize
 from utils.errors import CheckArgumentError
 from typing import Optional, Dict, List
 import json

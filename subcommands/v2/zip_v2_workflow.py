@@ -246,7 +246,9 @@ Example:
                     print(line_strip)
 
         # Revalidate directory with cwltool --validate
-        logger.info("Now all files have been transferred, confirming successful 'zip' with cwltool --validate")
+        logger.info(
+            "Now all files have been transferred, confirming successful 'zip' with cwltool --validate"
+        )
         proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
             [
                 "cwltool", "--validate", str(output_tempdir / "workflow.cwl")

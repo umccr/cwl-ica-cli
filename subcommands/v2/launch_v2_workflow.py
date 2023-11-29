@@ -188,7 +188,10 @@ Example:
         if self.output_parent_folder_id is not None:
             # Just checks its UUID4 format
             if not is_project_id_format(self.output_parent_folder_id):
-                logger.error(f"Got --output-parent-folder-id parameter as {self.output_parent_folder_id} but is not in pipeline-id format")
+                logger.error(
+                    f"Got --output-parent-folder-id parameter as "
+                    f"{self.output_parent_folder_id} but is not in pipeline-id format"
+                )
                 raise CheckArgumentError
         if self.output_parent_folder_id is None and self.output_parent_folder_path is not None:
             self.output_parent_folder_path = Path(self.output_parent_folder_path)
@@ -236,12 +239,18 @@ Example:
         if self.create_cwl_analysis_json_output_path is not None:
             self.create_cwl_analysis_json_output_path = Path(self.create_cwl_analysis_json_output_path)
             if not self.create_cwl_analysis_json_output_path.parent.is_dir():
-                logger.error(f"Please ensure the parent directory to {self.create_cwl_analysis_json_output_path} exists")
+                logger.error(
+                    f"Please ensure the parent directory to {self.create_cwl_analysis_json_output_path} exists"
+                )
                 raise CheckArgumentError
             if self.create_cwl_analysis_json_output_path.is_dir():
-                self.create_cwl_analysis_json_output_path = self.create_cwl_analysis_json_output_path / "createcwlanalysis.json"
+                self.create_cwl_analysis_json_output_path = (
+                        self.create_cwl_analysis_json_output_path / "createcwlanalysis.json"
+                )
             if self.create_cwl_analysis_json_output_path.is_file():
-                logger.error(f"Output path to {self.create_cwl_analysis_json_output_path} already exists, please delete")
+                logger.error(
+                    f"Output path to {self.create_cwl_analysis_json_output_path} already exists, please delete"
+                )
                 raise CheckArgumentError
 
         # CLI is good, now import json
@@ -288,7 +297,12 @@ Example:
         if self.create_cwl_analysis_json_output_path is not None:
             logger.info(f"Dumping launch analysis payload to {self.create_cwl_analysis_json_output_path}")
             with open(self.create_cwl_analysis_json_output_path, "w") as create_analysis_h:
-                create_analysis_h.write(json.dumps(recursively_build_open_api_body_from_libica_item(cwl_analysis), indent=2))
+                create_analysis_h.write(
+                    json.dumps(
+                        recursively_build_open_api_body_from_libica_item(cwl_analysis),
+                        indent=2
+                    )
+                )
                 create_analysis_h.write("\n")
 
         # Launch workflow
@@ -299,7 +313,10 @@ Example:
             configuration=get_icav2_configuration()
         )
 
-        logger.info(f"Successfully launched analysis pipeline '{self.pipeline_id}' with analysis id '{analysis_id}' and user reference '{user_reference}'")
+        logger.info(
+            f"Successfully launched analysis pipeline '{self.pipeline_id}' with "
+            f"analysis id '{analysis_id}' and user reference '{user_reference}'"
+        )
 
     def __call__(self):
         self.launch_workflow()

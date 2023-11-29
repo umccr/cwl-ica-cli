@@ -6,7 +6,8 @@ append_typescript_to_workflow
 append_typescript_to_tool
 append_typescript_to_expression
 
-Where the single premise of the subcommand is to add the directory 'typescript-expressions' to that tool/workflow/expression etc
+Where the single premise of the subcommand is to add the directory 'typescript-expressions'
+to that tool/workflow/expression etc
 
 We also test that yarn is installed and at least v3
 
@@ -243,7 +244,10 @@ class AppendTypeScriptDir(Command):
         create_typescript_expression_dir(self.get_typescript_expression_path(), self.xtrace)
 
     def create_blank_typescript_file(self):
-        create_blank_typescript_file(self.get_typescript_expression_path() / (self.cwl_file_path.stem + ".ts"), self.username)
+        create_blank_typescript_file(
+            self.get_typescript_expression_path() / (self.cwl_file_path.stem + ".ts"),
+            self.username
+        )
 
     def create_blank_typescript_test(self):
         create_blank_typescript_test_file(self.get_typescript_expression_path(), self.cwl_file_path.stem, self.username)

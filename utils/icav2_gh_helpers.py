@@ -16,12 +16,11 @@ from libica.openapi.v2.api.pipeline_api import PipelineApi
 from libica.openapi.v2.model.create_bundle import CreateBundle
 from libica.openapi.v2.model.bundle import Bundle
 from libica.openapi.v2.model.data import Data
-from libica.openapi.v2.model.link import Link
 from libica.openapi.v2.model.links import Links
 from libica.openapi.v2.model.pipeline import Pipeline
 from libica.openapi.v2.model.project_data import ProjectData
 
-from utils.errors import ProjectNotFoundError, BunchNotFoundError
+from utils.errors import ProjectV2NotFoundError, BunchNotFoundError
 from utils.globals import ICAV2_DEFAULT_BASE_URL
 from utils.icav2_helpers import get_icav2_configuration, get_data_obj_by_id, \
     convert_icav2_uri_to_data_obj, is_data_id, get_files_from_directory_id_recursively
@@ -585,6 +584,7 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
     Given a bundle id and a data id, add the data id to the bundle
     :param bundle_id:
     :param data_id:
+    :param icav2_access_token:
     :return:
     """
     # Create pipeline from GitHub release
@@ -721,7 +721,7 @@ def get_project_id_from_project_name(tenant_name: str, project_name: str) -> Opt
             ).get("project_id")
     except StopIteration:
         logger.error(f"Could not get project id from {tenant_name} / {project_name}")
-        raise ProjectNotFoundError
+        raise ProjectV2NotFoundError
 
 
 def get_bunch_names() -> List[str]:
@@ -758,7 +758,7 @@ def get_project_name_from_project_id(tenant_name: str, project_id: str) -> str:
     """
     Get project name / project id
     :param tenant_name:
-    :param pipeline_project_id:
+    :param project_id:
     :return:
     """
     try:
@@ -772,7 +772,7 @@ def get_project_name_from_project_id(tenant_name: str, project_id: str) -> str:
             ).get("project_name")
     except StopIteration:
         logger.error(f"Could not get project id from {tenant_name} / {project_id}")
-        raise ProjectNotFoundError
+        raise ProjectV2NotFoundError
 
 
 def get_pipeline_code_from_pipeline_id(pipeline_id, icav2_access_token) -> str:

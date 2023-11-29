@@ -33,12 +33,14 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(SyncGitHubActionsSchema, self).__init__(command_argv,
-                                                    item_dir=get_schemas_dir(),
-                                                    item_yaml_path=get_schema_yaml_path(),
-                                                    item_type_key="schemas",
-                                                    item_type="schema",
-                                                    item_suffix="yaml")
+        super(SyncGitHubActionsSchema, self).__init__(
+            command_argv,
+            item_dir=get_schemas_dir(),
+            item_yaml_path=get_schema_yaml_path(),
+            item_type_key="schemas",
+            item_type="schema",
+            item_suffix="yaml"
+        )
 
     def __call__(self):
         # Iterate through each item, determine if to update or not
@@ -59,7 +61,6 @@ Example:
         """
         pass
 
-
     @staticmethod
     def get_projects():
         """
@@ -67,7 +68,6 @@ Example:
         :return:
         """
         return None
-
 
     @staticmethod
     def get_project_ica_item_list(project):

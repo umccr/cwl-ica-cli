@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from typing import List
 
 from utils.logging import get_logger
 import subprocess
@@ -18,7 +18,7 @@ def run_subprocess_proc(*args, **kwargs):
     subprocess_proc = subprocess.run(*args, **kwargs)
 
     command_str = '" "'.join(map(str, ["\'%s\'" % arg for arg in subprocess_proc.args])) \
-        if type(subprocess_proc.args) == list \
+        if isinstance(subprocess_proc.args, List) \
         else subprocess_proc.args
     command_str = '"' + command_str + '"'
 

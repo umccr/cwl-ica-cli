@@ -38,16 +38,43 @@ class ProductionProject(Project):
 
     is_production = True  # Overwrites default in Project class
 
-    def __init__(self, project_name, project_id, project_abbr, project_api_key_name, project_description, linked_projects, tenant_id, tools, workflows):
+    def __init__(
+        self,
+        project_name,
+        project_id,
+        project_abbr,
+        project_api_key_name,
+        project_description,
+        linked_projects,
+        tenant_id,
+        tools,
+        workflows
+    ):
         """
         Collect the project from the project list if defined,
         otherwise read in the project from the project yaml path
         """
 
         # Call super class
-        super(ProductionProject, self).__init__(project_name, project_id, project_abbr, project_api_key_name, project_description, linked_projects, tenant_id, tools, workflows)
+        super(ProductionProject, self).__init__(
+            project_name,
+            project_id,
+            project_abbr,
+            project_api_key_name,
+            project_description,
+            linked_projects,
+            tenant_id,
+            tools,
+            workflows
+        )
 
-    def sync_item_version_with_project(self, ica_workflow_version: ICAWorkflowVersion, md5sum, cwl_packed_obj, force=False) -> bool:
+    def sync_item_version_with_project(
+        self,
+        ica_workflow_version: ICAWorkflowVersion,
+        md5sum,
+        cwl_packed_obj,
+        force=False
+    ) -> bool:
         """
         Takes an ica workflow version object (which, yes will be an item in this in either tools or workflows)
         Gets the new item versions md5sum and the cwl_packed_dict for uploading to ica
@@ -75,9 +102,13 @@ class ProductionProject(Project):
             _ = ica_workflow_version.get_workflow_version_object(self.get_project_token())
             # If this worked, confirm md5sums are the same
             if not ica_workflow_version.get_workflow_version_md5sum() == md5sum:
-                logger.error(f"Workflow version '{ica_workflow_version.ica_workflow_id}/{ica_workflow_version.ica_workflow_version_name}' "
-                             f"already exists but has a conflicting md5sum. This is a production project so not overwriting."
-                             f"Local md5sum is {md5sum} but ica remote md5sum is {ica_workflow_version.get_workflow_version_md5sum()}")
+                logger.error(
+                    f"Workflow version "
+                    f"'{ica_workflow_version.ica_workflow_id}/{ica_workflow_version.ica_workflow_version_name}' "
+                    f"already exists but has a conflicting md5sum. This is a production project so not overwriting. \n"
+                    f"Local md5sum is {md5sum} but ica remote md5sum is "
+                    f"{ica_workflow_version.get_workflow_version_md5sum()}"
+                )
                 raise ProductionProjectError
 
         except ApiException:
@@ -101,6 +132,8 @@ class ProductionProject(Project):
         :param item_key: Either 'tools' or 'workflows'
         :param item_obj: The item of type CWL that has a CWL Packed object.
                          From here we can collect the md5sum and the definition json ready for upload
+        :param access_token:
+        :param categories:
         :return:
         """
         # Get current ica list
@@ -130,7 +163,9 @@ class ProductionProject(Project):
                 categories=categories if categories is not None else []
             )
             # Create a workflow id -> this also must happen for a production project
-            this_project_ica_item.create_workflow_id(access_token, self.project_id, linked_projects=self.linked_projects)
+            this_project_ica_item.create_workflow_id(
+                access_token, self.project_id, linked_projects=self.linked_projects
+            )
 
             # We should also now append our project item to our list
             project_ica_items_list.append(this_project_ica_item)
@@ -145,12 +180,13 @@ class ProductionProject(Project):
                 raise WorkflowVersionExistsError
         else:
             # Create a new workflow version obj
-            project_ica_item_version = ICAWorkflowVersion(name=item_obj.version,
-                                                          path=Path(item_obj.cwl_file_path.parent.name) /
-                                                               Path(item_obj.cwl_file_path.name),
-                                                          ica_workflow_id=this_project_ica_item.ica_workflow_id,
-                                                          ica_workflow_version_name=item_obj.version + "--__GIT_COMMIT_ID__",
-                                                          modification_time=None,
-                                                          run_instances=None)
+            project_ica_item_version = ICAWorkflowVersion(
+                name=item_obj.version,
+                path=Path(item_obj.cwl_file_path.parent.name) / Path(item_obj.cwl_file_path.name),
+                ica_workflow_id=this_project_ica_item.ica_workflow_id,
+                ica_workflow_version_name=item_obj.version + "--__GIT_COMMIT_ID__",
+                modification_time=None,
+                run_instances=None
+            )
             # Append workflow
             this_project_ica_item.versions.append(project_ica_item_version)

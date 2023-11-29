@@ -22,7 +22,7 @@ from utils.repo import get_tenant_yaml_path, read_yaml, get_cwl_ica_repo_path, g
 from utils.conda import get_conda_activate_dir
 from utils.yaml import dump_yaml, to_multiline_string
 import os
-from utils.errors import CheckArgumentError, TenantNotFoundError, InvalidTokenError
+from utils.errors import CheckArgumentError, TenantNotFoundError, InvalidTokenError, CWLICARepoNotFoundError
 from classes.project import Project
 
 logger = get_logger()
@@ -183,7 +183,11 @@ Example:
         # TODO
 
         # Check repo path
-        repo_path = get_cwl_ica_repo_path()
+        try:
+            _ = get_cwl_ica_repo_path()
+        except CWLICARepoNotFoundError:
+            logger.error("Cannot initialise project, could not find cwl-ica repo")
+            raise CWLICARepoNotFoundError
 
         # Check tenant id
         tenant_name = self.args.get("--tenant-name", None)
@@ -200,7 +204,9 @@ Example:
                     self.tenant_id = tenant.get("tenant_id", None)
                 break
             else:
-                logger.error(f"Could not match tenant name \"{tenant_name}\" with a tenant id in \"{tenant_config_path}\"")
+                logger.error(
+                    f"Could not match tenant name \"{tenant_name}\" with a tenant id in \"{tenant_config_path}\""
+                )
                 raise TenantNotFoundError
         elif len(tenant_config_list) == 1:
             self.tenant_id = tenant_config_list[0].get("tenant_id", None)
@@ -217,7 +223,9 @@ Example:
                 logger.error("Could not get tenant_id attribute from tenant name "
                              "but \"CWL_ICA_DEFAULT_TENANT\" environment variable is set")
         else:
-            logger.error(f"Please specify --tenant-name parameter, multiple tenants are present in \"{tenant_config_path}\"")
+            logger.error(
+                f"Please specify --tenant-name parameter, multiple tenants are present in \"{tenant_config_path}\""
+            )
             raise TenantNotFoundError
 
         # Before we get project token, we need to make sure that ICA_BASE_URL env var exists
@@ -249,7 +257,9 @@ Example:
         del personal_access_token
 
         # We can now run get a project access token from the api key
-        self.project_access_token = create_token_from_api_key_with_role(base_url, api_key, project_id=self.project_id, role="admin")
+        self.project_access_token = create_token_from_api_key_with_role(
+            base_url, api_key, project_id=self.project_id, role="admin"
+        )
 
         # We don't need the api-key var anymore either
         del api_key

@@ -6,8 +6,6 @@ Handy functions for working with projects
 
 from classes.project import Project
 from classes.project_production import ProductionProject
-from classes.ica_workflow import ICAWorkflow
-from classes.ica_workflow_version import ICAWorkflowVersion
 from utils.repo import read_yaml, get_project_yaml_path
 from utils.ica_utils import get_base_url, get_projects_list_with_token
 from typing import List
@@ -34,10 +32,12 @@ def read_project_yaml() -> List[Project]:
         return []
 
     # Read in projects
-    projects_list: List[Project] = [Project.from_dict(project_dict)
-                                    if not project_dict.get("production", False)
-                                    else ProductionProject.from_dict(project_dict)
-                                    for project_dict in read_yaml(get_project_yaml_path())["projects"]]
+    projects_list: List[Project] = [
+        Project.from_dict(project_dict)
+        if not project_dict.get("production", False)
+        else ProductionProject.from_dict(project_dict)
+        for project_dict in read_yaml(get_project_yaml_path())["projects"]
+    ]
 
     return projects_list
 

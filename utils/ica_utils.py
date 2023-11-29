@@ -14,7 +14,7 @@ import os
 from utils.logging import get_logger
 from utils.globals import SCOPES_BY_ROLE, ICA_BASE_URL_ENV_VAR, BASE_URL_NETLOC_REGEX, EXPIRY_DAYS_WARNING_TRIGGER
 from utils.subprocess_handler import run_subprocess_proc
-from utils.conda import create_tokens_dir, get_conda_tokens_dir
+from utils.conda import get_conda_tokens_dir
 from utils.errors import BaseUrlEnvNotFoundError, InvalidBaseUrlError, \
     TokenMembershipsError, TokenScopeError, TokenCreationError, CheckArgumentError
 from pathlib import Path
@@ -124,6 +124,7 @@ def check_token_expiry(expiry_date, warn_on_near_expiry=True):
     """
     Check a tokens' expiry date
     :param expiry_date:
+    :param warn_on_near_expiry:
     :return:
     """
     # Get time diff
@@ -205,13 +206,16 @@ def get_projects_list_with_token(base_url, personal_access_token):
     next_page_token = None
 
     # Set the configuration
-    configuration = libica.openapi.libconsole.Configuration(host=base_url,
-                                                            api_key={
-                                                                "Authorization": personal_access_token
-                                                            },
-                                                            api_key_prefix={
-                                                                "Authorization": "Bearer"
-                                                            })
+    configuration = libica.openapi.libconsole.Configuration(
+        host=base_url,
+        api_key={
+            "Authorization": personal_access_token
+        },
+        api_key_prefix={
+            "Authorization": "Bearer"
+        }
+    )
+
     # Open up the api client context
     with libica.openapi.libconsole.ApiClient(configuration) as api_client:
         while counted_pages < total_page_count:
@@ -245,10 +249,12 @@ def create_personal_access_token(base_url, api_key):
     :return:
     """
     # Set the configuration
-    configuration = libica.openapi.libconsole.Configuration(host=base_url,
-                                                            api_key={
-                                                                "Authorization": api_key
-                                                            })
+    configuration = libica.openapi.libconsole.Configuration(
+        host=base_url,
+        api_key={
+            "Authorization": api_key
+        }
+    )
 
     # Open up the api client context
     with libica.openapi.libconsole.ApiClient(configuration) as api_client:
@@ -327,17 +333,16 @@ def store_token(access_token, project_name):
     """
     Store the access token in a safe location
     :param access_token:
-    :param project_id:
-    :param path:
+    :param project_name:
     :return:
     """
     # Get tokens directory
     tokens_dir = get_conda_tokens_dir()
-    if not tokens_dir.is_dir():
-        create_tokens_dir(tokens_dir)
     project_secret_path = tokens_dir / Path(project_name + ".txt")
+
     # Create file with owner-only permissions
     project_secret_path.touch(mode=0o600)
+
     # Write secret access token to file
     with open(project_secret_path, 'w') as secret_h:
         secret_h.write(access_token + "\n")

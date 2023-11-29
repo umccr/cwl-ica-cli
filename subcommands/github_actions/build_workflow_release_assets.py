@@ -185,7 +185,7 @@ Environment Variables
             raise ArgumentError
         # Check GITHUB Tags are as expected
         # dragen-pon-qc/3.9.3,dragen-pon-qc/3.9.3__221219235859
-        full_github_tag_regex_obj = re.fullmatch("(\S+/\S+)__(\d+)", self.github_tag[1])
+        full_github_tag_regex_obj = re.fullmatch(r"(\S+/\S+)__(\d+)", self.github_tag[1])
         if full_github_tag_regex_obj is None:
             logger.error(f"GITHUB_TAG env var '{','.join(self.github_tag)}' is not formatted as expected")
             raise ArgumentError
@@ -1132,9 +1132,11 @@ Environment Variables
                     }
                 )
 
-                create_cwl_workflow_from_github_release_returncode, \
-                create_cwl_workflow_from_github_release_stdout, \
-                create_cwl_workflow_from_github_release_stderr = run_subprocess_proc(
+                (
+                    create_cwl_workflow_from_github_release_returncode,
+                    create_cwl_workflow_from_github_release_stdout,
+                    create_cwl_workflow_from_github_release_stderr
+                ) = run_subprocess_proc(
                     create_cwl_workflow_from_github_release_command,
                     env=proc_environ,
                     capture_output=True
@@ -1160,9 +1162,11 @@ Environment Variables
                 # Release pipeline
                 release_pipeline_command = release_pipeline_command_prefix + [pipeline_id]
 
-                release_pipeline_returncode, \
-                release_pipeline_stdout, \
-                release_pipeline_stderr = run_subprocess_proc(
+                (
+                    release_pipeline_returncode,
+                    release_pipeline_stdout,
+                    release_pipeline_stderr
+                ) = run_subprocess_proc(
                     release_pipeline_command,
                     env=proc_environ,
                     capture_output=True

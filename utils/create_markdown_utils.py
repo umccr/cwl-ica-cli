@@ -7,6 +7,7 @@ Quick functions for using the mdutils objects
 from mdutils import MdUtils
 import re
 
+
 def add_toc_line(md_file_obj: MdUtils, header_name: str, link_text: str) -> MdUtils:
     """
     Add a line to top level of toc
@@ -23,5 +24,4 @@ def add_toc_line(md_file_obj: MdUtils, header_name: str, link_text: str) -> MdUt
             ),
             text=link_text)
     ))
-
     return md_file_obj

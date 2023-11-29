@@ -4,26 +4,14 @@
 Collect logger through verboselogs package
 """
 
+import inspect
 import verboselogs
 import logging
 
+LOGGER_STYLE = "%(asctime)s - %(levelname)-8s - %(module)-25s - %(funcName)-40s : LineNo. %(lineno)-4d - %(message)s"
+
 logger = verboselogs.VerboseLogger(__name__)
 logger.addHandler(logging.StreamHandler())
-
-#verboselogs.install()
-
-
-# def get_logger():
-#     """
-#     Returns the logger
-#     :return:
-#     """
-#     return logger
-
-import inspect
-import logging
-from logging.handlers import RotatingFileHandler
-LOGGER_STYLE = "%(asctime)s - %(levelname)-8s - %(module)-25s - %(funcName)-40s : LineNo. %(lineno)-4d - %(message)s"
 
 
 def get_caller_function():
@@ -83,21 +71,14 @@ def set_logger(script_dir, script, deploy_env, log_level=logging.DEBUG):
     # create a logging format
     formatter = logging.Formatter(LOGGER_STYLE)
 
-    # create a file handler
-    #file_handler = RotatingFileHandler(filename=script_dir / "{}.{}".format(script, LOG_FILE_SUFFIX[deploy_env]),
-    #                                   maxBytes=100000000, backupCount=5)
-    ## Set Level
-    #file_handler.setLevel(log_level)
-    #file_handler.setFormatter(formatter)
-
     # create a console handler
     console_handler = logging.StreamHandler()
+
     # Hard coded as don't need too much verbosity on the console side
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
 
     # add the handlers to the logger
-    #new_logger.addHandler(file_handler)
     new_logger.addHandler(console_handler)
 
 
@@ -108,5 +89,3 @@ def get_logger():
     """
     function_that_called_this_one = get_caller_function()
     return logging.getLogger(function_that_called_this_one)
-
-

@@ -3,12 +3,10 @@
 """
 Helpers for the gh command
 """
-
 import json
 from utils.subprocess_handler import run_subprocess_proc
 from utils.logging import get_logger
 from pathlib import Path
-from base64 import b64encode
 import os
 
 

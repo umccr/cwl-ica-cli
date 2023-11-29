@@ -10,7 +10,6 @@ import tempfile
 import os
 
 from libica.openapi.v2.model.analysis_step_logs import AnalysisStepLogs
-from libica.openapi.v2.model.create_cwl_analysis import CreateCwlAnalysis
 
 from utils.cwl_helper_utils import get_fragment_from_cwl_id
 from utils.icav2_helpers import get_project_id_from_project_name, \
@@ -22,7 +21,7 @@ from utils.logging import get_logger
 from pathlib import Path
 from argparse import ArgumentError
 from utils.errors import CheckArgumentError
-from typing import Optional, Dict, List
+from typing import Optional
 
 
 logger = get_logger()

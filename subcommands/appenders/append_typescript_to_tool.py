@@ -7,9 +7,7 @@ Subclass of initialiser
 from subcommands.appenders.append_typescript_dir import AppendTypeScriptDir
 from utils.logging import get_logger
 from pathlib import Path
-from classes.item_version_tool import ItemVersionTool
-from classes.item_tool import ItemTool
-from utils.repo import get_tool_yaml_path, get_tools_dir
+from utils.repo import get_tools_dir
 from utils.errors import CheckArgumentError
 
 logger = get_logger()
@@ -27,19 +25,22 @@ Description:
 
 
 Options:
-    --tool-path=<the tool path>                         Required, the path to the cwl tool
-    --xtrace                                            Optional, add xtrace option to initialise_typescript_expression_directory.sh
+    --tool-path=<the tool path>    Required, the path to the cwl tool
+    --xtrace                       Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
-    cwl-ica append-typescript-directory-to-cwl-commandline-tool --tool-path "tools/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
+    cwl-ica append-typescript-directory-to-cwl-commandline-tool \\
+      --tool-path "tools/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
     """
 
     def __init__(self, command_argv):
         # Call super class
-        super(AppendTypeScriptToolDir, self).__init__(command_argv,
-                                                            suffix="cwl",
-                                                            item_dir=get_tools_dir(),
-                                                            item_type="type")
+        super(AppendTypeScriptToolDir, self).__init__(
+            command_argv,
+            suffix="cwl",
+            item_dir=get_tools_dir(),
+            item_type="type"
+        )
 
     def __call__(self):
         # Call the super class' call function

@@ -7,7 +7,6 @@ Pulls in a cwl expression object and runs create_object() on it.
 
 from subcommands.creators.create_from_template import CreateFromTemplate
 from utils.logging import get_logger
-from docopt import docopt
 from argparse import ArgumentError
 from utils.repo import get_schemas_dir
 from classes.cwl_schema import CWLSchema
@@ -23,16 +22,19 @@ class CreateSchemaFromTemplate(CreateFromTemplate):
                                         (--schema-version="<schema_version>")
 
 Description:
-    We initialise a schema with all of the bells / schema and whistles.
+    We initialise a schema with all the bells / schema and whistles.
     This creates a file under <CWL_ICA_REPO_PATH>/schema/<schema_name>/<schema_version>/<schema_name>__<schema_version>.yaml
 
     The schema will have the bare minimum inputs and is ready for you to edit.
-    This command does NOT register the schema under schema.yaml, should you change your mind, you can easily just delete the file.
+    This command does NOT register the schema under schema.yaml, should you change your mind,
+    you can easily just delete the file.
+
     Remember that for each input and output that you add in a label attribute and a doc attribute.
 
     For readability purposes we recommend that you place the 'id' attribute of each input and output as the yaml key.
 
-    We make sure that --schema-name and --schema-version are appropriate names for folders / files, no special characters or spaces.
+    We make sure that --schema-name and --schema-version are appropriate names for folders / files,
+    no special characters or spaces.
 
     Make sure that the --schema-version argument is in x.y.z format.  If additional patch is required use
     x.y.z__<patch_string>.

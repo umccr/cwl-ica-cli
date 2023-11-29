@@ -26,10 +26,13 @@ class ItemTool(Item):
 
     def __init__(self, name, path, versions=None, categories=None):
         # Initialise super
-        super(ItemTool, self).__init__(name, path,
-                                       root_dir=get_tools_dir(),
-                                       versions=versions,
-                                       categories=categories)
+        super(ItemTool, self).__init__(
+            name,
+            path,
+            root_dir=get_tools_dir(),
+            versions=versions,
+            categories=categories
+        )
 
     def get_versions(self, versions):
         """

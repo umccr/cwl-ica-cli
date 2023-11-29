@@ -27,7 +27,6 @@ from ruamel.yaml.comments import \
     CommentedMap as OrderedDict, \
     CommentedSeq as OrderedList
 from ruamel.yaml import YAML
-from ruamel.yaml.main import round_trip_dump
 from pathlib import Path
 from typing import Optional, List, Any
 from classes.project import Project
@@ -240,10 +239,16 @@ class CreateSubmissionTemplate(Command):
             raise ItemNotFoundError
 
         # Get workDirectory, outputDirectory
-        if self.args.get("--gds-output-directory", None) is not None and self.args.get("--gds-output-prefix", None) is not None:
+        if (
+                self.args.get("--gds-output-directory", None) is not None
+                and self.args.get("--gds-output-prefix", None) is not None
+        ):
             logger.error("Please specify one and only one of --gds-output-directory and --gds-output-prefix")
             raise CheckArgumentError
-        if self.args.get("--gds-work-directory", None) is not None and self.args.get("--gds-work-prefix", None) is not None:
+        if (
+                self.args.get("--gds-work-directory", None) is not None and
+                self.args.get("--gds-work-prefix", None) is not None
+        ):
             logger.error("Please specify one and only one of --gds-work-directory and --gds-work-prefix")
             raise CheckArgumentError
 
@@ -298,8 +303,11 @@ class CreateSubmissionTemplate(Command):
             elif os.environ.get("ICA_ACCESS_TOKEN", None) is not None:
                 return os.environ.get("ICA_ACCESS_TOKEN")
             else:
-                logger.error("--launch-project specified and --ica-workflow-run-instance-id specified, "
-                             " please enter launch project context with ica-context-switcher or supply access-token for context with --access-token")
+                logger.error(
+                    "--launch-project specified and --ica-workflow-run-instance-id specified, "
+                    "please enter launch project context with ica-context-switcher or "
+                    "supply access-token for context with --access-token"
+                )
                 raise InvalidTokenError
         else:
             return self.project_obj.get_project_token()
@@ -494,22 +502,32 @@ class CreateSubmissionTemplate(Command):
         })
 
         # Add keys to each
-        self.input_template_object.get("engineParameters").yaml_set_comment_before_after_key(key="workDirectory",
-                                                                                             before="Set the gds path to the logs and intermediate files",
-                                                                                             indent=YAML_INDENTATION_LEVEL)
-        self.input_template_object.get("engineParameters").yaml_set_comment_before_after_key(key="outputDirectory",
-                                                                                             before="Set the gds path to the workflow outputs",
-                                                                                             indent=YAML_INDENTATION_LEVEL)
+        self.input_template_object.get("engineParameters").yaml_set_comment_before_after_key(
+            key="workDirectory",
+            before="Set the gds path to the logs and intermediate files",
+            indent=YAML_INDENTATION_LEVEL
+        )
+        self.input_template_object.get("engineParameters").yaml_set_comment_before_after_key(
+            key="outputDirectory",
+            before="Set the gds path to the workflow outputs",
+            indent=YAML_INDENTATION_LEVEL
+        )
 
         # Add eol comment
-        self.input_template_object.get("engineParameters").yaml_add_eol_comment(key="workDirectory",
-                                                                                comment="gds://path/to/work/dir/")
-        self.input_template_object.get("engineParameters").yaml_add_eol_comment(key="outputDirectory",
-                                                                                comment="gds://path/to/output/dir/")
+        self.input_template_object.get("engineParameters").yaml_add_eol_comment(
+            key="workDirectory",
+            comment="gds://path/to/work/dir/"
+        )
+        self.input_template_object.get("engineParameters").yaml_add_eol_comment(
+            key="outputDirectory",
+            comment="gds://path/to/output/dir/"
+        )
 
-        self.input_template_object.yaml_set_comment_before_after_key(key="engineParameters",
-                                                                     before=f"\nICA Engine Parameters",
-                                                                     indent=0)
+        self.input_template_object.yaml_set_comment_before_after_key(
+            key="engineParameters",
+            before=f"\nICA Engine Parameters",
+            indent=0
+        )
 
     def set_cwl_inputs_as_commented_map(self):
         """
@@ -518,13 +536,14 @@ class CreateSubmissionTemplate(Command):
         :return:
         """
         self.input_template_object["input"] = create_input_dict(
-            self.cwl_inputs,
-            self.cwl_file_path
+            self.cwl_inputs
         )
-        self.input_template_object.yaml_set_comment_before_after_key(key="input",
-                                                                     before=f"\nInputs to {self.item_type} {self.item_name}/{self.item_version}",
-                                                                     after="",
-                                                                     indent=0)
+        self.input_template_object.yaml_set_comment_before_after_key(
+            key="input",
+            before=f"\nInputs to {self.item_type} {self.item_name}/{self.item_version}",
+            after="",
+            indent=0
+        )
 
     def write_yaml_file(self):
         """
@@ -563,17 +582,25 @@ class CreateSubmissionTemplate(Command):
         yaml_obj = read_yaml(self.output_yaml_path)
 
         # Get inputs from workflow run instance id
-        ica_workflow_run_obj = ICAWorkflowRun(self.ica_workflow_run_id,
-                                              project_token=self.get_project_access_token(),
-                                              allow_unsuccessful_run=True,
-                                              get_task_run_objects=False)
+        ica_workflow_run_obj = ICAWorkflowRun(
+            self.ica_workflow_run_id,
+            project_token=self.get_project_access_token(),
+            allow_unsuccessful_run=True,
+            get_task_run_objects=False
+        )
 
         # Cross reference
-        if not self.ica_workflow_id == ica_workflow_run_obj.ica_workflow_id and not self.ignore_workflow_id_mismatch:
+        if (
+                not self.ica_workflow_id == ica_workflow_run_obj.ica_workflow_id and
+                not self.ignore_workflow_id_mismatch
+        ):
             logger.error(f"Cannot use {self.ica_workflow_run_id} as a reference. ICA workflow ids do not match")
             logger.error(f"Apples: {self.ica_workflow_id} vs Oranges: {ica_workflow_run_obj.ica_workflow_id}")
             raise ValueError
-        if not self.ica_workflow_version_name == ica_workflow_run_obj.ica_workflow_version_name and not self.ignore_workflow_id_mismatch:
+        if (
+                not self.ica_workflow_version_name == ica_workflow_run_obj.ica_workflow_version_name and
+                not self.ignore_workflow_id_mismatch
+        ):
             logger.warning(f"Got version name {self.ica_workflow_version_name}, "
                            f"but workflow run id is from version {ica_workflow_run_obj.ica_workflow_version_name}")
 
@@ -663,10 +690,9 @@ class CreateSubmissionTemplate(Command):
                     # We're at a key
                     input_key = input_key_regex_obj.group(1)
                     # Check if key is in list
-                    if input_key in inputs_present_in_workflow_run and not input_key in missing_keys:
+                    if input_key in inputs_present_in_workflow_run and input_key not in missing_keys:
                         comment_out_line = False
                     else:
-                        #logger.info(f"Commenting out input {input_key}, not present in {self.ica_workflow_run_id}")
                         comment_out_line = True
 
                 # Now comment out line if false or true
@@ -717,16 +743,12 @@ class CreateSubmissionTemplate(Command):
             shell_h.write(f"# Fail on non-zero exit\n")
             shell_h.write(f"set -euo pipefail\n\n")
 
-            # Add docs
-            #shell_h.write(f"# Use this script to launch the input json '{self.output_json_path.name}'\n\n")
-
             # Check yq is present
             shell_h.write(f"# Check jq, yq and {launch_binary} is in path\n")
             shell_h.write(f"echo 'Checking jq, yq and {launch_binary} are installed' 1>&2\n")
             shell_h.write(f"if ! type jq yq {launch_binary} >/dev/null 1>&2; then\n")
             shell_h.write(f"    echo \"Error: Please ensure you've installed 'jq', 'yq' and '{launch_binary}' before continuing\"\n")
             shell_h.write("fi\n\n")
-
 
             # Source ica-ica-lazy functions (bash functions might be exported but doesn't help if user
             # is running zsh

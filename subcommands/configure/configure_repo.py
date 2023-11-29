@@ -112,5 +112,3 @@ Example:
                 env_var_name=CWL_ICA_REPO_PATH_ENV_VAR,
                 repo_path=self.repository_path.absolute()
             ))
-
-

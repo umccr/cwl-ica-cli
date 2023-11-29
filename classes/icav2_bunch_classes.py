@@ -53,13 +53,14 @@ class DatasetItem:
       * object_e_tag_md5sum
       * folder_structure_md5sum
     """
-    def __init__(self,
-                 create: bool = True,
-                 data_obj: Optional[Data] = None,
-                 data_type: Optional[str] = None,
-                 **kwargs
-         ):
-
+    def __init__(
+            self,
+            create: bool = True,
+            data_obj: Optional[Data] = None,
+            data_type: Optional[str] = None,
+            **kwargs
+    ):
+        # Initialise data object
         self.data_obj = data_obj
 
         if create:
@@ -68,8 +69,12 @@ class DatasetItem:
             self.owning_project_id: Optional[str] = data_obj.details.owning_project_id
             self.owning_project_name: Optional[str] = data_obj.details.owning_project_name
             self.data_uri: Optional[str] = f"icav2://{data_obj.details.owning_project_name}{data_obj.details.path}"
-            self.creation_time: Optional[str] = data_obj.details.time_created.isoformat(timespec='seconds').replace("+00:00", "Z")
-            self.modification_time: Optional[str] = data_obj.details.time_modified.isoformat(timespec='seconds').replace("+00:00", "Z")
+            self.creation_time: Optional[str] = data_obj.details.time_created.isoformat(
+                timespec='seconds'
+            ).replace("+00:00", "Z")
+            self.modification_time: Optional[str] = data_obj.details.time_modified.isoformat(
+                timespec='seconds'
+            ).replace("+00:00", "Z")
             self.data_type: Optional[str] = data_type
 
             # Set creator id / creator name if not set for data item
@@ -149,15 +154,16 @@ class DatasetItemFolder(DatasetItem):
     """
     Child class of Dataset item
     """
-    def __init__(self,
-                 create: Optional[bool] = None,
-                 data_obj: Optional[Data] = None,
-                 num_files: Optional[str] = None,
-                 folder_size_in_bytes: Optional[int] = None,
-                 object_e_tag_md5sum: Optional[str] = None,
-                 folder_structure_md5sum: Optional[str] = None,
-                 **kwargs
-        ):
+    def __init__(
+        self,
+        create: Optional[bool] = None,
+        data_obj: Optional[Data] = None,
+        num_files: Optional[str] = None,
+        folder_size_in_bytes: Optional[int] = None,
+        object_e_tag_md5sum: Optional[str] = None,
+        folder_structure_md5sum: Optional[str] = None,
+        **kwargs
+    ):
 
         # Initialise folder parameters
         self.num_files = num_files
@@ -237,7 +243,8 @@ class DatasetItemFolder(DatasetItem):
             Path(self.data_obj.details.path)
         )
         if not folder_structure_md5sum == self.folder_structure_md5sum:
-            logger.error(f"Got expected number of files and size of folder and file etags, but folder structure is different. "
+            logger.error(f"Got expected number of files and size of folder and file etags, "
+                         f"but folder structure is different. "
                          f"Expected {self.folder_structure_md5sum} but got {folder_structure_md5sum}")
             raise InvalidDataItem
 
@@ -505,7 +512,8 @@ class Bunch:
       * Each bunch version contains the following attributes
         * version: semantic version
         * version_description: <str> version description
-        * version_creation_date: <datetime> version creation date - only the latest bunch version will be used to create a bundle.
+        * version_creation_date: <datetime> version creation date
+            - only the latest bunch version will be used to create a bundle.
         * datasets: <List[Dataset]>
           - For each dataset
           * dataset_name: <str> Name of the dataset
@@ -515,23 +523,23 @@ class Bunch:
 
     """
     def __init__(
-            self,
-            create: bool,
-            bunch_name: str,
-            bunch_description: str,
-            tenant_name: str,
-            pipeline_path: Path,
-            pipeline_project_name: str,
-            bunch_region_id: str,
-            bunch_region_city_name: str,
-            projects: Optional[List[Dict]] = None,
-            categories: Optional[List[str]] = None,
-            bunch_versions_dict: Optional[List[Dict]] = None,
-            # Parameters only when create is set to true
-            version: Optional[str] = None,
-            version_description: Optional[str] = None,
-            datasets: Optional[List[Dataset]] = None,
-        ):
+        self,
+        create: bool,
+        bunch_name: str,
+        bunch_description: str,
+        tenant_name: str,
+        pipeline_path: Path,
+        pipeline_project_name: str,
+        bunch_region_id: str,
+        bunch_region_city_name: str,
+        projects: Optional[List[Dict]] = None,
+        categories: Optional[List[str]] = None,
+        bunch_versions_dict: Optional[List[Dict]] = None,
+        # Parameters only when create is set to true
+        version: Optional[str] = None,
+        version_description: Optional[str] = None,
+        datasets: Optional[List[Dataset]] = None
+    ):
         """
         Initialise a bunch class object
         """
@@ -571,7 +579,10 @@ class Bunch:
         :return:
         """
         if not self.pipeline_path.is_file():
-            logger.error(f"Could not find path to bunch origin workflow path '{self.pipeline_path.relative_to(get_cwl_ica_repo_path())}'")
+            logger.error(
+                f"Could not find path to bunch origin workflow path "
+                f"'{self.pipeline_path.relative_to(get_cwl_ica_repo_path())}'"
+            )
             raise FileNotFoundError
 
     def to_dict(self):
@@ -628,11 +639,11 @@ class Bunch:
         return self.bunch_versions
 
     def generate_bunch_version(
-            self,
-            version: str,
-            version_description: str,
-            datasets: List[Dataset]
-        ) -> BunchVersion:
+        self,
+        version: str,
+        version_description: str,
+        datasets: List[Dataset]
+    ) -> BunchVersion:
         """
         Generate a bunch version.
         Appends to bunch_version attribute and returns version object
@@ -671,7 +682,8 @@ class BunchVersion:
     A bundle version contains the following attributes
     * version: semantic version
     * version_description: <str> version description
-    * version_creation_date: <datetime> version creation date - only the latest bunch version will be used to create a bundle.
+    * version_creation_date: <datetime> version creation date
+      - only the latest bunch version will be used to create a bundle.
     * datasets: <List[Dataset]>
       - For each dataset
       * dataset_name: <str> Name of the dataset
@@ -694,14 +706,14 @@ class BunchVersion:
     """
 
     def __init__(
-            self,
-            parent_bunch: Bunch,
-            create: bool,
-            version: str,
-            version_description: str,
-            version_creation_date: Optional[str] = None,
-            datasets: Optional[List[Dataset]] = None,
-        ):
+        self,
+        parent_bunch: Bunch,
+        create: bool,
+        version: str,
+        version_description: str,
+        version_creation_date: Optional[str] = None,
+        datasets: Optional[List[Dataset]] = None,
+    ):
         """
         Initialise bundle version attributes
         """
@@ -846,14 +858,14 @@ class BunchVersion:
                f"Regardless - the bunch version is {self.version}"
 
     def generate_bundle_from_bunch_version(
-            self,
-            pipeline_commit_id: str,
-            pipeline_release_url: str,
-            pipeline_id: str,
-            pipeline_checksum: str,
-            pipeline_project_id: str,
-            tenant_access_token: str,
-        ) -> Bundle:
+        self,
+        pipeline_commit_id: str,
+        pipeline_release_url: str,
+        pipeline_id: str,
+        pipeline_checksum: str,
+        pipeline_project_id: str,
+        tenant_access_token: str,
+    ) -> Bundle:
         """
         Generate a bundle from a bunch version object
         :param pipeline_commit_id:
@@ -862,7 +874,6 @@ class BunchVersion:
         :param pipeline_checksum:
         :param pipeline_project_id:
         :param tenant_access_token:
-        :param release_url:
         :return:
         """
 
@@ -966,37 +977,39 @@ class Bundle:
     * bundle_creation_time: <datetime>  # The creation time for this bundle
     * bundle_release_status: <enum>  # Has the bundle been released (should be true once written to configuration yaml)
     * bundle_data_ids: List<str>  # The data items that have been added to this bundle
-    * bundle_url: <str>  # The url to access the bundle (if the bundle is available in your tenant) https://ica.illumina.com/ica/bundles/<bundle_id>/bundleDetails
+    * bundle_url: <str>  # The url to access the bundle
+                         # (if the bundle is available in your tenant)
+                         # https://ica.illumina.com/ica/bundles/<bundle_id>/bundleDetails
     """
     def __init__(
-            self,
-            create: Optional[bool],
-            bundle_name: Optional[str],
-            bundle_description: Optional[str],
-            bundle_version: Optional[str],
-            bundle_version_description: Optional[str],
-            bundle_region_id: Optional[str],
-            bundle_region_city_name: Optional[str],
-            tenant_name: Optional[str],
-            pipeline_path: Optional[str],
-            pipeline_name: Optional[str],
-            pipeline_version: Optional[str],
-            pipeline_release_url: Optional[str],
-            pipeline_commit_id: Optional[str],
-            pipeline_checksum: Optional[str],
-            pipeline_project_id: Optional[str],
-            bunch_name: Optional[str],
-            bunch_version: Optional[str],
-            bunch_datasets: Optional[List[Dataset]],
-            bundle_categories: Optional[List[str]],
-            projects: Optional[str],
-            bundle_id: Optional[str] = None,
-            bundle_creation_time: Optional[str] = None,
-            bundle_release_status: Optional[str] = None,
-            bundle_data_ids: Optional[List[str]] = None,
-            bundle_pipeline_id: Optional[str] = None,
-            bundle_url: Optional[str] = None
-        ):
+        self,
+        create: Optional[bool],
+        bundle_name: Optional[str],
+        bundle_description: Optional[str],
+        bundle_version: Optional[str],
+        bundle_version_description: Optional[str],
+        bundle_region_id: Optional[str],
+        bundle_region_city_name: Optional[str],
+        tenant_name: Optional[str],
+        pipeline_path: Optional[str],
+        pipeline_name: Optional[str],
+        pipeline_version: Optional[str],
+        pipeline_release_url: Optional[str],
+        pipeline_commit_id: Optional[str],
+        pipeline_checksum: Optional[str],
+        pipeline_project_id: Optional[str],
+        bunch_name: Optional[str],
+        bunch_version: Optional[str],
+        bunch_datasets: Optional[List[Dataset]],
+        bundle_categories: Optional[List[str]],
+        projects: Optional[str],
+        bundle_id: Optional[str] = None,
+        bundle_creation_time: Optional[str] = None,
+        bundle_release_status: Optional[str] = None,
+        bundle_data_ids: Optional[List[str]] = None,
+        bundle_pipeline_id: Optional[str] = None,
+        bundle_url: Optional[str] = None
+    ):
         """
         Initialise a bundle object
         """
@@ -1040,7 +1053,9 @@ class Bundle:
             self.bundle_id = bundle_id
             self.bundle_data_ids = bundle_data_ids
         else:
-            self.bundle_creation_time = datetime.now().astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+            self.bundle_creation_time = datetime.now().astimezone(timezone.utc).isoformat(
+                timespec="seconds"
+            ).replace("+00:00", "Z")
             self.bundle_release_status = "draft"
             self.bundle_id = None
             self.bundle_data_ids = []
@@ -1116,7 +1131,9 @@ class Bundle:
             map(
                 lambda dataset_map_iter: {
                     "dataset_name": dataset_map_iter.dataset_name,
-                    "dataset_creation_time": dataset_map_iter.dataset_creation_time.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                    "dataset_creation_time": dataset_map_iter.dataset_creation_time.isoformat(
+                        timespec="seconds"
+                    ).replace("+00:00", "Z"),
                     "dataset_id_hash": dataset_map_iter.dataset_id_hash
                 },
                 self.bunch_datasets

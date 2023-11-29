@@ -9,6 +9,7 @@ dependencies:
   - pip
   - nodejs>=18
   - pip:
+    - beautifulsoup4
     - cwlref-runner
     - cwltool
     - cwl-utils

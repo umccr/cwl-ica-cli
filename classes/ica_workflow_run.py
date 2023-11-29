@@ -9,7 +9,7 @@ import libica.openapi.libwes
 from libica.openapi.libwes import WorkflowRun
 from libica.openapi.libwes.rest import ApiException
 from utils.ica_utils import get_base_url
-from utils.errors import ICAWorkflowRunCreationError, InvalidTokenError, GetStepNameError
+from utils.errors import ICAWorkflowRunCreationError, InvalidTokenError
 from urllib.parse import urlparse
 from utils.logging import get_logger
 import json
@@ -20,6 +20,7 @@ from classes.ica_task_run import ICATaskRun
 from pathlib import Path
 
 logger = get_logger()
+
 
 class ICAWorkflowRun:
     """
@@ -32,10 +33,25 @@ class ICAWorkflowRun:
     - A set of engine-parameters
     """
 
-    def __init__(self, ica_workflow_run_instance_id, ica_project_launch_context_id=None, ica_workflow_id=None, ica_workflow_name=None, ica_workflow_version_name=None,
-                 ica_workflow_run_name=None, ica_input=None, ica_output=None, ica_engine_parameters=None,
-                 workflow_start_time=None, workflow_end_time=None, workflow_duration=None,
-                 ica_task_objs=None, project_token=None, allow_unsuccessful_run=False, get_task_run_objects=True):
+    def __init__(
+        self,
+        ica_workflow_run_instance_id,
+        ica_project_launch_context_id=None,
+        ica_workflow_id=None,
+        ica_workflow_name=None,
+        ica_workflow_version_name=None,
+        ica_workflow_run_name=None,
+        ica_input=None,
+        ica_output=None,
+        ica_engine_parameters=None,
+        workflow_start_time=None,
+        workflow_end_time=None,
+        workflow_duration=None,
+        ica_task_objs=None,
+        project_token=None,
+        allow_unsuccessful_run=False,
+        get_task_run_objects=True
+    ):
         """
         :param ica_workflow_run_instance_id:
         :param ica_project_launch_context_id:
@@ -80,18 +96,25 @@ class ICAWorkflowRun:
 
             # Check workflow run status before continuing
             if not api_response.status == "Succeeded" and not allow_unsuccessful_run:
-                logger.error(f"This workflow run has status {api_response.status}, which is not considered a successful run. "
+                logger.error(f"This workflow run has status {api_response.status}, "
+                             f"which is not considered a successful run. "
                              f"Only successful runs can be recorded in the run yaml")
                 raise ICAWorkflowRunCreationError
 
-            self.ica_workflow_id, self.ica_workflow_version_name = self.split_href_by_id_and_version(api_response.workflow_version.href)
+            self.ica_workflow_id, self.ica_workflow_version_name = self.split_href_by_id_and_version(
+                api_response.workflow_version.href
+            )
             self.ica_project_launch_context_id = [acl.split(":", 1)[-1]
                                                   for acl in api_response.acl if acl.startswith("cid")][0]
             self.ica_workflow_name = self.get_workflow(self.ica_workflow_id, project_token).name
             self.ica_workflow_run_name = api_response.name
             self.ica_input = api_response.input if api_response.input is not None else {}
             self.ica_output = api_response.output if api_response.output is not None else {}
-            self.ica_engine_parameters = json.loads(api_response.engine_parameters) if api_response.engine_parameters is not None else {}
+            self.ica_engine_parameters = (
+                json.loads(api_response.engine_parameters)
+                if api_response.engine_parameters is not None
+                else {}
+            )
             self.workflow_start_time = int(api_response.time_started.timestamp())
             self.workflow_end_time = int(api_response.time_stopped.timestamp())
             self.workflow_duration = self.get_workflow_duration(api_response)
@@ -134,7 +157,6 @@ class ICAWorkflowRun:
         # Step 1 - get the run history
         configuration = self.get_ica_wes_configuration(project_token)
         run_id = self.ica_workflow_run_instance_id  # str | ID of the workflow run
-
 
         with libica.openapi.libwes.ApiClient(configuration) as api_client:
             # Create an instance of the API class
@@ -369,7 +391,9 @@ class ICAWorkflowRun:
                    ica_workflow_run_name=workflow_run_dict.get("ica_workflow_run_name"),
                    ica_input=json.loads(decode_compressed_base64(workflow_run_dict.get("ica_input", None))),
                    ica_output=json.loads(decode_compressed_base64(workflow_run_dict.get("ica_output", None))),
-                   ica_engine_parameters=json.loads(decode_compressed_base64(workflow_run_dict.get("ica_engine_parameters", None))),
+                   ica_engine_parameters=json.loads(
+                       decode_compressed_base64(workflow_run_dict.get("ica_engine_parameters", None))
+                   ),
                    workflow_start_time=workflow_run_dict.get("workflow_start_time"),
                    workflow_end_time=workflow_run_dict.get("workflow_end_time"),
                    workflow_duration=workflow_run_dict.get("workflow_duration"),

@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 
 from cwl_utils.parser import load_document_by_uri, Workflow
 
-from utils.gh_helpers import get_github_url
 from utils.logging import get_logger
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
 from utils.repo import get_workflows_dir, get_cwl_ica_repo_path
@@ -45,7 +44,7 @@ class Dockstore:
             readme_path: Optional[str] = None,
             authors: Optional[List[Dict]] = None,
             tags: Optional[List[str]] = None
-        ):
+    ):
 
         self.name = name  # Is name__version?
         self.cwl_file_path = cwl_file_path
@@ -96,7 +95,6 @@ class Dockstore:
         author_as_ordered_dict = workflow.extension_fields.get("https://schema.org/author")
 
         author_as_ordered_dict_stripped = {}
-        author_as_ordered_dict_stripped = {}
         for key, value in author_as_ordered_dict.items():
             new_key = key.rsplit(":", 1)[-1]
             if new_key in ["orcid", "name", "email", "role", "affiliation"]:
@@ -117,7 +115,7 @@ class Dockstore:
     def add_tags(self, tags: List[str]):
         """
         Add a tag to an existing dockstore yaml entry
-        :param tag:
+        :param tags:
         :return:
         """
         if self.tags is None:

@@ -14,7 +14,6 @@ Takes in --category-name as standard choice
 """
 
 from classes.command import Command
-from ruamel import yaml
 from utils.repo import read_yaml, get_project_yaml_path, get_category_yaml_path
 from utils.logging import get_logger
 from classes.project import Project
@@ -23,6 +22,7 @@ from utils.yaml import dump_yaml
 from utils.errors import CheckArgumentError, ItemNotFoundError, CategoryNotFoundError
 
 logger = get_logger()
+
 
 class AddCategory(Command):
     """
@@ -189,7 +189,10 @@ class AddCategory(Command):
                 if ica_item.name == self.name:
                     # Sync workflow
                     logger.info(f"Updating workflow ID {ica_item.ica_workflow_id} on project {project.project_name}")
-                    ica_item.update_ica_workflow_item(access_token=project.get_project_token(), categories=self.item_obj.categories)
+                    ica_item.update_ica_workflow_item(
+                        access_token=project.get_project_token(),
+                        categories=self.item_obj.categories
+                    )
 
     @staticmethod
     def get_item_obj_from_dict(item):
@@ -201,12 +204,9 @@ class AddCategory(Command):
         """
         raise NotImplementedError
 
-
     def check_args(self):
         """
         Implemented in subclass
         :return:
         """
         raise NotImplementedError
-
-

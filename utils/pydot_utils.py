@@ -18,7 +18,7 @@ from pydot import graph_from_dot_file, Dot
 from utils.cwl_helper_utils import get_fragment_from_cwl_id, split_cwl_id_to_path_and_fragment
 from utils.subprocess_handler import run_subprocess_proc
 from utils.logging import get_logger
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile
 from pathlib import Path
 from classes.cwl import CWL
 from utils.miscell import get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path, \
@@ -126,9 +126,13 @@ def build_cwl_workflow_image_from_dot(dot_file, output_file_path, ratio_value, i
     We calculate the svg size by estimating the inputs / outputs to get the length
     :return:
     """
-    dot_return_code, dot_stdout, dot_stderr = run_subprocess_proc(["dot",
-                                                                   f"-Gratio={ratio_value}",
-                                                                   f"-T{image_format}",
-                                                                   f"-o{output_file_path}",
-                                                                   f"{dot_file}"],
-                                                                  capture_output=True)
+    dot_return_code, dot_stdout, dot_stderr = run_subprocess_proc(
+        [
+            "dot",
+            f"-Gratio={ratio_value}",
+            f"-T{image_format}",
+            f"-o{output_file_path}",
+            f"{dot_file}"
+        ],
+        capture_output=True
+    )

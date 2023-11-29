@@ -6,6 +6,7 @@ Register a ica run instance
 
 from subcommands.initialisers.run_init import RegisterRunInstance
 
+
 class RegisterToolRunInstance(RegisterRunInstance):
     """Usage:
     cwl-ica [options] register-tool-run-instance help
@@ -36,6 +37,8 @@ Example:
         Initialiser
         """
         # Call super class - this calls checks args, gets run objects etc
-        super(RegisterToolRunInstance, self).__init__(command_argv,
-                                                      item_type="tool",
-                                                      item_type_key="tools")
+        super(RegisterToolRunInstance, self).__init__(
+            command_argv,
+            item_type="tool",
+            item_type_key="tools"
+        )

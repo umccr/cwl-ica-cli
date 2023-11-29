@@ -98,7 +98,7 @@ class ICAWorkflowVersion:
                 api_response = api_instance.create_workflow_version(self.ica_workflow_id, body=body)
                 # Create
             except ApiException:
-                logger.error(f"Api exeception error when trying to "
+                logger.error(f"Api exception error when trying to "
                              f"create workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
                 raise ApiException
 
@@ -112,7 +112,7 @@ class ICAWorkflowVersion:
         The only updates we tolerate are for name or acls, all other updates must go through 'sync_workflow_version'
         :param access_token
         :param version_name
-        :param acls
+        :param acl
         :return:
         """
 
@@ -132,7 +132,7 @@ class ICAWorkflowVersion:
                                                                     body=body)
                 # Create
             except ApiException:
-                logger.error(f"Api exeception error when trying to "
+                logger.error(f"Api exception error when trying to "
                              f"create workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
 
         self.workflow_version_obj = api_response
@@ -140,7 +140,14 @@ class ICAWorkflowVersion:
         # Update modification time attribute
         self.modification_time = self.get_workflow_version_modification_time()
 
-    def sync_workflow_version(self, workflow_definition, access_token, project_id, linked_projects=None, force=False) -> bool:
+    def sync_workflow_version(
+            self,
+            workflow_definition,
+            access_token,
+            project_id,
+            linked_projects=None,
+            force=False
+    ) -> bool:
         """
         Use libica to update a workflow version through PATCH
         :return:
@@ -153,9 +160,14 @@ class ICAWorkflowVersion:
         if not self.check_update_okay(force=force):
             if not force:
                 # Update should NOT happen
-                logger.warning(f"Not updating workflow, definition has changed elsewhere: "
-                               f"Showing differences in definitions:\n"
-                               f"{summarise_differences_of_two_dicts(workflow_definition, json.loads(self.workflow_version_obj.definition))}")
+                differences_summary = summarise_differences_of_two_dicts(
+                    workflow_definition, json.loads(self.workflow_version_obj.definition)
+                )
+                logger.warning(
+                    f"Not updating workflow, definition has changed elsewhere: "
+                    f"Showing differences in definitions:\n"
+                    f"{differences_summary}"
+                )
                 return False
             else:
                 logger.warning("Overriding ICA workflow version definition with --force")
@@ -179,7 +191,7 @@ class ICAWorkflowVersion:
                                                                     body=body)
                 # Create
             except ApiException:
-                logger.error(f"Api exeception error when trying to "
+                logger.error(f"Api exception error when trying to "
                              f"create workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
                 raise ApiException
 
@@ -210,7 +222,7 @@ class ICAWorkflowVersion:
                 # Get the details of a workflow version
                 api_response = api_instance.get_workflow_version(self.ica_workflow_id, self.ica_workflow_version_name)
             except ApiException:
-                logger.error(f"Api exeception error when trying to "
+                logger.error(f"Api exception error when trying to "
                              f"get workflow version \"{self.ica_workflow_id}/{self.ica_workflow_version_name}\"")
                 raise ApiException
 
@@ -272,7 +284,8 @@ class ICAWorkflowVersion:
                            f"version \"{self.ica_workflow_version_name}\".  "
                            f"It has been modified elsewhere but the "
                            f"modification was not recorded in project.yaml file. "
-                           f"Another user may be editing this workflow but has not pushed changes or you have not pulled the changes")
+                           f"Another user may be editing this workflow but has not pushed "
+                           f"changes or you have not pulled the changes")
         # Regardless of if force or not, still return false
         return False
 
@@ -300,7 +313,6 @@ class ICAWorkflowVersion:
     def modification_time_to_string(modification_time):
         """
         Get the modification time and convert to string logic
-        :param self:
         :param modification_time:
         :return:
         """
@@ -349,9 +361,11 @@ class ICAWorkflowVersion:
             logger.error("\"path\" attribute not found, cannot create ICAWorkflowVersion")
             raise ICAWorkflowVersionCreationError
 
-        return cls(name=workflow_version_dict.get("name"),
-                   path=workflow_version_dict.get("path"),
-                   ica_workflow_id=workflow_version_dict.get("ica_workflow_id", None),
-                   ica_workflow_version_name=workflow_version_dict.get("ica_workflow_version_name", None),
-                   modification_time=cls.modification_time_to_datetime(workflow_version_dict.get("modification_time", None)),
-                   run_instances=workflow_version_dict.get("run_instances", None))
+        return cls(
+            name=workflow_version_dict.get("name"),
+            path=workflow_version_dict.get("path"),
+            ica_workflow_id=workflow_version_dict.get("ica_workflow_id", None),
+            ica_workflow_version_name=workflow_version_dict.get("ica_workflow_version_name", None),
+            modification_time=cls.modification_time_to_datetime(workflow_version_dict.get("modification_time", None)),
+            run_instances=workflow_version_dict.get("run_instances", None)
+        )

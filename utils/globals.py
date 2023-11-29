@@ -10,7 +10,7 @@ import re
 CWL_ICA_REPO_PATH_ENV_VAR = "CWL_ICA_REPO_PATH"
 ICA_BASE_URL_ENV_VAR = "ICA_BASE_URL"
 EXPIRY_DAYS_WARNING_TRIGGER = 7
-BASE_URL_NETLOC_REGEX = "(\S+).platform.illumina.com"
+BASE_URL_NETLOC_REGEX = r"(\S+).platform.illumina.com"
 PROJECT_ID_REGEX = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 YAML_INDENTATION_LEVEL = 4
 BLOCK_YAML_INDENTATION_LEVEL = 2
@@ -222,5 +222,6 @@ class ICAv2AnalysisStorageSize(Enum):
     SMALL = "Small"
     MEDIUM = "Medium"
     LARGE = "Large"
+
 
 ICAV2_DEFAULT_ANALYSIS_STORAGE_SIZE = ICAv2AnalysisStorageSize.SMALL

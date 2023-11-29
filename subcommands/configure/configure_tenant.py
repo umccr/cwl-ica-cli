@@ -15,7 +15,8 @@ The tenant.yaml file should like this
   tenant_name: "UMCCR-dev"
 
 Although having to configure tenants seems unnecessary, there may be usecases where distinguishing between tenant ids
-becomes very useful when an organisation has multiple tenants or when it comes to adding in a new project from another tenant.
+becomes very useful when an organisation has multiple tenants
+or when it comes to adding in a new project from another tenant.
 """
 
 from ruamel.yaml.comments import CommentedMap as OrderedDict
@@ -43,10 +44,13 @@ Description:
     Configure the tenant.yaml.  Please check "${CWL_ICA_REPO_PATH}/config/tenant.yaml" first to
     see if you need to update this file. Run this command multiple times to populate the file with multiple tenants
 
+    The --set-as-default option can be fixed later through set default tenant command.
+    If no other tenant exists, this parameter is not necessary
+
 Options:
     --tenant-id=<tenant-id>         The tenant id
     --tenant-name=<your name>       The tenant name
-    --set-as-default                Set as the default tenant  (Can be done later through set default tenant, if no other tenant exists, this parameter is not necessary)
+    --set-as-default                Set as the default tenant
 
 Example:
     cwl-ica configure-tenant --tenant-id "abcdef" --tenant-name "UMCCR-dev"
@@ -134,9 +138,7 @@ Example:
             with open(tenant_activate_path, 'w') as tenant_h:
                 tenant_h.write(f"export CWL_ICA_DEFAULT_TENANT=\"{self.tenant_name}\"\n")
 
-
-    @staticmethod
-    def get_args(command_argv):
+    def get_args(self, command_argv):
         """
         :return:
         """

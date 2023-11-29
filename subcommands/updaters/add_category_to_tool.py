@@ -35,10 +35,12 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(AddCategoryToTool, self).__init__(command_argv,
-                                               item_yaml_path=get_tool_yaml_path(),
-                                               item_type_key="tools",
-                                               item_type="tool")
+        super(AddCategoryToTool, self).__init__(
+            command_argv,
+            item_yaml_path=get_tool_yaml_path(),
+            item_type_key="tools",
+            item_type="tool"
+        )
 
     def check_args(self):
         """

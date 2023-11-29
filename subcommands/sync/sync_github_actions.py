@@ -26,7 +26,15 @@ class SyncGitHubActions(Command):
     We iterate through each of the projects, if a given project contains an item it is also synced.
     """
 
-    def __init__(self, command_argv, item_dir=None, item_yaml_path=None, item_type_key=None, item_type=None, item_suffix="cwl"):
+    def __init__(
+            self,
+            command_argv,
+            item_dir=None,
+            item_yaml_path=None,
+            item_type_key=None,
+            item_type=None,
+            item_suffix="cwl"
+    ):
         """
         After checking args
         :param command_argv:
@@ -74,9 +82,11 @@ class SyncGitHubActions(Command):
             # Iterate through ica workflows with items
             for ica_workflow, item_obj in zip(ica_workflows, item_objs):
                 # Get ica workflow versions with item versions
-                ica_workflow_versions, item_versions = self.get_ica_workflow_versions_to_update(ica_workflow, item_obj,
-                                                                                                is_production=project.is_production,
-                                                                                                project_token=project.get_project_token())
+                ica_workflow_versions, item_versions = self.get_ica_workflow_versions_to_update(
+                    ica_workflow, item_obj,
+                    is_production=project.is_production,
+                    project_token=project.get_project_token()
+                )
                 # Iterate through workflow and version
                 for ica_workflow_version, item_version in zip(ica_workflow_versions, item_versions):
                     # Get md5sum
@@ -219,9 +229,11 @@ class SyncGitHubActions(Command):
                         break
                     # For production projects
                     # First we get the sum of the number of matching versions
-                    matching_p_item_versions = [p_item_version
-                                                for p_item_version in project_item.versions
-                                                if p_item_version.name == i_item_version.name]
+                    matching_p_item_versions = [
+                        p_item_version
+                        for p_item_version in project_item.versions
+                        if p_item_version.name == i_item_version.name
+                    ]
                     # Do we have an 'init' of this workflow
                     if len(matching_p_item_versions) == 1 and \
                             p_item_version.ica_workflow_version_name == i_item_version.name + "--__GIT_COMMIT_ID__":
@@ -243,16 +255,17 @@ class SyncGitHubActions(Command):
                             # We need to make a new ICAWorkflowVersion object
                             # Add this ica workflow version object to the list of tuples and
                             # also update the project item
-                            ica_workflow_version = ICAWorkflowVersion(name=i_item_version.name,
-                                                                      path=Path(i_item_version.name) /
-                                                                           Path(item_obj.name + "__" +
-                                                                                i_item_version.name +
-                                                                                "." + self.item_suffix),
-                                                                      ica_workflow_id=project_item.ica_workflow_id,
-                                                                      ica_workflow_version_name=i_item_version.name +
-                                                                                                "--__GIT_COMMIT_ID__",
-                                                                      modification_time=None,
-                                                                      run_instances=None)
+                            ica_workflow_version = ICAWorkflowVersion(
+                                name=i_item_version.name,
+                                path=Path(i_item_version.name) / Path(
+                                    item_obj.name + "__" + i_item_version.name + "." + self.item_suffix
+                                ),
+                                ica_workflow_id=project_item.ica_workflow_id,
+                                ica_workflow_version_name=i_item_version.name + "--__GIT_COMMIT_ID__",
+                                modification_time=None,
+                                run_instances=None
+                            )
+
                             # Append to project items
                             workflow_versions_to_append_to_project_item.append(ica_workflow_version)
 

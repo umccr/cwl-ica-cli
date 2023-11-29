@@ -32,7 +32,16 @@ class Initialiser(Command):
     The call is then defined in this class
     """
 
-    def __init__(self, command_argv, update_projects=True, item_dir=None, item_yaml_path=None, item_type_key=None, item_type=None, item_suffix="cwl"):
+    def __init__(
+            self,
+            command_argv,
+            update_projects=True,
+            item_dir=None,
+            item_yaml_path=None,
+            item_type_key=None,
+            item_type=None,
+            item_suffix="cwl"
+    ):
         # Call super class
         super(Initialiser, self).__init__(command_argv)
 

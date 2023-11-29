@@ -7,14 +7,12 @@ Wrapper around create_typescript_interface_from_schema.py
 from classes.command import Command
 from utils.logging import get_logger
 from typing import Optional
-from docopt import docopt
 from pathlib import Path
 from argparse import ArgumentError
 from string import ascii_letters, digits
-from utils.repo import get_user_yaml_path, read_yaml, get_tools_dir, get_schemas_dir
-from utils.errors import UserNotFoundError, CheckArgumentError, InvalidNameError, InvalidVersionError
+from utils.repo import get_schemas_dir
+from utils.errors import CheckArgumentError, InvalidNameError, InvalidVersionError
 from semantic_version import Version
-import os
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
 from utils.subprocess_handler import run_subprocess_proc
 
@@ -34,10 +32,12 @@ EnvironmentVariables:
     CWL_ICA_REPO_PATH         So we know where to find the other schemas that may be nested in the schema
 
 Example
-    cwl-ica create-typescript-interface-from-cwl-schema --schema-path schemas/fastq-list-row/1.0.0/fastq-list-row__1.0.0.yaml
+    cwl-ica create-typescript-interface-from-cwl-schema \\
+        --schema-path schemas/fastq-list-row/1.0.0/fastq-list-row__1.0.0.yaml
     """
+    suffix = ".ts"
 
-    def __init__(self, command_argv, suffix="ts"):
+    def __init__(self, command_argv):
         # Collect args from doc strings
         super().__init__(command_argv)
 
@@ -85,10 +85,13 @@ Example
 
         # Assign
         self.yaml_file_path = Path(schema_path_arg)
-        self.name, self.version = get_name_version_tuple_from_cwl_file_path(self.yaml_file_path, items_dir=get_schemas_dir())
+        self.name, self.version = get_name_version_tuple_from_cwl_file_path(
+            self.yaml_file_path,
+            items_dir=get_schemas_dir()
+        )
 
     def get_typescript_interface_path(self):
-        return self.yaml_file_path.parent / (self.yaml_file_path.stem + ".ts")
+        return self.yaml_file_path.parent / (self.yaml_file_path.stem + self.suffix)
 
     def get_schema_file_path(self):
         return get_schemas_dir() / self.name / self.version

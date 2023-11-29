@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 """
-All these thigns that could go wrong
+All these things that could go wrong
 """
 
 # Save namespace issue
 from jwt import InvalidTokenError
+
 
 # CWL
 class InvalidAuthorshipError(Exception):
@@ -71,11 +72,13 @@ class ICAWorkflowVersionCreationError(Exception):
     """
     pass
 
+
 class ICAWorkflowRunCreationError(Exception):
     """
     Could not create the run object
     """
     pass
+
 
 class ICAWorkflowRunExistsError(Exception):
     """
@@ -111,6 +114,7 @@ class GetStepNameError(Exception):
     Could not get the name of the step from the ica task launch value
     """
     pass
+
 
 # Items
 class ItemCreationError(Exception):
@@ -160,6 +164,7 @@ class ItemVersionCreationError(Exception):
     Could not create an item version object
     """
     pass
+
 
 # Projects
 class ProjectNotFoundError(Exception):
@@ -255,6 +260,7 @@ class CategoryExistsError(Exception):
     """
     pass
 
+
 class CategoryNotFoundError(Exception):
     """
     The category does not exist in category.yaml
@@ -336,11 +342,13 @@ class InvalidNameError(Exception):
     """
     pass
 
+
 class InvalidVersionError(Exception):
     """
     The version of the tool/workflow was bad
     """
     pass
+
 
 # CLI
 class CheckArgumentError(Exception):
@@ -348,6 +356,7 @@ class CheckArgumentError(Exception):
     Very broad error message category, something failed in the arguments section
     """
     pass
+
 
 # Yaml utils
 class CWLTypeNotFoundError(Exception):
@@ -371,7 +380,7 @@ class InvalidBunchVersionName(Exception):
     pass
 
 
-class ProjectNotFoundError(Exception):
+class ProjectV2NotFoundError(Exception):
     """
     Raise error if the v2 project is not found
     """

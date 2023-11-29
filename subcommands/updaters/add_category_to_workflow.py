@@ -35,10 +35,12 @@ Example:
 
     def __init__(self, command_argv):
         # Call super class
-        super(AddCategoryToWorkflow, self).__init__(command_argv,
-                                               item_yaml_path=get_workflow_yaml_path(),
-                                               item_type_key="workflows",
-                                               item_type="workflow")
+        super(AddCategoryToWorkflow, self).__init__(
+            command_argv,
+            item_yaml_path=get_workflow_yaml_path(),
+            item_type_key="workflows",
+            item_type="workflow"
+        )
 
     def check_args(self):
         """

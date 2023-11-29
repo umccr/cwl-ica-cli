@@ -6,6 +6,7 @@ Register a ica run instance
 
 from subcommands.initialisers.run_init import RegisterRunInstance
 
+
 class RegisterWorkflowRunInstance(RegisterRunInstance):
     """Usage:
     cwl-ica [options] register-workflow-run-instance help
@@ -36,6 +37,8 @@ Example:
         Initialiser
         """
         # Call super class - this calls checks args, gets run objects etc
-        super(RegisterWorkflowRunInstance, self).__init__(command_argv,
-                                                          item_type="workflow",
-                                                          item_type_key="workflows")
+        super(RegisterWorkflowRunInstance, self).__init__(
+            command_argv,
+            item_type="workflow",
+            item_type_key="workflows"
+        )

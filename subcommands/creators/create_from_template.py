@@ -8,7 +8,7 @@ from classes.command import Command
 from utils.logging import get_logger
 from pathlib import Path
 from string import ascii_letters, digits
-from utils.repo import get_user_yaml_path, read_yaml, get_tools_dir
+from utils.repo import get_user_yaml_path, read_yaml
 from utils.errors import UserNotFoundError, CheckArgumentError, InvalidNameError, InvalidVersionError
 from semantic_version import Version
 import os
@@ -175,10 +175,12 @@ class CreateFromTemplate(Command):
         items_path = self.get_top_dir(create_dir=True)
 
         # Get tool name
-        item_path = Path(items_path) / \
-                        Path(self.name) / \
-                        Path(self.version) / \
-                        Path(self.name + "__" + self.version + "." + self.suffix)
+        item_path = (
+                Path(items_path) /
+                Path(self.name) /
+                Path(self.version) /
+                Path(self.name + "__" + self.version + "." + self.suffix)
+        )
 
         # Create tool name path
         if not item_path.parent.is_dir():

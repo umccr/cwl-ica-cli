@@ -26,6 +26,7 @@ import json
 
 logger = get_logger()
 
+
 class GetWorkflowStepIDs(Command):
     """Usage:
     cwl-ica [options] get-workflow-step-ids help
@@ -73,7 +74,7 @@ Example:
         """
 
         logger.info("Getting workflow steps")
-        self.step_ids = self.get_steps_of_cwl_workflow(self.cwl_file_path, self.cwl_obj)
+        self.step_ids = self.get_steps_of_cwl_workflow(self.cwl_obj)
 
         logger.info("Printing the step ids")
         print(json.dumps(self.step_ids, indent=4))
@@ -122,7 +123,7 @@ Example:
         # Pull out the cwl object
         self.cwl_obj: Workflow = self.cwl_item.cwl_obj.cwl_obj
 
-    def get_steps_of_cwl_workflow(self, cwl_file_path, cwl_obj, path_prefix=Path()):
+    def get_steps_of_cwl_workflow(self, cwl_obj, path_prefix=Path()):
         """
         Get the workflow object
         :return:
@@ -146,7 +147,6 @@ Example:
                 # Extend steps
                 step_ids.extend(
                     self.get_steps_of_cwl_workflow(
-                        step_run_path,
                         step_cwl_obj,
                         path_prefix=Path(path_prefix) / Path(step.run).name
                     )

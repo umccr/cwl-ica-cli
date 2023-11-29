@@ -8,7 +8,7 @@ from utils.icav2_gh_helpers import add_tenant_to_config_yaml, check_tenant_in_co
 from utils.logging import get_logger
 from argparse import ArgumentError
 from utils.errors import CheckArgumentError
-from typing import Optional, Dict, List
+from typing import Optional
 
 
 logger = get_logger()
@@ -66,5 +66,3 @@ Example:
     def __call__(self):
         logger.info("Add tenant to icav2.yaml")
         add_tenant_to_config_yaml(self.tenant_name)
-
-

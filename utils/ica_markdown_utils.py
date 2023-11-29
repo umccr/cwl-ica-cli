@@ -102,7 +102,11 @@ def get_ica_section(cwl_file_path: Path, item_type: str, projects: List[Project]
 
         for run_obj in run_objs:
             # Create a run section header
-            md_file_obj.new_header(level=5, title=f"Run {run_obj.ica_workflow_run_instance_id}", add_table_of_contents="n")
+            md_file_obj.new_header(
+                level=5,
+                title=f"Run {run_obj.ica_workflow_run_instance_id}",
+                add_table_of_contents="n"
+            )
 
             # Add the run instance name
             md_file_obj.new_paragraph("\n")
@@ -124,8 +128,15 @@ cwl-ica copy-{}-submission-template --ica-workflow-run-instance-id {}\n
 # vim {}.template.json \n
 # Run the launch script
 bash {}.launch.sh
-                                    """.format(item_type, run_obj.ica_workflow_run_instance_id, run_obj.ica_workflow_run_instance_id, run_obj.ica_workflow_run_instance_id),
-                                    language="bash")
+                """.format(
+                    item_type,
+                    run_obj.ica_workflow_run_instance_id,
+                    run_obj.ica_workflow_run_instance_id,
+                    run_obj.ica_workflow_run_instance_id
+                ),
+                language="bash"
+            )
+
             md_file_obj.new_line("\n")
 
             md_file_obj.new_header(level=6, title=f"Run Inputs", add_table_of_contents="n")
@@ -155,7 +166,8 @@ bash {}.launch.sh
             build_ica_run_graph(run_obj, run_graph_path)
 
             # Add the run instance graph
-            md_file_obj.new_line("{}".format(
+            md_file_obj.new_line(
+                "{}".format(
                     md_file_obj.new_inline_link(
                         link=run_graph_raw_path,
                         text=md_file_obj.new_inline_image(
@@ -173,7 +185,12 @@ bash {}.launch.sh
     return md_file_obj
 
 
-def get_run_graph_path(cwl_file_path: Path, ica_workflow: ICAWorkflow, ica_workflow_version: ICAWorkflowVersion, ica_workflow_run: ICAWorkflowRun) -> Path:
+def get_run_graph_path(
+        cwl_file_path: Path,
+        ica_workflow: ICAWorkflow,
+        ica_workflow_version: ICAWorkflowVersion,
+        ica_workflow_run: ICAWorkflowRun
+) -> Path:
     """
     Get the run graph path from the ica workflow version name and version name
     :param cwl_file_path:
@@ -183,11 +200,13 @@ def get_run_graph_path(cwl_file_path: Path, ica_workflow: ICAWorkflow, ica_workf
     :return:
     """
 
-    return get_gh_run_graphs_dir() / \
-           get_items_dir_from_cwl_file_path(cwl_file_path).name / \
-           ica_workflow.name / \
-           ica_workflow_version.name / \
-           (ica_workflow_run.ica_workflow_run_name + "__" + ica_workflow_run.ica_workflow_run_instance_id + ".svg")
+    return (
+        get_gh_run_graphs_dir() /
+        get_items_dir_from_cwl_file_path(cwl_file_path).name /
+        ica_workflow.name /
+        ica_workflow_version.name /
+        (ica_workflow_run.ica_workflow_run_name + "__" + ica_workflow_run.ica_workflow_run_instance_id + ".svg")
+    )
 
 
 def get_run_instance_obj_from_id(run_instance_id: str) -> ICAWorkflowRun:
@@ -197,8 +216,10 @@ def get_run_instance_obj_from_id(run_instance_id: str) -> ICAWorkflowRun:
     :return: run obj: ICAWorkflowRun
     """
     # Get run objects
-    run_objs: List[ICAWorkflowRun] = [ICAWorkflowRun.from_dict(run_dict)
-                                      for run_dict in read_yaml(get_run_yaml_path())["runs"]]
+    run_objs: List[ICAWorkflowRun] = [
+        ICAWorkflowRun.from_dict(run_dict)
+        for run_dict in read_yaml(get_run_yaml_path())["runs"]
+    ]
 
     for run_obj in run_objs:
         if run_obj.ica_workflow_run_instance_id == run_instance_id:
@@ -218,10 +239,14 @@ def build_ica_run_graph(workflow_run_obj: ICAWorkflowRun, graph_path: Path):
     memory_capacity_dfs = []
 
     # Task period range
-    tasks_period_range = pd.timedelta_range(start=0,
-                                            end=datetime.fromtimestamp(workflow_run_obj.workflow_end_time) -
-                                                datetime.fromtimestamp(workflow_run_obj.workflow_start_time),
-                                            freq="T")
+    tasks_period_range = pd.timedelta_range(
+        start=0,
+        end=(
+            datetime.fromtimestamp(workflow_run_obj.workflow_end_time) -
+            datetime.fromtimestamp(workflow_run_obj.workflow_start_time)
+        ),
+        freq="T"
+    )
 
     for task_run_obj in workflow_run_obj.ica_task_objs:
         # Get task name
@@ -274,8 +299,12 @@ def build_ica_run_graph(workflow_run_obj: ICAWorkflowRun, graph_path: Path):
     # Now do a length-wise concat for cpu dfs and mem dfs we will then pivot with a sum in each collision
     cpu_df: pd.DataFrame = pivot_short_on_time_index(pd.concat(cpu_dfs, axis="rows"), metric="cpu")
     memory_df: pd.DataFrame = pivot_short_on_time_index(pd.concat(memory_dfs, axis="rows"), metric="memory")
-    cpu_capacity_df: pd.DataFrame = pivot_short_on_time_index(pd.concat(cpu_capacity_dfs, axis="rows"), metric="cpu_capacity")
-    memory_capacity_df: pd.DataFrame = pivot_short_on_time_index(pd.concat(memory_capacity_dfs, axis="rows"), metric="memory_capacity")
+    cpu_capacity_df: pd.DataFrame = pivot_short_on_time_index(
+        pd.concat(cpu_capacity_dfs, axis="rows"), metric="cpu_capacity"
+    )
+    memory_capacity_df: pd.DataFrame = pivot_short_on_time_index(
+        pd.concat(memory_capacity_dfs, axis="rows"), metric="memory_capacity"
+    )
 
     # Get the labels for the legent
     stack_labels = cpu_df.columns.tolist()
@@ -362,9 +391,6 @@ def build_ica_run_graph(workflow_run_obj: ICAWorkflowRun, graph_path: Path):
     ax[0].set_ylabel("CPUs")
     ax[1].set_ylabel("Memory (GB)")
 
-    # Squish everything up nicely
-    #fig.tight_layout()
-
     # Give the top title a bit of room
     fig.subplots_adjust(top=0.9)
 
@@ -382,8 +408,12 @@ def convert_seconds_to_hh_mm_formatter(td_float: float, pos):
     seconds_per_minute = 60
     td = timedelta(seconds=td_float)
     return "%s:%s" % (
-        str(( td.days * hours_per_day ) + ( td.seconds // seconds_per_hour )).zfill(2),
-        str(( td.seconds // seconds_per_minute ) % minutes_per_hour).zfill(2)
+        str(
+            (td.days * hours_per_day) + (td.seconds // seconds_per_hour)
+        ).zfill(2),
+        str(
+            (td.seconds // seconds_per_minute) % minutes_per_hour
+        ).zfill(2)
     )
 
 

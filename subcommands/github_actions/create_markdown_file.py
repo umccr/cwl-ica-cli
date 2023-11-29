@@ -88,8 +88,8 @@ class CreateMarkdownFile(Command):
         self.item_type = item_type  # type: Optional[str] # Tool or workflow
         self.item_type_key = item_type_key  # type: Optional[str] # tools or workflow
         self.items_dir = items_dir  # type: Optional[Path]
-        self.cwl_file_path = None # type: Optional[Path]
-        self.markdown_path = None # type: Optional[Path]
+        self.cwl_file_path = None  # type: Optional[Path]
+        self.markdown_path = None  # type: Optional[Path]
         self.item_name = None  # type: Optional[str]
         self.item_version = None  # type: Optional[str]
         self.item_obj = None  # type: Optional[Item]
@@ -164,7 +164,9 @@ class CreateMarkdownFile(Command):
         Given the item path, set the item name and item version
         :return:
         """
-        self.item_name, self.item_version = get_name_version_tuple_from_cwl_file_path(self.cwl_file_path, self.items_dir)
+        self.item_name, self.item_version = get_name_version_tuple_from_cwl_file_path(
+            self.cwl_file_path, self.items_dir
+        )
 
     def check_args(self):
         """
@@ -262,9 +264,11 @@ class CreateMarkdownFile(Command):
                 # We're good! Move on to next iterable combo
                 continue
             # We did not find them all!
-            logger.info(f"Did not find project/workflow/workflow-version combo "
-                        f"{project.project_name}/{workflow.ica_workflow_id}/{workflow_version.ica_workflow_version_name} "
-                        f"markdown file {self.markdown_path} will be re-created.")
+            logger.info(
+                f"Did not find project/workflow/workflow-version combo "
+                f"{project.project_name}/{workflow.ica_workflow_id}/{workflow_version.ica_workflow_version_name} "
+                f"markdown file {self.markdown_path} will be re-created."
+            )
             return False
 
         # We've found all of the projects, workflows and workflow versions in the markdown.
@@ -301,7 +305,9 @@ class CreateMarkdownFile(Command):
                             break
                     else:
                         # We didn't find the header for this run object
-                        logger.info(f"Could not find run {run_obj.ica_workflow_run_instance_id} in {self.markdown_path}")
+                        logger.info(
+                            f"Could not find run {run_obj.ica_workflow_run_instance_id} in {self.markdown_path}"
+                        )
                         return False
 
         # We've found all of the run objects
@@ -334,8 +340,7 @@ class CreateMarkdownFile(Command):
         Get the header section
         :return:
         """
-
-        ## TOC ##
+        # TOC
         md_file_obj = self.get_toc(md_file_obj)
 
         # Create overview section
@@ -437,7 +442,8 @@ class CreateMarkdownFile(Command):
         # TODO
         pass
 
-    def get_type_from_cwl_io_object(self, sub_cwl_object):
+    @staticmethod
+    def get_type_from_cwl_io_object(sub_cwl_object):
         """
         Get the type from the input object
         :param sub_cwl_object:
@@ -462,10 +468,17 @@ class CreateMarkdownFile(Command):
 
         md_file_obj.new_header(level=2, title=f"Related Links", add_table_of_contents='n')
 
-        md_file_obj.new_line("- {}".format(md_file_obj.new_inline_link(link=relpath(self.cwl_file_path.absolute(),
-                                                                                    self.markdown_path.absolute().parent),
-                                                                       text='CWL File Path')),
-                             wrap_width=0)
+        md_file_obj.new_line(
+            "- {}".format(
+                md_file_obj.new_inline_link(
+                    link=relpath(
+                        self.cwl_file_path.absolute(),
+                        self.markdown_path.absolute().parent
+                    ),
+                    text='CWL File Path')
+                ),
+            wrap_width=0
+        )
         md_file_obj.new_line("\n")
 
         # Get the uses section
@@ -548,7 +561,9 @@ class CreateMarkdownFile(Command):
                         if re.search(self.cwl_file_path.name, line):
                             break
                     else:
-                        logger.debug(f"Couldn't find {self.cwl_file_path.name} in a quick text search of {version.cwl_file_path}")
+                        logger.debug(
+                            f"Couldn't find {self.cwl_file_path.name} in a quick text search of {version.cwl_file_path}"
+                        )
                         # Didn't find a match for this filename, skipping
                         continue
 
@@ -584,7 +599,8 @@ class CreateMarkdownFile(Command):
 
     def get_ica_workflow_versions(self) -> Tuple[List[Project], List[ICAWorkflow], List[ICAWorkflowVersion]]:
         """
-        Get the workflow versions from the cwl file path -> Reads projects, gets ica workflow versions than exist for this path
+        Get the workflow versions from the cwl file path -> Reads projects,
+        gets ica workflow versions than exist for this path
         :return:
         """
         # Get list of projects
@@ -615,7 +631,3 @@ class CreateMarkdownFile(Command):
                         break
 
         return included_projects, included_workflows, included_workflow_versions
-
-
-
-

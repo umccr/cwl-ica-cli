@@ -123,7 +123,6 @@ Example
         # Get the cwl name
         self.cwl_name = cwl_id_to_path(self.cwl_obj.id)
 
-
     def import_item_obj(self):
         """
         Import the item object

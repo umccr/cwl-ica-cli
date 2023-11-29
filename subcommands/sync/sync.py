@@ -13,7 +13,7 @@ from classes.project import Project
 from classes.project_production import ProductionProject
 from utils.repo import get_tenant_yaml_path, read_yaml, get_project_yaml_path
 import os
-from ruamel import yaml
+from ruamel.yaml import YAML
 from utils.logging import get_logger
 from utils.errors import ItemNotFoundError, ItemVersionNotFoundError, CheckArgumentError
 from utils.yaml import dump_yaml
@@ -29,10 +29,20 @@ class Sync(Command):
     We check which projects hold this version, if --all is used but some projects do not have this
     workflow version, then a warning is thrown. Projects that have not had the x-init do not apply.
     Any project that is a production project is also skipped.
-    We then get the item and item version objects and then re-write out the project yaml based on the new workflow version and id
+    We then get the item and item version objects and then re-write out the project yaml
+    based on the new workflow version and id
     """
 
-    def __init__(self, command_argv, update_projects=True, item_dir=None, item_yaml_path=None, item_type_key=None, item_type=None, item_suffix="cwl"):
+    def __init__(
+            self,
+            command_argv,
+            update_projects=True,
+            item_dir=None,
+            item_yaml_path=None,
+            item_type_key=None,
+            item_type=None,
+            item_suffix="cwl"
+    ):
         """
         After checking args
         :param command_argv:
@@ -119,14 +129,19 @@ class Sync(Command):
             logger.info("Updating project definitions on ICA")
             for project in self.projects:
                 logger.info(f"Updating project \"{project.project_name}\"")
-                # Get the access token
-                access_token = project.get_project_token()
+                # Test getting the access token
+                _ = project.get_project_token()
                 # Get workflow
                 ica_workflow = self.get_ica_workflow(project)
                 # Get workflow version
                 ica_workflow_version = self.get_ica_workflow_version(ica_workflow)
                 # Now sync the item version with the project
-                if project.sync_item_version_with_project(ica_workflow_version, self.md5sum, self.cwl_packed_obj, force=self.force):
+                if project.sync_item_version_with_project(
+                        ica_workflow_version,
+                        self.md5sum,
+                        self.cwl_packed_obj,
+                        force=self.force
+                ):
                     at_least_one_sync_complete = True
 
             # Check justification to update project yaml

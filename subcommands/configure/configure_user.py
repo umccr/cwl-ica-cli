@@ -18,7 +18,6 @@ The variables are unset at ${CONDA_PREFIX}/etc/conda/activate.d/cwl-ica.sh
 from classes.command import Command
 from utils.conda import get_conda_activate_dir
 from utils.logging import get_logger
-from docopt import docopt
 from pathlib import Path
 import re
 import requests
@@ -49,15 +48,20 @@ Description:
     Set the username, and user's email and user orcid identifier inside <CWL_ICA_REPO_PATH>/config/user.yaml
     The username, user email and identifier are present in the label of each tool and workflow.
 
+    The set-as-default option can be done later through cwl-ica set-default-user, if no other user exists,
+    this parameter is not necessary.
+
 Options:
     --username=<your name>          Required, your name
     --email=<your email>            Required, your email
     --identifier=<your orcid id>    Optional, your https://orcid.org/ url
-    --set-as-default                Optional, set this user as your default user (Can be done later through cwl-ica set-default-user, if no other user exists, this parameter is not necessary)
+    --set-as-default                Optional, set this user as your default user
+
 
 Example:
     cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org"
-    cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org" --identifier "https://orcid.org/0000-0001-9754-647X"
+    cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org" \\
+      --identifier "https://orcid.org/0000-0001-9754-647X"
     cwl-ica configure-user --username "New User" --email "New.User@umccr.org" --set-as-default
     """
 

@@ -7,7 +7,7 @@ Subclass of initialiser
 from subcommands.appenders.append_typescript_dir import AppendTypeScriptDir
 from utils.logging import get_logger
 from pathlib import Path
-from utils.repo import get_workflow_yaml_path, get_workflows_dir
+from utils.repo import get_workflows_dir
 from utils.errors import CheckArgumentError
 
 logger = get_logger()
@@ -23,19 +23,22 @@ Description:
     Create a directory adjacent to the workflow cwl path that handles js in typescript.
 
 Options:
-    --workflow-path=<the workflow path>                         Required, the path to the cwl workflow
-    --xtrace                                                    Optional, add xtrace option to initialise_typescript_expression_directory.sh
+    --workflow-path=<the workflow path>    Required, the path to the cwl workflow
+    --xtrace                               Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
-    cwl-ica append-typescript-directory-to-cwl-workflow --workflow-path "workflows/bclconvert/4.0.3/bclconvert__4.0.3.cwl"
+    cwl-ica append-typescript-directory-to-cwl-workflow \\
+      --workflow-path "workflows/bclconvert/4.0.3/bclconvert__4.0.3.cwl"
     """
 
     def __init__(self, command_argv):
         # Call super class
-        super(AppendTypeScriptWorkflowDir, self).__init__(command_argv,
-                                                          suffix="cwl",
-                                                          item_dir=get_workflows_dir(),
-                                                          item_type="type")
+        super(AppendTypeScriptWorkflowDir, self).__init__(
+            command_argv,
+            suffix="cwl",
+            item_dir=get_workflows_dir(),
+            item_type="type"
+        )
 
     def __call__(self):
         # Call the super class' call function

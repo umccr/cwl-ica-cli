@@ -85,6 +85,3 @@ Example
             raise FileNotFoundError
 
         self.xtrace = self.args.get("--xtrace", False)
-
-
-
