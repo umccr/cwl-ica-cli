@@ -251,7 +251,7 @@ Example:
         )
         proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
             [
-                "cwltool", "--validate", str(output_tempdir / "workflow.cwl")
+                "cwltool", "--no-doc-cache", "--validate", str(output_tempdir / "workflow.cwl")
             ],
             cwd=str(output_tempdir),
             capture_output=True

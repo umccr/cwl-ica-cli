@@ -192,7 +192,7 @@ class CWL:
             [
                  "conda", "run",
                  "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
-                 "cwltool", "--pack", self.cwl_file_path
+                 "cwltool", "--no-doc-cache", "--pack", self.cwl_file_path
 
             ],
             capture_output=True)
@@ -207,7 +207,7 @@ class CWL:
     @staticmethod
     def run_cwltool_validate(cwl_file_path: Path):
         """
-        Run subprocess command ["cwltool", "--validate", "/path/to/cwl"]
+        Run subprocess command ["cwltool", "--no-doc-cache", "--validate", "/path/to/cwl"]
         :return:
         """
 
@@ -219,7 +219,7 @@ class CWL:
                 [
                     "conda", "run",
                     "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
-                    "cwltool", "--validate", cwl_file_path
+                    "cwltool", "--no-doc-cache", "--validate", cwl_file_path
 
                 ],
                 capture_output=True)
@@ -234,7 +234,7 @@ class CWL:
             [
                 "conda", "run",
                 "--name", f"{LATEST_CWLTOOL_CONDA_ENV_NAME}",
-                "cwltool", "--validate", cwl_file_path
+                "cwltool", "--no-doc-cache", "--validate", cwl_file_path
 
             ],
             capture_output=True)
