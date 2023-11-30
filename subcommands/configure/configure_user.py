@@ -60,8 +60,7 @@ Options:
 
 Example:
     cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org"
-    cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org" \\
-      --identifier "https://orcid.org/0000-0001-9754-647X"
+    cwl-ica configure-user --username "Alexis Lucattini" --email "Alexis.Lucattini@umccr.org" --identifier "https://orcid.org/0000-0001-9754-647X"
     cwl-ica configure-user --username "New User" --email "New.User@umccr.org" --set-as-default
     """
 
