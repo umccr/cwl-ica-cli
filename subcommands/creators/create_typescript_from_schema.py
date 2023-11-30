@@ -32,8 +32,7 @@ EnvironmentVariables:
     CWL_ICA_REPO_PATH         So we know where to find the other schemas that may be nested in the schema
 
 Example
-    cwl-ica create-typescript-interface-from-cwl-schema \\
-        --schema-path schemas/fastq-list-row/1.0.0/fastq-list-row__1.0.0.yaml
+    cwl-ica create-typescript-interface-from-cwl-schema --schema-path schemas/fastq-list-row/1.0.0/fastq-list-row__1.0.0.yaml
     """
     suffix = ".ts"
 

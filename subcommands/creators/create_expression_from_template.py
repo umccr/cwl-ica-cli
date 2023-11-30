@@ -55,10 +55,8 @@ EnvironmentVariables:
     CWL_ICA_DEFAULT_USER                           Saves having to use --username
 
 Example
-    cwl-ica create-expression-from-template --expression-name samexpressions-fastq --expression-version 1.10.0 \\
-      --username "Alexis Lucattini"
-    cwl-ica create-expression-from-template --expression-name create-fastq-list-csv --expression-version 0.1.1 \\
-      --username "Alexis Lucattini"
+    cwl-ica create-expression-from-template --expression-name samexpressions-fastq --expression-version 1.10.0 --username "Alexis Lucattini"
+    cwl-ica create-expression-from-template --expression-name create-fastq-list-csv --expression-version 0.1.1 --username "Alexis Lucattini"
     """
 
     def __init__(self, command_argv):

@@ -31,8 +31,7 @@ Options:
 
 Example:
     cwl-ica category-init --category-name "dragen" --category-description "Tool / Workflow uses dragen"
-    cwl-ica category-init --category-name "Alignment" \\
-      --category-description "Tool / Workflow aligns read-level data as bams"
+    cwl-ica category-init --category-name "Alignment" --category-description "Tool / Workflow aligns read-level data as bams"
     """
 
     def __init__(self, command_argv):

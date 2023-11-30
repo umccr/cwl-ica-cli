@@ -27,8 +27,7 @@ Options:
     --xtrace                               Optional, add xtrace option to initialise_typescript_expression_directory.sh
 
 Example:
-    cwl-ica append-typescript-directory-to-cwl-workflow \\
-      --workflow-path "workflows/bclconvert/4.0.3/bclconvert__4.0.3.cwl"
+    cwl-ica append-typescript-directory-to-cwl-workflow --workflow-path "workflows/bclconvert/4.0.3/bclconvert__4.0.3.cwl"
     """
 
     def __init__(self, command_argv):

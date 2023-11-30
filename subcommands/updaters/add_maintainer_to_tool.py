@@ -30,9 +30,7 @@ Options:
     --username=<the username>                 Required, the name of the maintainer
 
 Example:
-    cwl-ica add-maintainer-to-tool \\
-      --tool-path "tools/bwa-index/1.10.1/bwa-index__1.10.1.cwl" \\
-      --username "Alexis Lucattini"
+    cwl-ica add-maintainer-to-tool --tool-path "tools/bwa-index/1.10.1/bwa-index__1.10.1.cwl" --username "Alexis Lucattini"
     """
 
     def __init__(self, command_argv):

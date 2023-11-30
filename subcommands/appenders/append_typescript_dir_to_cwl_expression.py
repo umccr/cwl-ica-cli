@@ -30,8 +30,7 @@ Options:
     --xtrace                                  Optional, add xtrace option to initialise_typescript_expression_directory
 
 Example:
-    cwl-ica append-typescript-directory-to-cwl-expression-tool \\
-      --expression-path "expressions/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
+    cwl-ica append-typescript-directory-to-cwl-expression-tool --expression-path "expressions/flatten_array_file/1.0.0/flatten_array_file__1.0.0.cwl"
     """
 
     def __init__(self, command_argv):

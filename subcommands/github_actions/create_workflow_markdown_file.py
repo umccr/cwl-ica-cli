@@ -49,8 +49,7 @@ EnvironmentVariables:
     GITHUB_REPOSITORY                          This GitHub repository, probably 'umccr/cwl-ica'
 
 Example
-    cwl-ica github-actions-create-workflow-markdown \\
-      --workflow-path workflows/dragen-germline/3.7.5/dragen-germline__3.7.5.cwl"
+    cwl-ica github-actions-create-workflow-markdown --workflow-path workflows/dragen-germline/3.7.5/dragen-germline__3.7.5.cwl"
     """
 
     def __init__(self, command_argv):
