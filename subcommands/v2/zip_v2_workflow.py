@@ -16,34 +16,22 @@ This involves:
 4. Create a html document (from cwl auto-generated markdown)  :construction: to add to v2 upload
 """
 import os
-import shutil
-from fileinput import FileInput
-from zipfile import ZipFile, ZIP_DEFLATED
 
 from classes.command import Command
 from utils.logging import get_logger
 from pathlib import Path
 from argparse import ArgumentError
-from utils.globals import \
-    ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS, \
-    ICAV2_CONTAINER_MAPPINGS, \
-    ICAV2_DRAGEN_TEMPSPACE_MAPPINGS, \
-    PARAMS_XML_FILE_NAME, \
-    BLANK_PARAMS_XML_V2_FILE_CONTENTS
 from utils.errors import CheckArgumentError
 from typing import Optional, List, Dict
 from classes.cwl_workflow import CWLWorkflow
-from utils.repo import get_workflows_dir, get_cwl_ica_repo_path
+from utils.repo import get_workflows_dir
 from utils.miscell import get_name_version_tuple_from_cwl_file_path
-from utils.cwl_workflow_helper_utils import get_step_mappings, collect_objects_recursively, check_workflow_step_lengths
+from utils.cwl_workflow_helper_utils import get_step_mappings, check_workflow_step_lengths, \
+    zip_workflow
 from utils.cwl_schema_helper_utils import get_schemas
 from utils.cwl_schema_helper_utils import get_schema_mappings
-from utils.subprocess_handler import run_subprocess_proc
 
 logger = get_logger()
-
-# FIXME - harmonize with build-workflow-release-assets commands and undeprecate
-
 
 class ZipV2Workflow(Command):
     """Usage:
@@ -65,12 +53,6 @@ Example:
     """
 
     def __init__(self, command_argv):
-        logger.warning(
-            "The cwl-ica icav2-zip-workflow subcommand has been deprecated, "
-            "Please tag the workflow and push to github to build the workflow as a release asset. "
-            "You can then use the icav2 projectpipelines create-cwl-workflow* subcommands "
-            "from the https://github.com/umccr/icav2-cli-plugins repository to import the pipeline."
-        )
         # Collect args from doc strings
         super(ZipV2Workflow, self).__init__(command_argv)
 
@@ -165,117 +147,8 @@ Example:
         return get_schema_mappings(self.get_schemas(), self.cwl_file_path)
 
     def zip_workflow(self):
-        # Collect all the workflow objects
-        all_workflow_objects = collect_objects_recursively(self.cwl_workflow_obj)
-
-        # Create a temporary directory
-        output_tempdir = self.output_dir_path / self.output_zip_file.stem
-
-        # And we want to make sure it doesn't already exist
-        output_tempdir.mkdir(exist_ok=False)
-        logger.info(f"Transferring files over into {output_tempdir}")
-
-        # Copy over the workflow objects
-        for cwl_item, cwl_file_list in all_workflow_objects.items():
-
-            # Get the cwl file list
-            for cwl_file in cwl_file_list:
-                # Get the new path
-                new_path = output_tempdir.joinpath(cwl_file.relative_to(get_cwl_ica_repo_path()))
-
-                # Create a directory for this file
-                new_path.parent.mkdir(parents=True, exist_ok=False)
-
-                # And copy over contents of the file
-                shutil.copy2(cwl_file, new_path)
-
-        # Copy over the main workflow
-        new_workflow_path = output_tempdir / "workflow.cwl"
-        shutil.copy2(self.cwl_file_path, new_workflow_path)
-
-        # Edit the main workflow
-        with FileInput(new_workflow_path, inplace=True) as _input:
-            for line in _input:
-                line_strip = line.rstrip()
-                for step_mapping in self.get_step_mappings():
-                    if step_mapping.get("old") in line_strip:
-                        line_strip = line_strip.replace(step_mapping.get("old"), step_mapping.get("new"))
-                for schema_mapping in self.get_schema_mappings():
-                    if schema_mapping.get("old") in line_strip:
-                        line_strip = line_strip.replace(schema_mapping.get("old"), schema_mapping.get("new"))
-                print(line_strip)
-
-        # Iterate through all paths and make sure we convert resource requirements?
-        for path_item in output_tempdir.rglob("*"):
-            # Don't need to deal with directories
-            if not path_item.is_file():
-                continue
-
-            with FileInput(path_item, inplace=True) as _input:
-                for line in _input:
-                    # Strip line then reprint it
-                    # Which also conveniently converts any windows line endings into standard unix line endings
-                    line_strip = line.rstrip()
-
-                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/108
-                    for resource_mapping in ICAV2_COMPUTE_RESOURCE_TYPE_MAPPINGS:
-                        if resource_mapping.get("v1") in line_strip:
-                            line_strip = line_strip.replace(
-                                resource_mapping.get("v1"),
-                                resource_mapping.get("v2")
-                            )
-
-                    # Deal with https://github.com/umccr-illumina/dragen/issues/48
-                    for container_mapping in ICAV2_CONTAINER_MAPPINGS:
-                        if container_mapping.get("v1") in line_strip:
-                            line_strip = line_strip.replace(
-                                container_mapping.get("v1"),
-                                container_mapping.get("v2")
-                            )
-
-                    # Deal with https://github.com/umccr-illumina/ica_v2/issues/21
-                    # / also related https://github.com/umccr-illumina/ica_v2/issues/47
-                    if path_item.suffix == ".cwljs":
-                        if ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v1") in line_strip:
-                            line_strip = line_strip.replace(
-                                ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v1"),
-                                ICAV2_DRAGEN_TEMPSPACE_MAPPINGS.get("v2")
-                            )
-
-                    # Print line back to file
-                    print(line_strip)
-
-        # Revalidate directory with cwltool --validate
-        logger.info(
-            "Now all files have been transferred, confirming successful 'zip' with cwltool --validate"
-        )
-        proc_returncode, proc_stdout, proc_stderr = run_subprocess_proc(
-            [
-                "cwltool", "--no-doc-cache", "--validate", str(output_tempdir / "workflow.cwl")
-            ],
-            cwd=str(output_tempdir),
-            capture_output=True
-        )
-
-        if not proc_returncode == 0:
-            logger.error(f"cwltool --validate resulted in an error after 'zipping' of workflow "
-                         f"please run cwltool --debug --validate {str(output_tempdir / 'workflow.cwl')} to investigate further"
-                         f"leaving {str(output_tempdir)} as is")
-            raise ChildProcessError
-
-        # Place the blank params xml in the output temp directory
-        with open(output_tempdir / PARAMS_XML_FILE_NAME, "w") as params_h:
-            for line in BLANK_PARAMS_XML_V2_FILE_CONTENTS:
-                params_h.write(line + "\n")
-
-        # Check zip file doesn't exist
-        if self.output_zip_file.is_file():
-            os.remove(self.output_zip_file)
-
-        # Create the zipped directory
-        with ZipFile(self.output_zip_file, "w", ZIP_DEFLATED) as zip_file:
-            for entry in output_tempdir.rglob("*"):
-                zip_file.write(entry, Path(output_tempdir.name) / Path(entry.relative_to(output_tempdir)))
-
-        # Remove the directory
-        shutil.rmtree(output_tempdir)
+        """
+        Create a zipped workflow object from the cwl object
+        :return:
+        """
+        zip_workflow(self.cwl_workflow_obj, self.output_zip_file)
