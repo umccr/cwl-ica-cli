@@ -41,7 +41,7 @@ class CWLSchema(CWL):
         with open(self.cwl_file_path, "r") as cwl_h:
             yaml_obj = yaml.load(cwl_h)
 
-        self.cwl_obj = RecordSchema(yaml_obj).type
+        self.cwl_obj = RecordSchema(yaml_obj).type_
 
     def validate_object(self):
         """
@@ -108,7 +108,7 @@ class CWLSchema(CWL):
         """
 
         self.cwl_obj = RecordSchema(
-            type="record",
+            type_="record",
             fields=[]
         )
 
@@ -126,7 +126,7 @@ class CWLSchema(CWL):
 
         # Create ordered dictionary ready to be written
         write_obj = OrderedDict({
-            "type": self.cwl_obj.type,
+            "type": self.cwl_obj.type_,
             "name": self.name,
             "fields": self.cwl_obj.fields,
         })

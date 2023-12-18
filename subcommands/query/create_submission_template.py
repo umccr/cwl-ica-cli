@@ -405,7 +405,7 @@ class CreateSubmissionTemplate(Command):
                 "doc": input_item.doc,
                 "optional": False
             }
-            input_item_types = input_item.type
+            input_item_types = input_item.type_
 
             # Check if we need to go through a second time
             was_in_optional_list = False
