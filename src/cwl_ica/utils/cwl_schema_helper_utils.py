@@ -45,7 +45,7 @@ class CWLSchemaObj:
         self.cwl_file_path: Path = file_path
 
         # Confirm type is record
-        if not self.cwl_obj.type.get("type") == "record":
+        if not self.cwl_obj.type_.get("type") == "record":
             logger.error("Expected record type")
 
     def get_input_from_str_type(self, workflow_input: Dict) -> Union[Dict, str, List]:
@@ -160,7 +160,7 @@ class CWLSchemaObj:
         :return:
         """
         workflow_inputs = {}
-        for field_key, field_dict in self.cwl_obj.type.get("fields").items():
+        for field_key, field_dict in self.cwl_obj.type_.get("fields").items():
             if isinstance(field_dict.get("type"), Dict):
                 workflow_inputs.update(
                     {

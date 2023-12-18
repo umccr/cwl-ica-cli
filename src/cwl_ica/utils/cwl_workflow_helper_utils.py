@@ -249,7 +249,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     for cwl_path in all_workflow_paths:
 
         # Get the new path
-        new_path = output_tempdir.joinpath(cwl_path.relative_to(get_cwl_ica_repo_path()))
+        new_path = output_tempdir.joinpath(cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path()))
 
         # Create a directory for this file
         new_path.parent.mkdir(parents=True, exist_ok=False)
