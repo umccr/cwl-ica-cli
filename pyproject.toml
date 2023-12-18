@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cwl-ica"
+version = "v1.7"
+authors = [
+  { name="Alexis Lucattini", email="alexis.lucattini@umccr.org" },
+]
+description = "cwl-ica"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+  # Requirements created by pip-reqs
+  "beautifulsoup4 >= 4.12.2, < 5",
+  "cwl_utils >= 0.32, < 1",
+  "deepdiff >= 6.7.1, < 7",
+  "docopt >= 0.6.2, < 1",
+  "in_place >= 1.0.0, < 2",
+  "libica >= 2.3.0, < 3",
+  "matplotlib >= 3.8.0, < 4",
+  "mdutils >= 1.4.0, < 2",
+  "numpy >= 1.24.2, < 2",
+  "pandas >= 2.1.4, < 3",
+  "pydot >= 1.4.2, < 2",
+  "PyJWT >= 2.8.0, < 3",
+  "PyJWT >= 2.8.0, < 3",
+  "python_dateutil >= 2.8.2, < 3",
+  "Requests >= 2.31.0, < 3",
+  "ruamel.base >= 1.0.0, < 2",
+  "semantic_version >= 2.10.0, < 3",
+  "verboselogs >= 1.7, < 2",
+  "websocket_client >= 1.7.0, < 2",
+  "cwltool"  # Always the latest version
+]
+
+[project.urls]
+"Homepage" = "https://github.com/umccr/cwl-ica-cli"
+"Bug Tracker" = "https://github.com/umccr/cwl-ica-cli/issues"
+
+[project.scripts]
+"cwl-ica" = "cwl_ica.utils.cli:main"
+
+[tool.setuptools]
+script-files = [
+  "scripts/initialise_typescript_expression_directory.sh",
+  "scripts/update_yarn_dependencies.sh",
+  "scripts/validate_typescript_expressions_directory.sh",
+  "scripts/create_typescript_interface_from_schema.py"
+]

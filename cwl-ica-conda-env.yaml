@@ -2,31 +2,6 @@ name: cwl-ica
 channels:
   - defaults
 dependencies:
-  - python=3.10
-  - numpy
-  - pandas
-  - matplotlib
+  - python>=3.11  # Required for tomllib
   - pip
   - nodejs>=18
-  - pip:
-    - beautifulsoup4
-    - cwlref-runner
-    - cwltool
-    - cwl-utils
-    - pytest
-    - humanfriendly
-    - libica==2.3.0
-    - pyyaml
-    - requests
-    - verboselogs
-    - semantic_version
-    - python-dateutil
-    - docopt
-    - PyJWT
-    - tabulate
-    - mdutils==1.4.0
-    - deepdiff
-    - in-place
-    - pre-commit
-    - websocket
-    - websocket-client
