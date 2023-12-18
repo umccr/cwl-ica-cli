@@ -122,11 +122,7 @@ get_lib_path(){
 
   local conda_env_prefix="$1"
 
-  if [[ "${OSTYPE}" == "msys" ]]; then
-    echo "${conda_env_prefix}/Lib"
-  else
-    echo "${conda_env_prefix}/lib/python3.10"
-  fi
+  find "${conda_env_prefix}/lib" -name "cwl_ica" | sort | tail -n1
 }
 
 get_bin_path(){
@@ -240,7 +236,7 @@ update_conda_env() {
 
   if ! has_conda_env "${conda_env_name}"; then
     if [[ "${yes}" == "true" ]]; then
-      echo_stderr "Creating cwltool-icav1 conda env"
+      echo_stderr "Creating ${conda_env_name} conda env"
       run_conda_create "${conda_env_name}" "${conda_env_file}"
     else
       echo_stderr "'${conda_env_name}' conda env does not exist - would you like to create one?"
@@ -257,6 +253,7 @@ update_conda_env() {
     fi
   else
     if [[ "${yes}" == "true" ]]; then
+      # Install conda updates
       echo_stderr "Updating '${conda_env_name}' conda env"
       run_conda_update "${conda_env_name}" "${conda_env_file}"
     else
@@ -272,6 +269,11 @@ update_conda_env() {
         esac
       done
     fi
+  fi
+
+  # Install other deps through pyproject.toml
+  if [[ "${conda_env_name}" == "${CWL_ICA_CONDA_ENV_NAME}" ]]; then
+    conda run --name "${conda_env_name}" pip install "$(get_this_path)/."
   fi
 }
 
@@ -431,40 +433,6 @@ update_conda_env "${CWLTOOL_ICAV1_CONDA_ENV_NAME}" "${yes}"
 # Now we can obtain the env prefix which is where we will place our
 conda_cwl_ica_env_prefix="$(get_conda_env_prefix)"
 
-###########
-# COPY BINS
-###########
-
-# Copy over to conda env
-echo_stderr "Adding scripts to \"${conda_cwl_ica_env_prefix}/bin\""
-
-# Add scripts to bin
-chmod +x "$(get_this_path)/bin/"*
-rsync --archive \
-  --exclude "__init__.py" \
-  "$(get_this_path)/bin/" "$(get_bin_path "${conda_cwl_ica_env_prefix}")/"
-
-###########
-# COPY LIBS
-###########
-: '
-Copy over utils/classes/subcommands to library path
-'
-
-rsync --delete --archive \
-  "$(get_this_path)/utils/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/"
-
-rsync --delete --archive \
-  "$(get_this_path)/classes/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/classes/"
-
-rsync --delete --archive \
-  "$(get_this_path)/subcommands/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/subcommands/"
-
-rsync --delete --archive \
-  --include "*.py" \
-  --exclude "*" \
-  "$(get_this_path)/bin/" "$(get_lib_path "${conda_cwl_ica_env_prefix}")/bin/"
-
 #####################
 # REPLACE __VERSION__
 #####################
@@ -472,26 +440,41 @@ rsync --delete --archive \
 Only needed in the event that one is installing from source
 '
 
-sed "s/__VERSION__/latest/" \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py" > \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp"
+# From toml lib
 
-mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py.tmp" \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py"
+version_path="$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/__version__.py"
+version_number="$( \
+"${conda_cwl_ica_env_prefix}/bin/python3" - <<EOF
 
+# Imports
+import tomllib
+
+# Open toml file
+with open("$(get_this_path)/pyproject.toml", mode="rb") as toml_h:
+    config = tomllib.load(toml_h)
+
+# Get from toml file
+print(config["project"]["version"])
+EOF
+)"
+
+# Replace __VERSION__ with version number from toml lib
+sed "s/__VERSION__/${version_number}/" \
+  "${version_path}" > \
+  "${version_path}.tmp"
+mv "${version_path}.tmp" \
+  "${version_path}"
+
+# Get the latest cwltool version
 latest_cwltool_version="$(
   conda run --name "cwl-ica" \
   cwltool --version | cut -f2 -d' '
 )"
-
+globals_path="$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py"
 sed "s/__LATEST_CWLTOOL_VERSION__/${latest_cwltool_version}/" \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py" > \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py.tmp"
-
-  mv "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py.tmp" \
-  "$(get_lib_path "${conda_cwl_ica_env_prefix}")/utils/globals.py"
-
-
+  "${globals_path}" > \
+  "${globals_path}.tmp"
+mv "${globals_path}.tmp" "${globals_path}"
 
 ##################################
 # Update npm and yarn

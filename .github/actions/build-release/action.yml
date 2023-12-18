@@ -85,11 +85,9 @@ runs:
         # Add source files
         rsync --archive \
           "--include=autocompletion/***" \
-          "--include=bin/***" \
-          "--include=classes/***" \
-          "--include=subcommands/***" \
-          "--include=utils/***" \
+          "--include=src/***" \
           "--include=*-conda-env.yaml" \
+          "--include=pyproject.toml" \
           "--include=install.sh" \
           "--exclude=*" \
           "./" "release-${{ inputs.git_tag }}/"
