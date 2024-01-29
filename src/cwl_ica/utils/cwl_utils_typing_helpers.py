@@ -47,8 +47,8 @@ from cwl_utils.parser.cwl_v1_1 import (
 )
 
 from cwl_utils.parser.cwl_v1_1 import (
-    WorkflowOutputParameterType as WorkflowOutputParameter_v1_1,
-    WorkflowInputParameterType as WorkflowInputParameter_v1_1
+    WorkflowOutputParameter as WorkflowOutputParameter_v1_1,
+    WorkflowInputParameter as WorkflowInputParameter_v1_1
 )
 
 from cwl_utils.parser.cwl_v1_1 import (
@@ -80,8 +80,8 @@ from cwl_utils.parser.cwl_v1_2 import (
 )
 
 from cwl_utils.parser.cwl_v1_2 import (
-    WorkflowOutputParameterType as WorkflowOutputParameter_v1_2,
-    WorkflowInputParameterType as WorkflowInputParameter_v1_2
+    WorkflowOutputParameter as WorkflowOutputParameter_v1_2,
+    WorkflowInputParameter as WorkflowInputParameter_v1_2
 )
 
 from cwl_utils.parser.cwl_v1_2 import (
