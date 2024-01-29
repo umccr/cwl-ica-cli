@@ -4,12 +4,15 @@
 List the unregistered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# External
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_expression_yaml_path
+from cwl_ica.utils.repo import get_expressions_dir
+from cwl_ica.utils.miscell import read_yaml
 
 registered_expression_paths = [
     Path(expression["path"]) / Path(version["path"])

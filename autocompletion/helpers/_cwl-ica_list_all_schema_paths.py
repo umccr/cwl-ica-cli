@@ -4,12 +4,13 @@
 List the unregistered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_schemas_dir
 
 # Get the current word value
 if not "${CURRENT_WORD-}" == "":

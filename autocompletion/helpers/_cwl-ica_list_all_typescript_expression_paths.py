@@ -4,12 +4,13 @@
 List all the typescript expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_cwl_ica_repo_path
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_cwl_ica_repo_path
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
