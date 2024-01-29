@@ -93,7 +93,7 @@ runs:
           "./" "release-${{ inputs.git_tag }}/"
         # Update version.py for release
         sed -i "s/__VERSION__/${NON_LATEST_CWL_ICA_VERSION}/" \
-          "release-${{ inputs.git_tag }}/utils/__version__.py"
+          "release-${{ inputs.git_tag }}/src/cwl_ica/utils/__version__.py"
         # Make install.sh an executable
         chmod +x "release-${{ inputs.git_tag }}/install.sh"
         # Create zip file
