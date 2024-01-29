@@ -27,7 +27,7 @@ from .cwl_utils_typing_helpers import (
     InlineJavascriptRequirementType, InputEnumSchemaType,
     OutputEnumSchemaType, OutputArraySchemaType, OutputRecordSchemaType,
     InputArraySchemaType, InputRecordSchemaType,
-    WorkflowParameterType, ArraySchemaType
+    WorkflowParameterType, ArraySchemaType, EnumSchemaType
 )
 
 # Classes

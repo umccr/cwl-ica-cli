@@ -47,7 +47,7 @@ from ...utils.ica_utils import get_projects_list_with_token, get_base_url, get_r
 from ...utils.repo import get_run_yaml_path, get_project_yaml_path
 from ...utils.errors import ProjectNotFoundError, ItemVersionNotFoundError, ItemNotFoundError
 from ...utils.cwl_helper_utils import (
-    InputArraySchema, InputEnumSchema,
+    InputArraySchemaType, InputEnumSchemaType,
     split_cwl_id_to_path_and_fragment,
     get_fragment_from_cwl_id
 )
@@ -573,7 +573,7 @@ class CreateSubmissionTemplate(Command):
     def sanitise_input(self, input_obj, input_item) -> Any:
         # Handle InputArraySchema objects (and double arrays)
         input_item_type = input_obj["cwl_type"]
-        while isinstance(input_item_type, InputArraySchema):
+        while isinstance(input_item_type, InputArraySchemaType):
             if "is_array" not in input_obj.keys():
                 input_obj["is_array"] = 1
             else:
@@ -597,7 +597,7 @@ class CreateSubmissionTemplate(Command):
             input_obj["schema_obj"] = schema_object.get_sanitised_object()
 
         # Handle InputEnumSchema objects
-        elif isinstance(input_item_type, InputEnumSchema):
+        elif isinstance(input_item_type, InputEnumSchemaType):
             # Assign value to the first symbol
             input_obj["cwl_type"] = "enum"
             input_obj["symbols"] = list(
