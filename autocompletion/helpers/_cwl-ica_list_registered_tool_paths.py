@@ -4,12 +4,15 @@
 List the registered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.repo import get_tools_dir
+from cwl_ica.utils.miscell import read_yaml
 
 tool_paths = [
     Path(tool["path"]) / Path(version["path"])

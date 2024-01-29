@@ -4,12 +4,16 @@
 List the unregistered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_schema_yaml_path
+from cwl_ica.utils.repo import get_schemas_dir
+from cwl_ica.utils.miscell import read_yaml
+
 
 registered_schema_paths = [
     Path(schema["path"]) / Path(version["path"])

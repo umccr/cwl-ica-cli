@@ -4,12 +4,13 @@
 List the registered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_expression_yaml_path, read_yaml, get_expressions_dir
 
 expression_paths = [
     Path(expression["path"]) / Path(version["path"])

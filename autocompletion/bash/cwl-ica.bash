@@ -78,6 +78,7 @@ Each project is linked to a tenancy id
 '$'\n''tool-sync'$'\t''Sync a tool md5sum in \${CWL_ICA_REPO_PATH}/config/tool.yaml
 and update definition on ICA
 '$'\n''tool-validate'$'\t''Validate a CWL tool ready for initialising on ICA
+'$'\n''typescript-expression-update'$'\t''Update a typescript expression yarn.lock file
 '$'\n''typescript-expression-validate'$'\t''Validate a typescript expression and generate a .cwljs file ready for importation
 '$'\n''validate-api-key-script'$'\t''Confirm your api-key script works for a given project
 '$'\n''validate-config-yamls'$'\t''Confirm all config yamls are legitimate
@@ -1341,6 +1342,26 @@ to workflow names
         ;;
         esac
       ;;
+      typescript-expression-update)
+        OPTIONS+=('--typescript-expression-dir' 'The name of the workflow
+' '--xtrace' 'Set xtrace on the update_yarn_dependencies shell script
+')
+        __cwl-ica_handle_options_flags
+        case ${MYWORDS[$INDEX-1]} in
+          --typescript-expression-dir)
+            _cwl-ica_typescript-expression-update_option_typescript_expression_dir_completion
+          ;;
+          --xtrace)
+          ;;
+
+        esac
+        case $INDEX in
+
+        *)
+            __comp_current_options || return
+        ;;
+        esac
+      ;;
       typescript-expression-validate)
         OPTIONS+=('--typescript-expression-dir' 'The name of the workflow
 ' '--xtrace' 'Set xtrace on the validate_typescript_expressions_directory shell script
@@ -1490,8 +1511,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_tool_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each tool name
 for tool in read_yaml(get_tool_yaml_path())["tools"]:
@@ -1509,8 +1531,8 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_category_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_category_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for category in read_yaml(get_category_yaml_path())["categories"]:
@@ -1528,8 +1550,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_workflow_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_workflow_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each tool name
 for workflow in read_yaml(get_workflow_yaml_path())["workflows"]:
@@ -1547,8 +1570,8 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_category_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_category_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for category in read_yaml(get_category_yaml_path())["categories"]:
@@ -1566,8 +1589,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -1586,12 +1609,15 @@ python - <<EOF
 List the unregistered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_expression_yaml_path
+from cwl_ica.utils.repo import get_expressions_dir
+from cwl_ica.utils.miscell import read_yaml
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -1682,8 +1708,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -1702,12 +1729,13 @@ python - <<EOF
 List the unregistered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tools_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -1797,8 +1825,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -1817,12 +1846,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -1913,8 +1943,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -1933,12 +1964,15 @@ python - <<EOF
 List the registered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.repo import get_tools_dir
+from cwl_ica.utils.miscell import read_yaml
 
 tool_paths = [
     Path(tool["path"]) / Path(version["path"])
@@ -2023,8 +2057,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -2043,12 +2077,15 @@ python - <<EOF
 List the registered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflow_yaml_path
+from cwl_ica.utils.repo import get_workflows_dir
+from cwl_ica.utils.miscell import read_yaml
 
 workflow_paths = [
     Path(workflow["path"]) / Path(version["path"])
@@ -2134,8 +2171,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -2154,12 +2191,13 @@ python - <<EOF
 List the unregistered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tools_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2250,12 +2288,15 @@ python - <<EOF
 List the unregistered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_expression_yaml_path
+from cwl_ica.utils.repo import get_expressions_dir
+from cwl_ica.utils.miscell import read_yaml
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2347,12 +2388,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2443,8 +2485,9 @@ python - <<EOF
 """
 List all of the run instance ids in the run.yaml file
 """
-from utils.repo import get_run_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_run_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each run instance id
 for run in read_yaml(get_run_yaml_path())["runs"]:
@@ -2462,8 +2505,9 @@ python - <<EOF
 """
 List all of the run instance ids in the run.yaml file
 """
-from utils.repo import get_run_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_run_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each run instance id
 for run in read_yaml(get_run_yaml_path())["runs"]:
@@ -2481,8 +2525,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -2500,8 +2545,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -2520,12 +2566,13 @@ python - <<EOF
 List the unregistered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tools_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2615,8 +2662,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -2679,8 +2726,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -2699,12 +2747,13 @@ python - <<EOF
 List the unregistered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_schemas_dir
 
 # Get the current word value
 if not "${CURRENT_WORD-}" == "":
@@ -2794,8 +2843,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -2814,12 +2864,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -2910,8 +2961,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -3105,12 +3156,15 @@ python - <<EOF
 List the unregistered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# External
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_expression_yaml_path
+from cwl_ica.utils.repo import get_expressions_dir
+from cwl_ica.utils.miscell import read_yaml
 
 registered_expression_paths = [
     Path(expression["path"]) / Path(version["path"])
@@ -3213,12 +3267,13 @@ python - <<EOF
 List the registered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_expression_yaml_path, read_yaml, get_expressions_dir
 
 expression_paths = [
     Path(expression["path"]) / Path(version["path"])
@@ -3303,12 +3358,13 @@ python - <<EOF
 List the registered expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_expressions_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_expression_yaml_path, read_yaml, get_expressions_dir
 
 expression_paths = [
     Path(expression["path"]) / Path(version["path"])
@@ -3393,12 +3449,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -3743,12 +3800,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -3836,8 +3894,9 @@ _cwl-ica_list-projects_option_tenant_name_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -3855,12 +3914,15 @@ python - <<EOF
 List the registered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.repo import get_tools_dir
+from cwl_ica.utils.miscell import read_yaml
 
 tool_paths = [
     Path(tool["path"]) / Path(version["path"])
@@ -3945,8 +4007,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -3973,8 +4035,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -3989,8 +4051,9 @@ _cwl-ica_project-init_option_tenant_name_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -4007,8 +4070,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4026,8 +4089,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4046,12 +4109,16 @@ python - <<EOF
 List the unregistered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_schema_yaml_path
+from cwl_ica.utils.repo import get_schemas_dir
+from cwl_ica.utils.miscell import read_yaml
+
 
 registered_schema_paths = [
     Path(schema["path"]) / Path(version["path"])
@@ -4152,12 +4219,13 @@ python - <<EOF
 List the registered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import read_yaml, get_schema_yaml_path, get_schemas_dir
 
 schema_paths = [
     Path(schema["path"]) / Path(version["path"])
@@ -4241,12 +4309,13 @@ python - <<EOF
 List the unregistered schema paths
 """
 
-from utils.repo import get_schema_yaml_path
-from utils.repo import get_schemas_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_schemas_dir
 
 # Get the current word value
 if not "${CURRENT_WORD-}" == "":
@@ -4336,8 +4405,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4352,8 +4421,9 @@ _cwl-ica_set-default-tenant_option_tenant_name_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -4370,8 +4440,9 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_user_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_user_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for user in read_yaml(get_user_yaml_path())["users"]:
@@ -4390,12 +4461,16 @@ python - <<EOF
 List the unregistered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.repo import get_tools_dir
+from cwl_ica.utils.miscell import read_yaml
+
 
 registered_tool_paths = [
     Path(tool["path"]) / Path(version["path"])
@@ -4496,8 +4571,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4512,8 +4587,9 @@ _cwl-ica_tool-init_option_tenants_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -4530,8 +4606,8 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_category_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_category_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for category in read_yaml(get_category_yaml_path())["categories"]:
@@ -4550,12 +4626,15 @@ python - <<EOF
 List the registered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tool_yaml_path
+from cwl_ica.utils.repo import get_tools_dir
+from cwl_ica.utils.miscell import read_yaml
 
 tool_paths = [
     Path(tool["path"]) / Path(version["path"])
@@ -4640,8 +4719,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4656,8 +4735,9 @@ _cwl-ica_tool-sync_option_tenants_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -4675,12 +4755,13 @@ python - <<EOF
 List the unregistered tool paths
 """
 
-from utils.repo import get_tool_yaml_path
-from utils.repo import get_tools_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_tools_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -4761,6 +4842,122 @@ EOF
 )"
     _cwl-ica_compreply "$param_tool_path"
 }
+_cwl-ica_typescript-expression-update_option_typescript_expression_dir_completion() {
+    local CURRENT_WORD="${words[$cword]}"
+    local param_typescript_expression_dir="$(
+python - <<EOF
+#!/usr/bin/env python3
+
+"""
+List all the typescript expression paths
+"""
+
+# Externals
+from pathlib import Path
+from os import getcwd
+from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_cwl_ica_repo_path
+
+# Get the current word value
+if not "${CURRENT_WORD}" == "":
+    current_word_value = "${CURRENT_WORD}"
+else:
+    current_word_value = None
+
+if current_word_value is None:
+    current_word_value = ""
+    current_path_resolved = Path(getcwd()).absolute()
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in get_cwl_ica_repo_path().glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+        # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+        len(
+            {"tools", "expressions", "typescript-expressions"}.intersection(
+                [
+                    s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                ]
+            )
+        ) > 0
+    ]
+else:
+    if current_word_value.endswith("/"):
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value)).resolve()
+    else:
+        current_path_resolved = Path(getcwd()).joinpath(Path(current_word_value).parent).resolve()
+
+    typescript_expression_paths = [
+        s_file.parent.relative_to(get_cwl_ica_repo_path())
+        for s_file in current_path_resolved.glob("**/*.ts")
+        # We don't want to pull in the typescript test files
+        if not (len(s_file.parent.parts) >= 1 and s_file.parent.parts[-1] == 'tests') and
+           # We also want to make sure it's under the tools, expressions or typescript-expressions directories
+           len(
+               {"tools", "expressions", "typescript-expressions"}.intersection(
+                   [
+                       s_file.resolve().absolute().relative_to(get_cwl_ica_repo_path()).parent.parts[0]
+                   ]
+               )
+           ) > 0
+    ]
+
+# Resolve the current path
+# If getcwd() is "/c/Users/awluc"
+# 1. Non relative paths: current_word_value = "/etc" -> current_path_resolved = "/etc"
+# 2. Relative parent path: current_word_value = "../../Program Files" -> current_path_resolved = "/c/Program Files"
+# 3. Subfolder: current_word_value = "OneDrive" -> current_path_resolved = "/c/Users/awluc/OneDrive"
+# 4. Subfolder of expressions dir = "OneDrive/GitHub/UMCCR/expressions/contig/" -> current path resolved
+
+# Is the current_path_resolved a subpath of the expressions directory?
+try:
+    _ = current_path_resolved.relative_to(get_cwl_ica_repo_path())
+    in_repo_dir = True
+except ValueError:
+    in_repo_dir = False
+
+if in_repo_dir:
+    current_path_resolved_relative_to_expressions_dir = current_path_resolved.relative_to(get_cwl_ica_repo_path())
+    if current_path_resolved_relative_to_expressions_dir == Path("."):
+        for s_path in typescript_expression_paths:
+            if current_word_value.endswith("/"):
+                print(Path(current_word_value) / s_path)
+            else:
+                print(Path(current_word_value).parent / s_path)
+    else:
+        for s_path in typescript_expression_paths:
+            if str(s_path).startswith(str(current_path_resolved_relative_to_expressions_dir)):
+                if current_word_value.endswith("/"):
+                    print(Path(current_word_value) / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+                else:
+                    print(Path(current_word_value).parent / s_path.relative_to(
+                        current_path_resolved_relative_to_expressions_dir))
+
+else:
+    # Now get the expressions yaml path relative to the current path
+    try:
+        expressions_dir = get_cwl_ica_repo_path().relative_to(current_path_resolved)
+    except ValueError:
+        # We could be in a different mount point OR just in a subdirectory
+        if str(get_cwl_ica_repo_path().absolute()) in str(relpath(get_cwl_ica_repo_path(), current_path_resolved)):
+            # Separate mount point
+            expressions_dir = get_cwl_ica_repo_path().absolute()
+        else:
+            expressions_dir = Path(relpath(get_cwl_ica_repo_path(), current_path_resolved))
+
+    # Now iterate through paths
+    for s_path in typescript_expression_paths:
+        if current_word_value.endswith("/"):
+            print(Path(current_word_value) / expressions_dir.joinpath(s_path))
+        else:
+            print(Path(current_word_value).parent / expressions_dir.joinpath(s_path))
+EOF
+)"
+    _cwl-ica_compreply "$param_typescript_expression_dir"
+}
 _cwl-ica_typescript-expression-validate_option_typescript_expression_dir_completion() {
     local CURRENT_WORD="${words[$cword]}"
     local param_typescript_expression_dir="$(
@@ -4771,12 +4968,13 @@ python - <<EOF
 List all the typescript expression paths
 """
 
-from utils.repo import get_expression_yaml_path
-from utils.repo import get_cwl_ica_repo_path
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_cwl_ica_repo_path
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":
@@ -4885,8 +5083,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -4905,12 +5103,16 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA imports
+from cwl_ica.utils.repo import get_workflow_yaml_path
+from cwl_ica.utils.repo import get_workflows_dir
+from cwl_ica.utils.miscell import read_yaml
+
 
 registered_workflow_paths = [
     Path(workflow["path"]) / Path(version["path"])
@@ -5012,8 +5214,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -5028,8 +5230,9 @@ _cwl-ica_workflow-init_option_tenants_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -5046,8 +5249,8 @@ python - <<EOF
 """
 List all of the category names in the categories.yaml file
 """
-from utils.repo import get_category_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_category_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for category in read_yaml(get_category_yaml_path())["categories"]:
@@ -5066,12 +5269,15 @@ python - <<EOF
 List the registered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# External imports
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflow_yaml_path
+from cwl_ica.utils.repo import get_workflows_dir
+from cwl_ica.utils.miscell import read_yaml
 
 workflow_paths = [
     Path(workflow["path"]) / Path(version["path"])
@@ -5157,8 +5363,8 @@ python - <<EOF
 """
 List all of the project names in the project.yaml file
 """
-from utils.repo import get_project_yaml_path
-from utils.miscell import read_yaml
+from cwl_ica.utils.repo import get_project_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 # Import yaml and print each project name
 for project in read_yaml(get_project_yaml_path())["projects"]:
@@ -5173,8 +5379,9 @@ _cwl-ica_workflow-sync_option_tenants_completion() {
 python - <<EOF
 #!/usr/bin/env python
 
-from utils.repo import get_tenant_yaml_path
-from utils.miscell import read_yaml
+# CWL ICA imports
+from cwl_ica.utils.repo import get_tenant_yaml_path
+from cwl_ica.utils.miscell import read_yaml
 
 for tenant in read_yaml(get_tenant_yaml_path())["tenants"]:
     print(tenant["tenant_name"])
@@ -5192,12 +5399,13 @@ python - <<EOF
 List the unregistered workflow paths
 """
 
-from utils.repo import get_workflow_yaml_path
-from utils.repo import get_workflows_dir
-from utils.miscell import read_yaml
+# Externals
 from pathlib import Path
 from os import getcwd
 from os.path import relpath
+
+# CWL ICA
+from cwl_ica.utils.repo import get_workflows_dir
 
 # Get the current word value
 if not "${CURRENT_WORD}" == "":

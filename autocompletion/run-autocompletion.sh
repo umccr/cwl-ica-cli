@@ -57,8 +57,7 @@ for template in templates/*.evalyaml; do
   docker run \
 	--volume "$PWD:$PWD" \
         --workdir "$PWD" \
-	ghcr.io/umccr/appspec:0.006 \
-	    appspec \
+	 ghcr.io/alexiswl/app-appspec-p5:v0.007-rc \
   		completion \
 			"${template}" \
 		    	--name "${name_root}" \
@@ -78,8 +77,7 @@ for template in templates/*.evalyaml; do
   docker run \
 	--volume "$PWD:$PWD" \
         --workdir "$PWD" \
-	ghcr.io/umccr/appspec:0.006 \
-	    appspec \
+	 ghcr.io/alexiswl/app-appspec-p5:v0.007-rc \
 	  	completion \
         		"${template}" \
             --name "${name_root}" \
