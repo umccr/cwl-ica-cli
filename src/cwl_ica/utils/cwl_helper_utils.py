@@ -4,7 +4,7 @@
 Again CWL helpers that have been WET Types all over the shop.
 """
 
-# Extenral imports
+# External imports
 from copy import deepcopy
 from typing import List, Dict, Union, Tuple
 from pathlib import Path
@@ -123,33 +123,33 @@ def create_template_from_workflow_outputs(workflow_outputs: List[WorkflowOutputP
 
 
 def get_workflow_input_type(workflow_input: WorkflowInputParameter):
-    if isinstance(workflow_input.type, str):
+    if isinstance(workflow_input.type_, str):
         return get_workflow_input_type_from_str_type(workflow_input)
-    elif isinstance(workflow_input.type, InputEnumSchemaType):
+    elif isinstance(workflow_input.type_, InputEnumSchemaType):
         return get_workflow_input_type_from_enum_schema(workflow_input)
-    elif isinstance(workflow_input.type, InputArraySchemaType):
+    elif isinstance(workflow_input.type_, InputArraySchemaType):
         return get_workflow_input_type_from_array_schema(workflow_input)
-    elif isinstance(workflow_input.type, InputRecordSchemaType):
+    elif isinstance(workflow_input.type_, InputRecordSchemaType):
         return get_workflow_input_type_from_record_schema(workflow_input)
-    elif isinstance(workflow_input.type, List):
+    elif isinstance(workflow_input.type_, List):
         return get_workflow_input_type_from_array_type(workflow_input)
     else:
-        logger.warning(f"Don't know what to do here with {type(workflow_input.type)}")
+        logger.warning(f"Don't know what to do here with {type(workflow_input.type_)}")
 
 
 def get_workflow_output_type(workflow_output: WorkflowOutputParameter):
-    if isinstance(workflow_output.type, str):
+    if isinstance(workflow_output.type_, str):
         return get_workflow_output_type_from_str_type(workflow_output)
-    elif isinstance(workflow_output.type, OutputEnumSchemaType):
+    elif isinstance(workflow_output.type_, OutputEnumSchemaType):
         return get_workflow_output_type_from_enum_schema(workflow_output)
-    elif isinstance(workflow_output.type, OutputArraySchemaType):
+    elif isinstance(workflow_output.type_, OutputArraySchemaType):
         return get_workflow_output_type_from_array_schema(workflow_output)
-    elif isinstance(workflow_output.type, OutputRecordSchemaType):
+    elif isinstance(workflow_output.type_, OutputRecordSchemaType):
         return get_workflow_output_type_from_record_schema(workflow_output)
-    elif isinstance(workflow_output.type, List):
+    elif isinstance(workflow_output.type_, List):
         return get_workflow_output_type_from_array_type(workflow_output)
     else:
-        logger.warning(f"Don't know what to do here with {type(workflow_output.type)}")
+        logger.warning(f"Don't know what to do here with {type(workflow_output.type_)}")
         
 
 def get_workflow_parameter_type_from_enum_schema(workflow_parameter: WorkflowParameterType):
@@ -158,7 +158,7 @@ def get_workflow_parameter_type_from_enum_schema(workflow_parameter: WorkflowPar
     :param workflow_parameter:
     :return:
     """
-    workflow_parameter_type: InputEnumSchemaType = workflow_parameter.type
+    workflow_parameter_type: InputEnumSchemaType = workflow_parameter.type_
     return shortname(workflow_parameter_type.symbols[0])
 
 
@@ -190,7 +190,7 @@ def get_workflow_type_from_array_schema(workflow_parameter: WorkflowParameterTyp
 
     workflow_parameter_new = deepcopy(workflow_parameter)
 
-    workflow_parameter_new.type = workflow_parameter.type.items
+    workflow_parameter_new.type_ = workflow_parameter.type_.items
 
     return [
         get_workflow_input_type(workflow_parameter_new)
@@ -233,11 +233,11 @@ def get_workflow_type_from_array_type(workflow_parameter: WorkflowParameterType)
     :param workflow_parameter:
     :return:
     """
-    if not workflow_parameter.type[0] == "null":
+    if not workflow_parameter.type_[0] == "null":
         logger.error("Unsure what to do with input of type list where first element is not null")
         raise ValueError
     workflow_input_new = deepcopy(workflow_parameter)
-    workflow_input_new.type = workflow_parameter.type[1]
+    workflow_input_new.type_ = workflow_parameter.type_[1]
     return get_workflow_input_type(workflow_input_new)
 
 
@@ -271,34 +271,34 @@ def get_workflow_parameter_type_from_str_type(workflow_parameter: WorkflowParame
           }
         """
     from .cwl_schema_helper_utils import CWLSchemaObj
-    if workflow_parameter.type.startswith("file://"):
+    if workflow_parameter.type_.startswith("file://"):
         # This is a schema!
-        return CWLSchemaObj.load_schema_from_uri(workflow_parameter.type).get_template()
-    if "#" in workflow_parameter.type:
+        return CWLSchemaObj.load_schema_from_uri(workflow_parameter.type_).get_template()
+    if "#" in workflow_parameter.type_:
         original_path = Path(urlparse(workflow_parameter.id).path)
         full_uri_path = original_path.parent.joinpath(
-            get_path_from_cwl_id(workflow_parameter.type)).resolve().absolute().as_uri()
+            get_path_from_cwl_id(workflow_parameter.type_)).resolve().absolute().as_uri()
         return CWLSchemaObj.load_schema_from_uri(full_uri_path).get_template()
-    if workflow_parameter.type == "Directory":
+    if workflow_parameter.type_ == "Directory":
         return {
             "class": "Directory",
             "location": "icav2://project_id/path/to/dir/"
         }
-    elif workflow_parameter.type == "File":
+    elif workflow_parameter.type_ == "File":
         return {
             "class": "File",
             "location": "icav2://project_id/path/to/file"
         }
-    elif workflow_parameter.type == "boolean":
+    elif workflow_parameter.type_ == "boolean":
         return workflow_parameter.default if workflow_parameter.default is not None else False
-    elif workflow_parameter.type == "int":
+    elif workflow_parameter.type_ == "int":
         return workflow_parameter.default if workflow_parameter.default is not None else "string"
-    elif workflow_parameter.type == "float":
+    elif workflow_parameter.type_ == "float":
         return workflow_parameter.default if workflow_parameter.default is not None else "string"
-    elif workflow_parameter.type == "string":
+    elif workflow_parameter.type_ == "string":
         return workflow_parameter.default if workflow_parameter.default is not None else "string"
     else:
-        logger.warning(f"Don't know what to do here with {workflow_parameter.type}")
+        logger.warning(f"Don't know what to do here with {workflow_parameter.type_}")
 
 
 def get_workflow_input_type_from_str_type(workflow_input: WorkflowInputParameter):
@@ -387,7 +387,7 @@ def get_type_from_cwl_io_object(cwl_item: Union[WorkflowInputParameter, Workflow
     :param cwl_item:
     :return:
     """
-    i_o_type = cwl_item.type
+    i_o_type = cwl_item.type_
     i_o_optional = False
 
     # If the instance type is a list, could be because its optional
