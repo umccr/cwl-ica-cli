@@ -276,7 +276,7 @@ Example:
                     )
                 )
 
-                self.bunch_region_id = region_obj.id
+                self.bunch_region_city_name = region_obj.city_name
             except StopIteration:
                 logger.error(f"Could not find region that matches id {self.bunch_region_id}")
                 raise CheckArgumentError
@@ -290,7 +290,7 @@ Example:
                     )
                 )
 
-                self.bunch_region_city_name = region_obj.city_name
+                self.bunch_region_id = region_obj.id
             except StopIteration:
                 logger.error(f"Could not find region that matches id {self.bunch_region_id}")
                 raise CheckArgumentError
@@ -372,7 +372,7 @@ Example:
         self.check_arg_in_input_yaml_and_cli(
             "--dataset",
             input_yaml_data,
-            required=True,
+            required=False,
             arg_type=List,
             attr_name="dataset_name_list",
             yaml_key="datasets"
