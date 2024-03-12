@@ -92,7 +92,8 @@ def append_workflow_to_dockstore_yaml(workflow_path: Path, gzipped_packed_workfl
     try:
         dockstore_obj = next(
             filter(
-                lambda dockstore_obj_iter_: dockstore_obj_iter_.cwl_file_path == workflow_path,
+                lambda dockstore_obj_iter_: (dockstore_obj_iter_.cwl_file_path.relative_to(get_workflows_dir())) ==
+                                            (workflow_path.absolute().relative_to(get_workflows_dir())),
                 dockstore_obj_list
             )
         )
