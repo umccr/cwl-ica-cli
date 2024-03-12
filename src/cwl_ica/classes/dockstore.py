@@ -155,7 +155,9 @@ class Dockstore:
         # Calculate cwl file path
         cwl_file_path = \
             get_workflows_dir() / \
-            Path(dockstore_dict.get("primaryDescriptorPath")).relative_to("/.dockstore")
+            (
+                Path(dockstore_dict.get("primaryDescriptorPath").replace(".packed.cwl.json", ".cwl"))
+            ).relative_to("/.dockstore")
 
         return cls(
             create=False,
