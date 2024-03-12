@@ -26,6 +26,7 @@ from ...utils.errors import CheckArgumentError
 # Classes
 from ...classes.icav2_bunch_classes import Dataset, Bunch
 from ...classes.command import Command
+from ...utils.repo import get_cwl_ica_repo_path
 
 # Set logger
 logger = get_logger()
@@ -276,7 +277,7 @@ Example:
                     )
                 )
 
-                self.bunch_region_id = region_obj.id
+                self.bunch_region_city_name = region_obj.city_name
             except StopIteration:
                 logger.error(f"Could not find region that matches id {self.bunch_region_id}")
                 raise CheckArgumentError
@@ -290,7 +291,7 @@ Example:
                     )
                 )
 
-                self.bunch_region_city_name = region_obj.city_name
+                self.bunch_region_id = region_obj.id
             except StopIteration:
                 logger.error(f"Could not find region that matches id {self.bunch_region_id}")
                 raise CheckArgumentError
@@ -372,7 +373,7 @@ Example:
         self.check_arg_in_input_yaml_and_cli(
             "--dataset",
             input_yaml_data,
-            required=True,
+            required=False,
             arg_type=List,
             attr_name="dataset_name_list",
             yaml_key="datasets"
@@ -471,7 +472,7 @@ Example:
                 bunch_name=self.bunch_name,
                 bunch_description=self.bunch_description,
                 tenant_name=self.tenant_name,
-                pipeline_path=self.workflow_path,
+                pipeline_path=self.workflow_path.absolute().relative_to(get_cwl_ica_repo_path()),
                 pipeline_project_name=self.pipeline_project_name,
                 bunch_region_id=self.bunch_region_id,
                 bunch_region_city_name=self.bunch_region_city_name,
