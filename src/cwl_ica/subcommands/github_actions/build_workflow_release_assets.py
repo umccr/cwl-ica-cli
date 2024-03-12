@@ -796,15 +796,14 @@ Environment Variables
 
     def fast_forward_tags(self):
         """
-        Fast forward tags after commit
+        Fast-forward tags after commit
         :return:
         """
-        # FIXME use gh api for these commands
         for tag in self.github_tag:
             git_tag_command = [
                 "git", "tag",
                 "--annotate",
-                "--message", f"Release of {self.release_name}"
+                "--message", f"Release of {self.release_name}",
                 "--force", tag
             ]
 
