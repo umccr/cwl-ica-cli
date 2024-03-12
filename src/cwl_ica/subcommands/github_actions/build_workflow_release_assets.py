@@ -1081,7 +1081,7 @@ Environment Variables
 
         create_cwl_workflow_from_github_release_command = [
             f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
             "projectpipelines",
             "create-cwl-workflow-from-github-release",
             self.release_url,
@@ -1090,7 +1090,7 @@ Environment Variables
 
         release_pipeline_command_prefix = [
             f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
             "projectpipelines",
             "release",
         ]
@@ -1127,7 +1127,7 @@ Environment Variables
 
                 proc_environ.update(
                     {
-                        "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
+                        "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
                         "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
                         "ICAV2_PROJECT_ID": pipeline_project_id,
                         "ICAV2_ACCESS_TOKEN": get_tenant_access_token(tenant_name)

@@ -557,7 +557,7 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
+            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -565,7 +565,7 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
 
     link_pipeline_command = [
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
         "bundles",
         "add-pipeline",
         bundle_id,
@@ -597,7 +597,7 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
+            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -605,7 +605,7 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
 
     link_data_command = [
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
         "bundles",
         "add-data",
         bundle_id,
@@ -636,7 +636,7 @@ def release_bundle(bundle_id: str, icav2_access_token: str):
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
+            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -644,7 +644,7 @@ def release_bundle(bundle_id: str, icav2_access_token: str):
 
     release_bundle_command = [
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
         "bundles",
         "release",
         bundle_id
@@ -675,7 +675,7 @@ def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: s
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.10/site-packages/",
+            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -683,7 +683,7 @@ def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: s
 
     add_bundle_to_project_command = [
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/plugins/bin/icav2-cli-plugins.py",
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
         "bundles",
         "add-bundle-to-project",
         bundle_id,
