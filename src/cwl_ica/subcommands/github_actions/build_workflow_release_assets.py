@@ -157,6 +157,7 @@ Environment Variables
 
         # Create release assets
         self.create_compressed_packed_workflow()
+        self.create_cwl_inputs_schema_gen()
 
     def check_args(self):
         """
