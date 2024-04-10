@@ -22,7 +22,7 @@ jobs:
       # Standard checkout step
       - name: Checkout code
         id: git_checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       # Run autocompletion script
       - id: update_autocompletion
         name: update autocompletion
