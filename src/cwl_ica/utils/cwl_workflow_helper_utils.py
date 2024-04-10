@@ -458,3 +458,31 @@ def create_packed_workflow_from_zipped_workflow_path(zipped_path: Path, output_p
         )
 
         pack_h.write(bytes((json.dumps(json.loads(pack_stdout), indent=2, ensure_ascii=False) + "\n").encode()))
+
+
+def create_cwl_inputs_schema_gen(zipped_path: Path, output_path: Path):
+    if not output_path.parent.is_dir():
+        logger.error(f"Could not write to {output_path}, parent directory does not exist")
+        raise NotADirectoryError
+
+    with (
+        gzip.open(output_path, "wb") as json_schema_h,
+        TemporaryDirectory() as unzip_tmpdir,
+        ZipFile(zipped_path, "r") as workflow_zip
+    ):
+        # Unzip workflow to tmp dir
+        workflow_zip.extractall(unzip_tmpdir)
+        extracted_main_workflow_path = Path(unzip_tmpdir) / zipped_path.stem / "workflow.cwl"
+        # Pack workflow
+        json_schema_gen_returncode, json_schema_gen_stdout, json_schema_gen_stderr = run_subprocess_proc(
+            [
+                "cwl-inputs-schema-gen", f"file://{extracted_main_workflow_path}"
+            ],
+            capture_output=True
+        )
+
+        json_schema_h.write(
+            bytes(
+                (json.dumps(json.loads(json_schema_gen_stdout), indent=2, ensure_ascii=False) + "\n").encode()
+            )
+        )
