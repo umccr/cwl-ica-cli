@@ -160,7 +160,7 @@ RUN ( \
         "/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
       ) && \
       echo "Cleaning up" 1>&2 && \
-      rm -rm cwl-utils \
+      rm -rf cwl-utils \
     )
 
 
