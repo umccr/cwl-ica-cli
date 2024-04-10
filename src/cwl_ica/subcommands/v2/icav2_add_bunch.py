@@ -472,7 +472,7 @@ Example:
                 bunch_name=self.bunch_name,
                 bunch_description=self.bunch_description,
                 tenant_name=self.tenant_name,
-                pipeline_path=self.workflow_path.absolute().relative_to(get_cwl_ica_repo_path()),
+                pipeline_path=self.workflow_path.absolute().resolve().relative_to(get_cwl_ica_repo_path()),
                 pipeline_project_name=self.pipeline_project_name,
                 bunch_region_id=self.bunch_region_id,
                 bunch_region_city_name=self.bunch_region_city_name,
