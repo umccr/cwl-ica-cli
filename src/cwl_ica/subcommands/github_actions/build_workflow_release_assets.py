@@ -31,6 +31,7 @@ Steps
 # External imports
 import json
 import os
+from os import environ
 import re
 from argparse import ArgumentError
 from json import JSONDecodeError
@@ -47,18 +48,31 @@ from mdutils import MdUtils
 from cwl_utils.parser import load_document_by_uri
 
 # Utils
-from ...utils.cwl_helper_utils import create_template_from_workflow_inputs, create_template_from_workflow_outputs, \
+from ...utils.cwl_helper_utils import (
+    create_template_from_workflow_inputs, create_template_from_workflow_outputs,
     get_workflow_overrides_steps_dict, get_type_from_cwl_io_object
-from ...utils.cwl_workflow_helper_utils import zip_workflow, create_packed_workflow_from_zipped_workflow_path
-from ...utils.dockstore_helpers import append_workflow_to_dockstore_yaml, get_dockstore_yaml_path, workflow_path_name_to_dockstore_name
-from ...utils.gh_helpers import get_gh_release_output_path, get_github_url, get_releases_url
+)
+from ...utils.cwl_workflow_helper_utils import (
+    zip_workflow, create_packed_workflow_from_zipped_workflow_path,
+    create_cwl_inputs_schema_gen
+)
+from ...utils.dockstore_helpers import (
+    append_workflow_to_dockstore_yaml, get_dockstore_yaml_path, workflow_path_name_to_dockstore_name
+)
+from ...utils.gh_helpers import (
+    get_gh_release_output_path, get_github_url, get_releases_url
+)
 from ...utils.globals import ICAV2_DEFAULT_BASE_URL
-from ...utils.icav2_gh_helpers import read_config_yaml, write_config_yaml, get_icav2_config_yaml_path, \
-    get_project_id_from_project_name, get_project_name_from_project_id, get_pipeline_code_from_pipeline_id, \
+from ...utils.icav2_gh_helpers import (
+    read_config_yaml, write_config_yaml, get_icav2_config_yaml_path,
+    get_project_id_from_project_name, get_project_name_from_project_id, get_pipeline_code_from_pipeline_id,
     get_tenant_access_token
+)
 from ...utils.logging import get_logger
-from ...utils.miscell import get_name_version_tuple_from_cwl_file_path, \
+from ...utils.miscell import (
+    get_name_version_tuple_from_cwl_file_path,
     get_items_dir_from_cwl_file_path, cwl_id_to_path
+)
 from ...utils.pydot_utils import get_step_path_from_step_obj
 from ...utils.repo import get_workflows_dir, get_dockstore_dir, get_cwl_ica_repo_path
 from ...utils.subprocess_handler import run_subprocess_proc
@@ -119,6 +133,7 @@ Environment Variables
         # Release assets
         self.zipped_workflow_path = None  # type: Optional[Path]
         self.packed_workflow_path = None  # type: Optional[Path]
+        self.json_schema_gen_path = None  # type: Optional[Path]
         self.zipped_cwl_obj = None  # type: Optional[CWLWorkflow]
 
         # Release artifacts
@@ -207,6 +222,8 @@ Environment Variables
         self.zipped_workflow_path = self.release_artifacts_path / (self.release_name + ".zip")
         # packed_workflow_path
         self.packed_workflow_path = self.release_artifacts_path / (self.release_name + ".packed.cwl.json.gz")
+        # json_schema_gen_path
+        self.json_schema_gen_path = self.release_artifacts_path / (self.release_name + ".schema.json")
 
         # Get md path
         self.md_path = Path(self.md_path_tmpdir.name) / "ReleaseNotes.md"
@@ -375,6 +392,16 @@ Environment Variables
         create_packed_workflow_from_zipped_workflow_path(
             self.zipped_workflow_path,
             self.packed_workflow_path
+        )
+
+    def create_cwl_inputs_schema_gen(self):
+        """
+        Create a JSON Schema for the inputs of a CWL workflow
+        :return:
+        """
+        create_cwl_inputs_schema_gen(
+            self.zipped_workflow_path,
+            self.json_schema_gen_path
         )
 
     # MDUtils sections
@@ -808,12 +835,12 @@ Environment Variables
             ]
 
             # Set configuration so user is associated with the tags
-            proc_environ = os.environ.copy()
+            proc_environ = environ.copy()
 
             proc_environ.update(
                 {
-                    "GIT_AUTHOR_NAME": proc_environ.get("_GIT_AUTHOR_NAME"),
-                    "GIT_AUTHOR_EMAIL": proc_environ.get("_GIT_AUTHOR_EMAIL")
+                    "GIT_AUTHOR_NAME": environ.get("_GIT_AUTHOR_NAME"),
+                    "GIT_AUTHOR_EMAIL": environ.get("_GIT_AUTHOR_EMAIL")
                 }
             )
 
@@ -834,6 +861,16 @@ Environment Variables
         Push branch and tags
         :return:
         """
+        # Set configuration so user is associated with the push event
+        proc_environ = environ.copy()
+
+        proc_environ.update(
+            {
+                "GIT_AUTHOR_NAME": environ.get("_GIT_AUTHOR_NAME"),
+                "GIT_AUTHOR_EMAIL": environ.get("_GIT_AUTHOR_EMAIL")
+            }
+        )
+
         git_push_command = [
             "git", "push",
             "--set-upstream", "origin",
@@ -841,6 +878,7 @@ Environment Variables
         ]
         git_push_returncode, git_push_stdout, git_push_stderr = run_subprocess_proc(
             git_push_command,
+            env=proc_environ,
             capture_output=True
         )
 
@@ -855,6 +893,7 @@ Environment Variables
         ]
         git_push_tags_returncode, git_push_tags_stdout, git_push_tags_stderr = run_subprocess_proc(
             git_push_tags_command,
+            env=proc_environ,
             capture_output=True
         )
 
@@ -911,7 +950,8 @@ Environment Variables
         gh_create_release_command.extend(
             [
                 self.packed_workflow_path,
-                self.zipped_workflow_path
+                self.zipped_workflow_path,
+                self.json_schema_gen_path
             ]
         )
 

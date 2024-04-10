@@ -1,4 +1,4 @@
-FROM docker.io/condaforge/mambaforge:23.3.1-1
+FROM docker.io/condaforge/mambaforge:24.1.2-0
 
 # Set args
 ARG CONDA_GROUP_NAME="cwl_ica_group"
@@ -11,6 +11,8 @@ ARG ICAV2_PLUGINS_CLI_VERSION="v2.20.1"
 ARG ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION="3.11"
 ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.11"
 ARG CURL_VERSION="7.81.0"
+ARG CWL_UTILS_REPO_PATH="https://github.com/alexiswl/cwl-utils"
+ARG CWL_UTILS_REPO_BRANCH="enhancement/cwl-inputs-schema-gen"
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -59,7 +61,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
     rm -rf aws/ awscliv2.zip && \
     echo "Removing existing installation of curl" && \
     apt-get purge -y -q --auto-remove curl && \
-    echo "Installing curl" 1>&2 && \
+    echo "Installing curl (that supports --fail-with-body parameter)" 1>&2 && \
     ( \
       wget "https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz" && \
       tar -xzf "curl-${CURL_VERSION}.tar.gz" && \
@@ -146,5 +148,20 @@ RUN ( \
 
 ENV PATH="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
 ENV ICAV2_CLI_PLUGINS_HOME="/home/${CONDA_USER_NAME}/.icav2-cli-plugins/"
+
+# Add cwl-utils (with cwl-inputs-schema-gen) to cwl-ica environment
+RUN ( \
+      cd "/home/${CONDA_USER_NAME}" && \
+      echo "Cloning cwl-utils" 1>&2 && \
+      git clone --branch "${CWL_UTILS_REPO_BRANCH}" "${CWL_UTILS_REPO_PATH}" "cwl-utils" && \
+      echo "Installing cwl-utils" 1>&2 && \
+      ( \
+        cd 'cwl-utils' && \
+        "/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
+      ) && \
+      echo "Cleaning up" 1>&2 && \
+      rm -rm cwl-utils \
+    )
+
 
 CMD "cwl-ica"
