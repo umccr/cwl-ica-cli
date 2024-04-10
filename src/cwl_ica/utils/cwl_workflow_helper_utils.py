@@ -466,7 +466,7 @@ def create_cwl_inputs_schema_gen(zipped_path: Path, output_path: Path):
         raise NotADirectoryError
 
     with (
-        gzip.open(output_path, "wb") as json_schema_h,
+        open(output_path, "w") as json_schema_h,
         TemporaryDirectory() as unzip_tmpdir,
         ZipFile(zipped_path, "r") as workflow_zip
     ):
@@ -482,7 +482,5 @@ def create_cwl_inputs_schema_gen(zipped_path: Path, output_path: Path):
         )
 
         json_schema_h.write(
-            bytes(
-                (json.dumps(json.loads(json_schema_gen_stdout), indent=2, ensure_ascii=False) + "\n").encode()
-            )
+          json.dumps(json.loads(json_schema_gen_stdout), indent=2, ensure_ascii=False) + "\n"
         )
