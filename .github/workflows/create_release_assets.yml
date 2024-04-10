@@ -55,7 +55,7 @@ jobs:
       # Standard checkout step
       - name: Checkout code
         id: git_checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # Use qemu to perform multiplatform builds
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -65,7 +65,7 @@ jobs:
         with:
           use: true
           install: true
-          config-inline: |
+          buildkitd-config-inline: |
             [worker.oci]
               max-parallelism = 2
       # Log in to GitHub Container registry
