@@ -6,9 +6,11 @@ Again CWL helpers that have been WET Types all over the shop.
 
 # External imports
 from copy import deepcopy
+from os import environ
 from typing import List, Dict, Union, Tuple
 from pathlib import Path
-from urllib.parse import urlparse, urldefrag
+from urllib.parse import urlparse, urldefrag, quote
+from ruamel.yaml import YAML, CommentedMap
 
 # CWL Utils
 from cwl_utils.parser.latest import \
@@ -86,22 +88,72 @@ def get_include_items(cwl_item: CWL) -> List[Path]:
     return include_items
 
 
-def create_template_from_workflow_inputs(workflow_inputs: List[WorkflowInputParameter]):
+def create_template_from_workflow_inputs(workflow_inputs: List[WorkflowInputParameter], output_format="json"):
     """
     List inputs by template
     :param workflow_inputs:
     :return:
     """
+
+    if output_format == "yaml":
+        return create_template_from_workflow_inputs_yaml(workflow_inputs)
+
     input_type_dict = {}
 
     for workflow_input in workflow_inputs:
         input_type_dict.update(
             {
-                shortname(workflow_input.id): get_workflow_input_type(workflow_input)
+                shortname(workflow_input.id): get_workflow_input_template_value(workflow_input)
             }
         )
 
     return input_type_dict
+
+
+def create_template_from_workflow_inputs_yaml(workflow_inputs: List[WorkflowInputParameter]):
+    # Local imports
+    from .gh_helpers import get_github_url
+
+    yaml_dict = CommentedMap()
+
+    # Iterate through workflow inputs
+    for workflow_input in workflow_inputs:
+        # Initialise the input key
+        yaml_dict.update(
+            {
+                shortname(workflow_input.id): get_workflow_input_template_value(workflow_input)
+            }
+        )
+
+        # Add label
+        before_comments = [
+            f"{workflow_input.label} ({'Required' if not get_workflow_input_is_optional(workflow_input) else 'Optional'})"
+        ]
+
+        # Add default if it exists
+        if workflow_input.default is not None:
+            before_comments.append(f"Default value: {workflow_input.default}")
+
+        # Add docs
+        before_comments.append(f"Docs: {workflow_input.doc}")
+
+        # Write comment to commented map
+        yaml_dict.yaml_set_comment_before_after_key(
+            key=shortname(workflow_input.id),
+            before='\n' + '\n'.join(before_comments),
+            after="\n"
+        )
+
+    # Add a top comment to point to the schema for the input
+    # Convert '/' to %2F
+    tag_safe_quote = quote(environ["GITHUB_TAG"].split(",")[-1], safe='')
+    tag_join_underscore = '__'.join(environ["GITHUB_TAG"].split(",")[-1].split("/"))
+    yaml_dict.yaml_set_start_comment(
+        comment=f'yaml-language-server: $schema={get_github_url()}/releases/download/{tag_safe_quote}/{tag_join_underscore}.schema.json'
+    )
+
+    # Return the yaml
+    return yaml_dict
 
 
 def create_template_from_workflow_outputs(workflow_outputs: List[WorkflowOutputParameter]):
@@ -122,17 +174,25 @@ def create_template_from_workflow_outputs(workflow_outputs: List[WorkflowOutputP
     return output_type_dict
 
 
-def get_workflow_input_type(workflow_input: WorkflowInputParameter):
+def get_workflow_input_is_optional(workflow_input: WorkflowInputParameter):
+    if isinstance(workflow_input.type_, List) and workflow_input.type_[0] == 'null':
+        return True
+    elif getattr(workflow_input, 'default') is not None:
+        return True
+    return False
+
+
+def get_workflow_input_template_value(workflow_input: WorkflowInputParameter):
     if isinstance(workflow_input.type_, str):
-        return get_workflow_input_type_from_str_type(workflow_input)
+        return get_workflow_input_template_value_from_str_type(workflow_input)
     elif isinstance(workflow_input.type_, InputEnumSchemaType):
-        return get_workflow_input_type_from_enum_schema(workflow_input)
+        return get_workflow_input_template_value_from_enum_schema(workflow_input)
     elif isinstance(workflow_input.type_, InputArraySchemaType):
-        return get_workflow_input_type_from_array_schema(workflow_input)
+        return get_workflow_input_template_value_from_array_schema(workflow_input)
     elif isinstance(workflow_input.type_, InputRecordSchemaType):
-        return get_workflow_input_type_from_record_schema(workflow_input)
+        return get_workflow_input_template_value_from_record_schema(workflow_input)
     elif isinstance(workflow_input.type_, List):
-        return get_workflow_input_type_from_array_type(workflow_input)
+        return get_workflow_input_template_value_from_array_type(workflow_input)
     else:
         logger.warning(f"Don't know what to do here with {type(workflow_input.type_)}")
 
@@ -162,7 +222,7 @@ def get_workflow_parameter_type_from_enum_schema(workflow_parameter: WorkflowPar
     return shortname(workflow_parameter_type.symbols[0])
 
 
-def get_workflow_input_type_from_enum_schema(workflow_input: WorkflowInputParameter):
+def get_workflow_input_template_value_from_enum_schema(workflow_input: WorkflowInputParameter):
     """
     Workflow input type is an enum type
     :param workflow_input:
@@ -193,11 +253,11 @@ def get_workflow_type_from_array_schema(workflow_parameter: WorkflowParameterTyp
     workflow_parameter_new.type_ = workflow_parameter.type_.items
 
     return [
-        get_workflow_input_type(workflow_parameter_new)
+        get_workflow_input_template_value(workflow_parameter_new)
     ]
 
 
-def get_workflow_input_type_from_array_schema(workflow_input: WorkflowInputParameter):
+def get_workflow_input_template_value_from_array_schema(workflow_input: WorkflowInputParameter):
     """
     Workflow input type is an array schema
     items attribute may be a file uri
@@ -218,7 +278,7 @@ def get_workflow_output_type_from_array_schema(workflow_output: WorkflowOutputPa
     return get_workflow_type_from_array_schema(workflow_output)
 
 
-def get_workflow_input_type_from_record_schema(workflow_input: WorkflowInputParameter):
+def get_workflow_input_template_value_from_record_schema(workflow_input: WorkflowInputParameter):
     raise NotImplementedError
 
 
@@ -238,10 +298,10 @@ def get_workflow_type_from_array_type(workflow_parameter: WorkflowParameterType)
         raise ValueError
     workflow_input_new = deepcopy(workflow_parameter)
     workflow_input_new.type_ = workflow_parameter.type_[1]
-    return get_workflow_input_type(workflow_input_new)
+    return get_workflow_input_template_value(workflow_input_new)
 
 
-def get_workflow_input_type_from_array_type(workflow_input: WorkflowInputParameter):
+def get_workflow_input_template_value_from_array_type(workflow_input: WorkflowInputParameter):
     """
     Workflow input is type list -
     likely that the first input is 'null'
@@ -301,7 +361,7 @@ def get_workflow_parameter_type_from_str_type(workflow_parameter: WorkflowParame
         logger.warning(f"Don't know what to do here with {workflow_parameter.type_}")
 
 
-def get_workflow_input_type_from_str_type(workflow_input: WorkflowInputParameter):
+def get_workflow_input_template_value_from_str_type(workflow_input: WorkflowInputParameter):
     """
     Workflow input type is a string type
     :param workflow_input:
