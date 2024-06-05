@@ -226,7 +226,7 @@ class CWL:
                 [
                     "conda", "run",
                     "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
-                    "cwltool", "--no-doc-cache", "--validate", cwl_file_path
+                    "cwltool", "--no-doc-cache", "--validate", str(cwl_file_path)
 
                 ],
                 capture_output=True)

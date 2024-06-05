@@ -35,11 +35,11 @@ from os import environ
 import re
 from argparse import ArgumentError
 from json import JSONDecodeError
-from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory, NamedTemporaryFile
 from urllib.parse import urldefrag
 from zipfile import ZipFile
 from time import sleep
-from ruamel.yaml import CommentedSeq
+from ruamel.yaml import CommentedSeq, YAML
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 from mdutils import MdUtils
@@ -134,6 +134,10 @@ Environment Variables
         self.zipped_workflow_path = None  # type: Optional[Path]
         self.packed_workflow_path = None  # type: Optional[Path]
         self.json_schema_gen_path = None  # type: Optional[Path]
+        self.input_template_json_path = None  # type: Optional[Path]
+        self.input_template_yaml_path = None  # type: Optional[Path]
+        self.overrides_template_json = None  # type: Optional[Path]
+        self.overrides_template_yaml = None  # type: Optional[Path]
         self.zipped_cwl_obj = None  # type: Optional[CWLWorkflow]
 
         # Release artifacts
@@ -158,6 +162,8 @@ Environment Variables
         # Create release assets
         self.create_compressed_packed_workflow()
         self.create_cwl_inputs_schema_gen()
+        self.create_inputs_templates_as_release_assets()
+        self.create_overrides_as_release_assets()
 
     def check_args(self):
         """
@@ -225,6 +231,12 @@ Environment Variables
         self.packed_workflow_path = self.release_artifacts_path / (self.release_name + ".packed.cwl.json.gz")
         # json_schema_gen_path
         self.json_schema_gen_path = self.release_artifacts_path / (self.release_name + ".schema.json")
+        # Inputs paths
+        self.input_template_json_path = self.release_artifacts_path / (self.release_name + ".inputs.json")
+        self.input_template_yaml_path = self.release_artifacts_path / (self.release_name + ".inputs.yaml")
+        # Release assets
+        self.overrides_template_yaml = self.release_artifacts_path / (self.release_name + ".zipped.overrides.yaml")
+        self.overrides_template_json = self.release_artifacts_path / (self.release_name + ".zipped.overrides.json")
 
         # Get md path
         self.md_path = Path(self.md_path_tmpdir.name) / "ReleaseNotes.md"
@@ -405,6 +417,59 @@ Environment Variables
             self.json_schema_gen_path
         )
 
+    def create_inputs_templates_as_release_assets(self):
+        # Write out yaml
+        with open(self.input_template_yaml_path, 'w') as yaml_h:
+            yaml_obj = YAML()
+            yaml_obj.dump(
+                create_template_from_workflow_inputs(self.cwl_obj.cwl_obj.inputs, output_format="yaml"),
+                yaml_h
+            )
+
+        # Write out json
+        with open(self.input_template_json_path, 'w') as json_h:
+            json_h.write(
+                json.dumps(
+                    create_template_from_workflow_inputs(self.cwl_obj.cwl_obj.inputs),
+                    indent=4
+                )
+            )
+
+    def create_overrides_as_release_assets(self):
+        from ...utils.cwl_helper_utils import shortname
+
+        with TemporaryDirectory() as zipped_temp_dir, ZipFile(self.zipped_workflow_path, "r") as zip_h:
+            # Extract zipped into tempdir
+            zip_h.extractall(zipped_temp_dir)
+
+            # Get workflow.cwl
+            workflow_cwl_file_path = Path(zipped_temp_dir) / self.zipped_workflow_path.stem / "workflow.cwl"
+            zipped_cwl_workflow_obj = load_document_by_uri(workflow_cwl_file_path)
+
+            zipped_cwl_workflow_overrides = get_workflow_overrides_steps_dict(
+                workflow_steps=zipped_cwl_workflow_obj.steps,
+                calling_relative_workflow_file_path=Path(Path(workflow_cwl_file_path).name),
+                calling_workflow_id=shortname(zipped_cwl_workflow_obj.id),
+                original_relative_directory=workflow_cwl_file_path.parent
+            )
+
+        # Write out as yaml
+        with open(self.overrides_template_yaml, 'w') as yaml_h:
+            yaml_obj = YAML()
+            yaml_obj.dump(
+                zipped_cwl_workflow_overrides,
+                yaml_h
+            )
+
+        # Write out json
+        with open(self.overrides_template_json, 'w') as json_h:
+            json_h.write(
+                json.dumps(
+                    zipped_cwl_workflow_overrides,
+                    indent=4
+                )
+            )
+
     # MDUtils sections
     def initialise_markdown_file(self):
         """
@@ -527,8 +592,8 @@ Environment Variables
             # Add the image
             self.md_file_obj.new_line(
                 self.md_file_obj.new_inline_image(
-                        path=workflow_image_url,
-                        text=workflow_name
+                    path=workflow_image_url,
+                    text=workflow_name
                 )
             )
 
@@ -537,6 +602,32 @@ Environment Variables
     def add_inputs_template_section(self):
         self.md_file_obj.new_header(
             level=2, title="Inputs Template", add_table_of_contents="n"
+        )
+
+        # Yaml header
+        self.md_file_obj.new_header(
+            level=3, title="Yaml"
+        )
+
+        self.md_file_obj.new_line("<details>")
+        self.md_file_obj.new_line("<summary>Click to expand!</summary>\n")
+
+        temp_file = NamedTemporaryFile(delete=False).name
+        with open(temp_file, 'w') as temp_h:
+            yaml_obj = YAML()
+            yaml_obj.dump(
+                create_template_from_workflow_inputs(self.cwl_obj.cwl_obj.inputs, output_format="yaml"),
+                temp_h
+            )
+        with open(temp_file, 'r') as temp_h:
+            self.md_file_obj.insert_code(
+                temp_h.read()
+            )
+        self.md_file_obj.new_line("</details>\n")
+
+        # JSon Template
+        self.md_file_obj.new_header(
+            level=3, title="Json"
         )
 
         self.md_file_obj.new_line("<details>")
@@ -747,9 +838,10 @@ Environment Variables
             workflow_image_path = self.get_release_artifact_output_path() / (workflow.stem + ".svg")
             workflow_image_url = self.get_repo_url_from_relative_repo_path(workflow_image_path)
             name, version = workflow.stem.split("__", 1)
-            workflow_obj = CWLWorkflow(cwl_file_path=get_workflows_dir() / name / version / (name + "__" + version + ".cwl"),
-                                       name=name,
-                                       version=version)
+            workflow_obj = CWLWorkflow(
+                cwl_file_path=get_workflows_dir() / name / version / (name + "__" + version + ".cwl"),
+                name=name,
+                version=version)
             workflow_obj()
             workflow_obj.generate_workflow_image(
                 workflow_image_path
@@ -952,7 +1044,11 @@ Environment Variables
             [
                 self.packed_workflow_path,
                 self.zipped_workflow_path,
-                self.json_schema_gen_path
+                self.json_schema_gen_path,
+                self.input_template_json_path,
+                self.input_template_yaml_path,
+                self.overrides_template_json,
+                self.overrides_template_yaml
             ]
         )
 
@@ -1065,7 +1161,8 @@ Environment Variables
         # Commit
         git_commit_command = [
             "git", "commit",
-            "-m", f"Updated .dockstore.yml and packed json to include {self.cwl_file_path} with tags {', '.join(self.github_tag)}"
+            "-m",
+            f"Updated .dockstore.yml and packed json to include {self.cwl_file_path} with tags {', '.join(self.github_tag)}"
         ]
 
         git_commit_returncode, git_commit_stdout, git_commit_stderr = run_subprocess_proc(
