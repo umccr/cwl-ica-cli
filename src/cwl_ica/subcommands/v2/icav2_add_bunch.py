@@ -13,13 +13,15 @@ from ruamel.yaml import CommentedSeq
 from argparse import ArgumentError
 from typing import Optional, List, Dict, Union, Type
 
+# Wrapica imports
+from wrapica.region import get_regions
+
 # Utils
 from ...utils.icav2_gh_helpers import (
     get_bunch_attributes_from_input_yaml, get_bunch_names,
     get_bunch_from_bunch_name, get_dataset_from_dataset_name,
     read_config_yaml, write_config_yaml
 )
-from ...utils.icav2_helpers import get_regions, get_icav2_configuration
 from ...utils.logging import get_logger
 from ...utils.errors import CheckArgumentError
 
@@ -256,7 +258,7 @@ Example:
             self.__setattr__(attr_name, values_in_yaml_and_cli)
 
     def set_bunch_region_attributes(self):
-        regions_list = get_regions(get_icav2_configuration())
+        regions_list = get_regions()
 
         if self.bunch_region_id is None and self.bunch_region_city_name is None:
 

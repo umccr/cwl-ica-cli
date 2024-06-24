@@ -93,6 +93,11 @@ Command:
     add-linked-project                  Link an existing project-id to an initialised project in project.yaml
 
 
+    #######################
+    Release Commands
+    #######################
+    workflow-release                    Release a workflow to GitHub
+
     ########################
     Add-category Commands
     ########################
@@ -298,6 +303,10 @@ def _dispatch():
         from ..subcommands.updaters.add_tool_to_project import AddToolToProject as command_to_call
     elif cmd == "add-workflow-to-project":
         from ..subcommands.updaters.add_workflow_to_project import AddWorkflowToProject as command_to_call
+
+    # Add workflow sync
+    elif cmd == "workflow-release":
+        from ..subcommands.creators.create_workflow_release import CreateWorkflowRelease as command_to_call
 
     # Add category to 'x' commands
     elif cmd == "add-category-to-tool":

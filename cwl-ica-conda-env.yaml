@@ -2,6 +2,6 @@ name: cwl-ica
 channels:
   - defaults
 dependencies:
-  - python>=3.11  # Required for tomllib
+  - python>=3.12  # wrapica requires python 3.12
   - pip
   - nodejs>=18

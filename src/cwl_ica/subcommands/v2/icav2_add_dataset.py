@@ -18,13 +18,16 @@ import os
 # Libica
 from libica.openapi.v2.model.data import Data
 
+# Wrapica
+from wrapica.project_data import get_project_data_obj_by_id, convert_icav2_uri_to_data_obj
+from wrapica.project import check_project_has_data_sharing_enabled
+
 # Utils
 from ...utils.docopt_helpers import clean_multi_args
 from ...utils.icav2_gh_helpers import (
-    get_dataset_from_input_yaml, get_data_obj_from_data_uri,
-    is_data_id, read_config_yaml, get_data_obj_from_data_id
+    get_dataset_from_input_yaml,
+    is_data_id_format, read_config_yaml
 )
-from ...utils.icav2_helpers import check_project_has_data_sharing_enabled
 from ...utils.logging import get_logger
 from ...utils.errors import CheckArgumentError
 
@@ -171,7 +174,7 @@ Example:
             raise CheckArgumentError
 
         # Check if input yaml is provided
-        input_yaml_arg = self.args.get("--input-yaml", None)
+        input_yaml_arg: str | None = self.args.get("--input-yaml", None)
         if input_yaml_arg is not None:
             if not Path(input_yaml_arg).is_file():
                 logger.error(f"Could not find file --input-yaml '{input_yaml_arg}'")
@@ -222,13 +225,13 @@ Example:
         config = read_config_yaml()
         if config is not None:
             datasets = config.get("datasets", None)
-            dataset_names_list = list(map(lambda dataset: dataset.get("dataset_name"), datasets))
+            dataset_names_list = list(map(lambda dataset: dataset.get("dataset_name", None), datasets))
             if datasets is not None and self.dataset_name in dataset_names_list:
                 logger.error("Dataset name already in icav2.yaml")
                 raise CheckArgumentError
 
-        project_id_arg_list = self.args.get("--project-id", None)
-        data_id_arg_list = self.args.get("--data-id", None)
+        project_id_arg_list: List | None = self.args.get("--project-id", None)
+        data_id_arg_list: List | None = self.args.get("--data-id", None)
 
         if data_id_arg_list is not None:
             # Check project id is specified if data id is specified on cli
@@ -244,25 +247,25 @@ Example:
 
             # Get data parameter list
             for project_id_arg, data_id_arg in zip_longest(project_id_arg_list, data_id_arg_list):
-                self.data_list_obj.append(get_data_obj_from_data_id(project_id_arg, data_id_arg))
+                self.data_list_obj.append(get_project_data_obj_by_id(project_id_arg, data_id_arg))
 
         # Check uri list
         for data_uri_arg in self.args.get("--data-uri"):
-            self.data_list_obj.append(get_data_obj_from_data_uri(data_uri_arg))
+            self.data_list_obj.append(convert_icav2_uri_to_data_obj(data_uri_arg))
 
         # Check generic --data arg
         for index_arg, data_arg in enumerate(self.args.get("--data")):
-            if is_data_id(data_arg):
+            if is_data_id_format(data_arg):
                 if not len(project_id_arg_list) == 1 and not len(project_id_arg_list) == len(self.args.get("--data")):
                     logger.error(
                         "Please either specify --project-id just once or as many times as --data is specified")
                     raise CheckArgumentError
                 if len(project_id_arg_list) == 1:
-                    self.data_list_obj.append(get_data_obj_from_data_id(project_id_arg_list[0], data_arg))
+                    self.data_list_obj.append(get_project_data_obj_by_id(project_id_arg_list[0], data_arg))
                 else:
-                    self.data_list_obj.append(get_data_obj_from_data_id(project_id_arg_list[index_arg], data_arg))
+                    self.data_list_obj.append(get_project_data_obj_by_id(project_id_arg_list[index_arg], data_arg))
             else:
-                self.data_list_obj.append(get_data_obj_from_data_uri(data_arg))
+                self.data_list_obj.append(convert_icav2_uri_to_data_obj(data_arg))
 
         # Convert data objects to dataset items
         self.dataset_items: List[DatasetItem] = [
@@ -270,7 +273,7 @@ Example:
                 create=True,
                 data_obj=data_obj,
             )
-            if data_obj.details.data_type == "FILE"
+            if data_obj.data.details.data_type == "FILE"
             else
             DatasetItemFolder(
                 create=True,

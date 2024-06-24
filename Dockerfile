@@ -7,12 +7,15 @@ ARG CONDA_USER_NAME="cwl_ica_user"
 ARG CONDA_USER_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
-ARG ICAV2_PLUGINS_CLI_VERSION="v2.20.1"
-ARG ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION="3.11"
-ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.11"
+ARG ICAV2_CLI_VERSION="2.26.0"
+ARG ICAV2_PLUGINS_CLI_VERSION="v2.27.0.dev20240624111939"
+ARG ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION="3.12"
+ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.12"
 ARG CURL_VERSION="7.81.0"
 ARG CWL_UTILS_REPO_PATH="https://github.com/alexiswl/cwl-utils"
 ARG CWL_UTILS_REPO_BRANCH="enhancement/cwl-inputs-schema-gen"
+
+ARG TARGETPLATFORM
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
     echo "Updating Apt" 1>&2 && \
@@ -36,7 +39,8 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       libnghttp2-dev \
       libssl-dev \
       wget \
-      autoconf && \
+      autoconf \
+      busybox && \
     echo "Cleaning up after apt installations" 1>&2 && \
     apt-get clean -y && \
     echo "Installing yq" 1>&2 && \
@@ -102,6 +106,17 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       --gid "${CONDA_GROUP_ID}" \
       --uid "${CONDA_USER_ID}" "${CONDA_USER_NAME}"
 
+# Install ICAv2 CLI
+# Important for projectpipelines get command
+# Where we want to swap out the tokens depending on the tenant
+RUN \
+  echo "Installing ICAv2 CLI" 1>&2 && \
+  wget --quiet \
+    --output-document "/dev/stdout" \
+    "https://stratus-documentation-us-east-1-public.s3.amazonaws.com/cli/${ICAV2_CLI_VERSION}/ica-linux-${TARGETPLATFORM#linux/}.zip" | \
+  busybox unzip -p - "linux-${TARGETPLATFORM#linux/}/icav2" > "/usr/local/bin/icav2" && \
+  chmod +x "/usr/local/bin/icav2"
+
 
 # Copy over source to . for user
 COPY . "/cwl-ica-src-temp/"
@@ -110,6 +125,7 @@ RUN \
     cp -r "/cwl-ica-src-temp/." "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
     chown -R "${CONDA_USER_ID}:${CONDA_GROUP_ID}" "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
     rm -rf  "/cwl-ica-src-temp/"
+
 
 # Switch to conda user
 USER "${CONDA_USER_NAME}"

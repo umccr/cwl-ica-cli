@@ -11,24 +11,24 @@ from pathlib import Path
 from hashlib import md5
 from typing import List, Tuple, Dict, Optional
 from urllib.parse import urlparse
+import json
 from ruamel.yaml import YAML, CommentedMap, CommentedSeq
 
-# Libica
-from libica.openapi.v2 import Configuration, ApiClient, ApiException
-from libica.openapi.v2.api.bundle_api import BundleApi
-from libica.openapi.v2.api.pipeline_api import PipelineApi
-from libica.openapi.v2.model.create_bundle import CreateBundle
-from libica.openapi.v2.model.bundle import Bundle
-from libica.openapi.v2.model.data import Data
-from libica.openapi.v2.model.links import Links
-from libica.openapi.v2.model.pipeline import Pipeline
-from libica.openapi.v2.model.project_data import ProjectData
+# Wrapica
+from wrapica.data import Data
+
+from wrapica.project_data import (
+    ProjectData,
+    find_project_data_bulk,
+    convert_icav2_uri_to_data_obj,
+    get_project_data_obj_by_id, 
+    is_data_id_format
+)
+from wrapica.enums import DataType
 
 # Local Utils
 from .errors import ProjectV2NotFoundError, BunchNotFoundError
 from .globals import ICAV2_DEFAULT_BASE_URL
-from .icav2_helpers import get_icav2_configuration, get_data_obj_by_id, \
-    convert_icav2_uri_to_data_obj, is_data_id, get_files_from_directory_id_recursively
 from .logging import get_logger
 from .subprocess_handler import run_subprocess_proc
 
@@ -124,15 +124,15 @@ def generate_data_id_md5sum(data_list: List[Data]) -> str:
     return data_ids_md5sum
 
 
-def generate_e_tag_md5sum_from_file_list(data_list: List[Data]) -> str:
+def generate_e_tag_md5sum_from_file_list(data_list: List[ProjectData]) -> str:
     sorted_data_list_etags = list(
         map(
             # Get the etag from the sorted list
-            lambda file_item: file_item.details.object_e_tag,
+            lambda file_item: file_item.data.details.object_e_tag,
             # data list sorted by the path attribute
             sorted(
                 data_list,
-                key=lambda x: x.details.path
+                key=lambda x: x.data.details.path
             )
         )
     )
@@ -147,15 +147,15 @@ def generate_e_tag_md5sum_from_file_list(data_list: List[Data]) -> str:
     return etags_md5sum
 
 
-def generate_folder_structure_md5sum_from_file_list(data_list: List[Data], parent_folder_path: Path) -> str:
+def generate_folder_structure_md5sum_from_file_list(data_list: List[ProjectData], parent_folder_path: Path) -> str:
     sorted_data_list_paths = list(
         map(
             # Get the path from the sorted list
-            lambda file_item: str(Path(file_item.details.path).relative_to(parent_folder_path)),
+            lambda file_item: str(Path(file_item.data.details.path).relative_to(parent_folder_path)),
             # data list sorted by the path attribute
             sorted(
                 data_list,
-                key=lambda x: x.details.path
+                key=lambda x: x.data.details.path
             )
         )
     )
@@ -183,7 +183,11 @@ def get_folder_specific_dataset_attributes(data_obj: Data) -> Dict:
     project_id = data_obj.details.owning_project_id
 
     # All subfiles
-    all_files = get_files_from_directory_id_recursively(project_id, data_obj.id, get_icav2_configuration())
+    all_files = find_project_data_bulk(
+        project_id=project_id,
+        parent_folder_id=data_obj.id,
+        data_type=DataType.FILE
+    )
 
     # Step 1 -> Find all files within a folder
     num_files = len(all_files)
@@ -339,7 +343,7 @@ def add_project_to_config_yaml(tenant_name: str, project_name: str, project_id: 
     write_config_yaml(data)
 
 
-def get_dataset_from_input_yaml(input_yaml_path: Path) -> Tuple[Optional[str], Optional[str], List[Data]]:
+def get_dataset_from_input_yaml(input_yaml_path: Path) -> Tuple[Optional[str], Optional[str], List[ProjectData]]:
     # Get dataset name
     yaml_obj = YAML()
 
@@ -364,7 +368,7 @@ def get_dataset_from_input_yaml(input_yaml_path: Path) -> Tuple[Optional[str], O
     else:
         dataset_description = None
 
-    dataset_list: List[Data] = []
+    dataset_list: List[ProjectData] = []
 
     # Read data objects
     if "data" in input_yaml_map.keys():
@@ -379,69 +383,50 @@ def get_dataset_from_input_yaml(input_yaml_path: Path) -> Tuple[Optional[str], O
             if isinstance(data_item, str):
                 # Must be of uri origin
                 dataset_list.append(
-                    get_data_obj_from_data_uri(data_item)
+                    convert_icav2_uri_to_data_obj(data_item)
                 )
             elif isinstance(data_item, Dict):
-                data_attr = data_item.get("data", None)
-                data_id_attr = data_item.get("data_id", None)
-                data_uri_attr = data_item.get("data_uri", None)
-                project_id_attr = data_item.get("project_id", None)
+                data_attr: str | None = data_item.get("data", None)
+                data_id_attr: str | None = data_item.get("data_id", None)
+                data_uri_attr: str | None = data_item.get("data_uri", None)
+                project_id_attr: str | None = data_item.get("project_id", None)
                 # Get data id if specified
                 if data_id_attr is not None:
-                    if not is_data_id(data_id_attr):
+                    if not is_data_id_format(data_id_attr):
                         logger.error(f"Got data_id attribute as {data_id_attr} but this is not a valid data id")
+                        raise ValueError
                     # Check project id
                     if project_id_attr is None:
                         logger.error(f"Cannot specfiy a data id {data_attr} without a project id attribute")
                         raise ValueError
                     # Get data item
                     dataset_list.append(
-                        get_data_obj_by_id(project_id_attr, data_attr, get_icav2_configuration())
+                        get_project_data_obj_by_id(project_id_attr, data_attr)
                     )
                 # Get data attribute
                 if data_attr is not None:
-                    if is_data_id(data_attr):
+                    if is_data_id_format(data_attr):
                         # Check project id
                         if project_id_attr is None:
                             logger.error(f"Cannot specfiy a data id {data_attr} without a project id attribute")
                             raise ValueError
                         # Get data item
                         dataset_list.append(
-                            get_data_obj_by_id(project_id_attr, data_attr, get_icav2_configuration())
+                            get_project_data_obj_by_id(project_id_attr, data_attr)
                         )
                     else:
                         dataset_list.append(
-                            get_data_obj_from_data_uri(data_attr)
+                            convert_icav2_uri_to_data_obj(data_attr)
                         )
                 elif data_uri_attr is not None:
                     dataset_list.append(
-                        get_data_obj_from_data_uri(data_uri_attr)
+                        convert_icav2_uri_to_data_obj(data_uri_attr)
                     )
                 else:
                     logger.error("Must specify one of data, data_id or data_uri keys")
                     raise ValueError
 
     return dataset_name, dataset_description, dataset_list
-
-
-def get_data_obj_from_data_uri(data_uri: str) -> Data | List[Data]:
-    projectdata_obj: ProjectData = convert_icav2_uri_to_data_obj(data_uri, get_icav2_configuration())
-    project_id = projectdata_obj.project_id
-    data_obj = projectdata_obj.data
-    if data_obj.details.data_type == "FILE":
-        return data_obj
-    else:
-        return get_files_from_directory_id_recursively(project_id, data_obj.get("id"), get_icav2_configuration())
-
-
-def get_data_obj_from_data_id(project_id: str, data_id: str) -> Data | List[Data]:
-    data_obj = get_data_obj_by_id(project_id, data_id, get_icav2_configuration())
-    if data_obj.details.data_type == "FILE":
-        return data_obj
-    else:
-        return get_files_from_directory_id_recursively(
-            project_id, data_obj.get("id"), get_icav2_configuration()
-        )
 
 
 def get_dataset_from_dataset_name(dataset_name: str) -> Dataset:
@@ -481,69 +466,6 @@ def get_bunch_attributes_from_input_yaml(input_yaml_path: Path) -> CommentedMap:
     return data
 
 
-def generate_empty_bundle(
-        bundle_name: str, bundle_version: str,
-        bundle_description: str, bundle_version_description: str,
-        region_id: str, categories: List[str],
-        pipeline_release_url: str,
-        icav2_access_token: str
-    ) -> Bundle:
-    """
-    Generate an empty bundle
-    :param bundle_name:
-    :param bundle_version:
-    :param bundle_description:
-    :param bundle_version_description:
-    :param region_id:
-    :param categories:
-    :param pipeline_release_url
-    :param icav2_access_token:
-    :return:
-    """
-    # Configuration needs manual work with custom access token
-    configuration = Configuration(
-        host=os.environ.get("ICAV2_BASE_URL", ICAV2_DEFAULT_BASE_URL),
-        access_token=icav2_access_token
-    )
-
-    with ApiClient(configuration) as api_client:
-        # Create an instance of the API class
-        api_instance = BundleApi(api_client)
-
-    create_bundle = CreateBundle(
-        name=bundle_name,
-        short_description=bundle_description,
-        bundle_release_version=bundle_version,
-        bundle_version_comment=bundle_version_description,
-        region_id=region_id,
-        bundle_status="DRAFT",
-        categories=categories,
-        links=Links(
-            links=[
-                # Drop link while https://github.com/umccr-illumina/ica_v2/issues/156 is still active
-                # Link(
-                #     name="GitHub CWL-ICA Release Page",
-                #     url=pipeline_release_url
-                # )
-            ],
-            licenses=[],
-            homepages=[],
-            publications=[]
-        )
-    )
-
-    # example passing only required values which don't have defaults set
-    # and optional values
-    try:
-        # Create a new bundle
-        api_response: Bundle = api_instance.create_bundle(create_bundle=create_bundle)
-    except ApiException as e:
-        logger.error("Exception when calling BundleApi->create_bundle: %s\n" % e)
-        raise ApiException
-
-    return api_response
-
-
 def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token: str):
     """
     Given a bundle id and a pipeline id, add the pipeline to the bundle
@@ -557,7 +479,6 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -569,7 +490,7 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
         "bundles",
         "add-pipeline",
         bundle_id,
-        "--pipeline-id", pipeline_id
+        "--pipeline", pipeline_id
     ]
 
     link_pipeline_returncode, link_pipeline_stdout, link_pipeline_stderr = run_subprocess_proc(
@@ -581,6 +502,65 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
     if not link_pipeline_returncode == 0:
         logger.error(f"{link_pipeline_stdout}")
         logger.error(f"{link_pipeline_stderr}")
+        raise ChildProcessError
+
+
+def generate_empty_bundle(
+    bundle_name: str,
+    bundle_version: str,
+    bundle_description: str,
+    bundle_version_description: str,
+    region_id: str,
+    categories: List[str],
+    pipeline_release_url: str,
+    icav2_access_token: str
+):
+    """
+    Generate an empty bundle
+    :param bundle_name:
+    :param bundle_version:
+    :param bundle_description:
+    :param bundle_version_description:
+    :param region_id:
+    :param categories:
+    :param pipeline_release_url:
+    :param icav2_access_token:
+    :return:
+    """
+    # Create pipeline from GitHub release
+    proc_environ = os.environ.copy()
+
+    proc_environ.update(
+        {
+            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
+            "ICAV2_ACCESS_TOKEN": icav2_access_token
+        }
+    )
+
+    link_data_command = [
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
+        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
+        "bundles",
+        "init",
+        bundle_name,
+        "--short-description", bundle_description,
+        "--bundle-version", bundle_version,
+        "--bundle-version-description", bundle_version_description,
+    ]
+
+    # Extend with categories
+    for category in categories:
+        link_data_command.extend(["--category", category])
+
+    link_data_returncode, link_data_stdout, link_data_stderr = run_subprocess_proc(
+        link_data_command,
+        env=proc_environ,
+        capture_output=True
+    )
+
+    if not link_data_returncode == 0:
+        logger.error(f"{link_data_stdout}")
+        logger.error(f"{link_data_stderr}")
         raise ChildProcessError
 
 
@@ -597,7 +577,6 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -609,7 +588,7 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
         "bundles",
         "add-data",
         bundle_id,
-        "--data-id", data_id
+        "--data", data_id
     ]
 
     link_data_returncode, link_data_stdout, link_data_stderr = run_subprocess_proc(
@@ -636,7 +615,6 @@ def release_bundle(bundle_id: str, icav2_access_token: str):
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -675,7 +653,6 @@ def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: s
 
     proc_environ.update(
         {
-            "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
             "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
             "ICAV2_ACCESS_TOKEN": icav2_access_token
         }
@@ -781,31 +758,36 @@ def get_project_name_from_project_id(tenant_name: str, project_id: str) -> str:
 
 
 def get_pipeline_code_from_pipeline_id(pipeline_id, icav2_access_token) -> str:
-    """
-    Given a pipeline name,
-    :param pipeline_id:
-    :param icav2_access_token:
-    :return:
-    """
-    configuration = Configuration(
-        host=os.environ.get("ICAV2_BASE_URL", ICAV2_DEFAULT_BASE_URL),
-        access_token=icav2_access_token
+    # Create pipeline from GitHub release
+    proc_environ = os.environ.copy()
+
+    proc_environ.update(
+        {
+            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
+            "ICAV2_ACCESS_TOKEN": icav2_access_token
+        }
     )
 
-    # Enter a context with an instance of the API client
-    with ApiClient(configuration) as api_client:
-        # Create an instance of the API class
-        api_instance = PipelineApi(api_client)
+    pipelines_get_command = [
+        "icav2",
+        "projectpipelines",
+        "get",
+        pipeline_id,
+        "--output-format", "json"
+    ]
 
-        # example passing only required values which don't have defaults set
-        try:
-            # Retrieve a pipeline.
-            api_response: Pipeline = api_instance.get_pipeline(pipeline_id)
-        except ApiException as e:
-            logger.error("Exception when calling PipelineApi->get_pipeline: %s\n" % e)
-            raise ApiException
+    pipelines_get_returncode, pipelines_get_stdout, pipelines_get_stderr = run_subprocess_proc(
+        pipelines_get_command,
+        env=proc_environ,
+        capture_output=True
+    )
 
-    return api_response.code
+    if not pipelines_get_returncode == 0:
+        logger.error(f"{pipelines_get_stdout}")
+        logger.error(f"{pipelines_get_stderr}")
+        raise ChildProcessError
+
+    return json.loads(pipelines_get_stdout).get("code")
 
 
 def get_tenant_access_token(tenant_name) -> str:
