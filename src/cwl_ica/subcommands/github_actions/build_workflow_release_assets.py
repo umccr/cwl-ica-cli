@@ -65,8 +65,8 @@ from ...utils.gh_helpers import (
 from ...utils.globals import ICAV2_DEFAULT_BASE_URL
 from ...utils.icav2_gh_helpers import (
     read_config_yaml, write_config_yaml, get_icav2_config_yaml_path,
-    get_project_id_from_project_name, get_project_name_from_project_id, get_pipeline_code_from_pipeline_id,
-    get_tenant_access_token
+    get_project_id_from_project_name, get_project_name_from_project_id,
+    get_tenant_access_token, get_pipeline_code_from_pipeline_id
 )
 from ...utils.logging import get_logger
 from ...utils.miscell import (
@@ -1265,7 +1265,6 @@ Environment Variables
 
                 proc_environ.update(
                     {
-                        "PYTHONPATH": f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/lib/python3.11/site-packages/",
                         "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
                         "ICAV2_PROJECT_ID": pipeline_project_id,
                         "ICAV2_ACCESS_TOKEN": get_tenant_access_token(tenant_name)

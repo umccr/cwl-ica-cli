@@ -273,7 +273,10 @@ update_conda_env() {
 
   # Install other deps through pyproject.toml
   if [[ "${conda_env_name}" == "${CWL_ICA_CONDA_ENV_NAME}" ]]; then
-    conda run --name "${conda_env_name}" pip install "$(get_this_path)/."
+    conda run --name "${conda_env_name}" \
+      pip install \
+        --extra-index-url "https://test.pypi.org/simple" \
+        "$(get_this_path)/."
   fi
 }
 

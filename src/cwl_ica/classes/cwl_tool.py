@@ -122,7 +122,10 @@ class CWLTool(CWL):
             # Just make sure that 'ResourceRequirement' and 'DockerRequirement' are not in the 'requirements' section
             # Both should be in the hints section instead
             for requirement in requirements:
-                if isinstance(requirement, self.EXPECTED_HINT_TYPES):
+                if isinstance(requirement, ResourceRequirementType) and hasattr(requirement, "tmpdirMin"):
+                    # tmpDirMin must be in the requirements section
+                    pass
+                elif isinstance(requirement, self.EXPECTED_HINT_TYPES):
                     logger.error(f"Requirement {requirement.class_} should be in 'hints' section instead")
                     issue_count += 1
                     validation_passing = False

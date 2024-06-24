@@ -10,7 +10,7 @@ from os import environ
 from typing import List, Dict, Union, Tuple
 from pathlib import Path
 from urllib.parse import urlparse, urldefrag, quote
-from ruamel.yaml import YAML, CommentedMap
+from ruamel.yaml import CommentedMap
 
 # CWL Utils
 from cwl_utils.parser.latest import \

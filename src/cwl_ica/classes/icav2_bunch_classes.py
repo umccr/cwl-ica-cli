@@ -12,9 +12,16 @@ from ruamel.yaml import CommentedSeq
 from datetime import datetime, timezone
 
 # Libica imports
-from libica.openapi.v2.model.data import Data
+from libica.openapi.v2.model.project_data import ProjectData
 from libica.openapi.v2.model.region import Region
 
+# Wrapica imports
+from wrapica.user import get_user_name_from_user_id
+from wrapica.project_data import get_project_data_obj_by_id, find_project_data_bulk
+from wrapica.region import get_region_obj_from_project_id
+from wrapica.enums import DataType
+
+# Local imports
 # Utils
 from ..utils.errors import InvalidDataItem, InvalidBunchVersionName
 from ..utils.icav2_gh_helpers import (
@@ -22,10 +29,6 @@ from ..utils.icav2_gh_helpers import (
     read_config_yaml, write_config_yaml, generate_empty_bundle,
     add_pipeline_to_bundle, add_data_to_bundle, release_bundle, add_bundle_to_project, get_dataset_from_dataset_name,
     get_project_id_from_project_name
-)
-from ..utils.icav2_helpers import (
-    get_creator_name_from_creator_id, get_icav2_configuration,
-    get_files_from_directory_id_recursively, get_region_obj_from_project_id, get_data_obj_by_id
 )
 from ..utils.logging import get_logger
 from ..utils.miscell import get_name_version_tuple_from_cwl_file_path
@@ -61,7 +64,7 @@ class DatasetItem:
     def __init__(
             self,
             create: bool = True,
-            data_obj: Optional[Data] = None,
+            data_obj: Optional[ProjectData] = None,
             data_type: Optional[str] = None,
             **kwargs
     ):
@@ -70,27 +73,27 @@ class DatasetItem:
 
         if create:
             # DataSet Item not initialised
-            self.data_id: Optional[str] = data_obj.id
-            self.owning_project_id: Optional[str] = data_obj.details.owning_project_id
-            self.owning_project_name: Optional[str] = data_obj.details.owning_project_name
-            self.data_uri: Optional[str] = f"icav2://{data_obj.details.owning_project_name}{data_obj.details.path}"
-            self.creation_time: Optional[str] = data_obj.details.time_created.isoformat(
+            self.data_id: Optional[str] = data_obj.data.id
+            self.owning_project_id: Optional[str] = data_obj.data.details.owning_project_id
+            self.owning_project_name: Optional[str] = data_obj.data.details.owning_project_name
+            self.data_uri: Optional[str] = f"icav2://{data_obj.data.details.owning_project_name}{data_obj.data.details.path}"
+            self.creation_time: Optional[str] = data_obj.data.details.time_created.isoformat(
                 timespec='seconds'
             ).replace("+00:00", "Z")
-            self.modification_time: Optional[str] = data_obj.details.time_modified.isoformat(
+            self.modification_time: Optional[str] = data_obj.data.details.time_modified.isoformat(
                 timespec='seconds'
             ).replace("+00:00", "Z")
             self.data_type: Optional[str] = data_type
 
             # Set creator id / creator name if not set for data item
-            if hasattr(data_obj.details, "creator_id"):
-                self.creator_id = data_obj.details.creator_id
+            if hasattr(data_obj.data.details, "creator_id"):
+                self.creator_id = data_obj.data.details.creator_id
             else:
                 self.creator_id = None
 
             self.creator_name: Optional[str]
             if self.creator_id is not None:
-                self.creator_name = get_creator_name_from_creator_id(self.creator_id, get_icav2_configuration())
+                self.creator_name = get_user_name_from_user_id(self.creator_id)
             else:
                 self.creator_name = None
 
@@ -100,7 +103,7 @@ class DatasetItem:
             for key, value in kwargs.items():
                 setattr(self, key, value)
 
-    def set_type_attributes(self, data_obj: Data):
+    def set_type_attributes(self, data_obj: ProjectData):
         # Implemented in subclass
         raise NotImplementedError
 
@@ -130,14 +133,12 @@ class DatasetItem:
         return data_map
 
     @classmethod
-    def from_dict(cls, dataset_dict: OrderedDict):
-        """
-        Import from yaml
-        Implemented in subclass
-        :return:
-        """
-
-        raise NotImplementedError
+    def from_dict(cls, dataset_dict: Dict):
+        return cls(
+            create=False,
+            data_obj=dataset_dict.get("data_obj", None),
+            **dataset_dict
+        )
 
     def validate_dataset(self):
         """
@@ -148,11 +149,11 @@ class DatasetItem:
 
     def set_data_obj_attribute(self):
         # Required to validate dataset
-        # Takes the data id from an already existing dataset item and sets the data_obj Data attribute
+        # Takes the data id from an already existing dataset item and sets the data_obj ProjectData attribute
         if self.data_obj is not None:
             return
 
-        self.data_obj = get_data_obj_by_id(self.owning_project_id, self.data_id, get_icav2_configuration())
+        self.data_obj = get_project_data_obj_by_id(self.owning_project_id, self.data_id)
 
 
 class DatasetItemFolder(DatasetItem):
@@ -162,7 +163,7 @@ class DatasetItemFolder(DatasetItem):
     def __init__(
         self,
         create: Optional[bool] = None,
-        data_obj: Optional[Data] = None,
+        data_obj: Optional[ProjectData] = None,
         num_files: Optional[str] = None,
         folder_size_in_bytes: Optional[int] = None,
         object_e_tag_md5sum: Optional[str] = None,
@@ -181,18 +182,22 @@ class DatasetItemFolder(DatasetItem):
         # Collect args from super set
         super().__init__(create, data_obj, self.data_type, **kwargs)
 
-    def set_type_attributes(self, data_obj: Data):
+    def set_type_attributes(self, data_obj: ProjectData):
         # Get owning project id from the data object attribute
-        project_id = data_obj.details.owning_project_id
+        project_id = data_obj.data.details.owning_project_id
 
         # All subfiles
-        all_files = get_files_from_directory_id_recursively(project_id, data_obj.id, get_icav2_configuration())
+        all_files = find_project_data_bulk(
+            project_id=project_id,
+            parent_folder_id=data_obj.data.id,
+            data_type=DataType.FILE,
+        )
 
         # Step 1 -> Find all files within a folder
         self.num_files = len(all_files)
 
         # Step 2 -> Calculate file size of all files within a folder
-        self.folder_size_in_bytes = sum(map(lambda file_item: file_item.details.file_size_in_bytes, all_files))
+        self.folder_size_in_bytes = sum(map(lambda file_item: file_item.data.details.file_size_in_bytes, all_files))
 
         # Step 3 -> Calculate md5sum from etag list
         self.object_e_tag_md5sum = generate_e_tag_md5sum_from_file_list(all_files)
@@ -200,7 +205,7 @@ class DatasetItemFolder(DatasetItem):
         # Step 4 -> Calculate md5sum from folder structure
         self.folder_structure_md5sum = generate_folder_structure_md5sum_from_file_list(
             all_files,
-            Path(data_obj.details.path)
+            Path(data_obj.data.details.path)
         )
 
     def type_attributes_to_dict(self) -> OrderedDict:
@@ -216,10 +221,10 @@ class DatasetItemFolder(DatasetItem):
         self.set_data_obj_attribute()
 
         # Check number of files
-        all_files = get_files_from_directory_id_recursively(
-            self.owning_project_id,
-            self.data_obj.id,
-            get_icav2_configuration()
+        all_files = find_project_data_bulk(
+            project_id=self.owning_project_id,
+            parent_folder_id=self.data_obj.id,
+            data_type=DataType.FILE
         )
 
         # Confirm we have the expected number of files in the folder
@@ -229,7 +234,7 @@ class DatasetItemFolder(DatasetItem):
             raise InvalidDataItem
 
         # Calculate the size of the folder is still the same
-        folder_size_in_bytes = sum(map(lambda file_item: file_item.details.file_size_in_bytes, all_files))
+        folder_size_in_bytes = sum(map(lambda file_item: file_item.data.details.file_size_in_bytes, all_files))
         if not folder_size_in_bytes == self.folder_size_in_bytes:
             logger.error(f"Got expected number of files in {self.data_uri} but folder is a different size. "
                          f"Expected {self.folder_size_in_bytes} but got {folder_size_in_bytes}")
@@ -245,7 +250,7 @@ class DatasetItemFolder(DatasetItem):
         # Calculate the folder structure md5sum
         folder_structure_md5sum = generate_folder_structure_md5sum_from_file_list(
             all_files,
-            Path(self.data_obj.details.path)
+            Path(self.data_obj.data.details.path)
         )
         if not folder_structure_md5sum == self.folder_structure_md5sum:
             logger.error(f"Got expected number of files and size of folder and file etags, "
@@ -253,24 +258,14 @@ class DatasetItemFolder(DatasetItem):
                          f"Expected {self.folder_structure_md5sum} but got {folder_structure_md5sum}")
             raise InvalidDataItem
 
-    @classmethod
-    def from_dict(cls, dataset_dict: Dict):
-        return cls(
-            create=False,
-            data_obj=dataset_dict.get("data_obj", None),
-            num_files=dataset_dict.get("num_files", None),
-            folder_size_in_bytes=dataset_dict.get("folder_size_in_bytes", None),
-            object_e_tag_md5sum=dataset_dict.get("object_e_tag_md5sum", None),
-            folder_structure_md5sum=dataset_dict.get("folder_structure_md5sum", None),
-            **dataset_dict
-        )
+
 
 
 class DatasetItemFile(DatasetItem):
     """
     Child class of Dataset item
     """
-    def __init__(self, create: Optional[bool], data_obj: Optional[Data],
+    def __init__(self, create: Optional[bool], data_obj: Optional[ProjectData],
                  file_size_in_bytes: Optional[int] = None,
                  object_e_tag: Optional[str] = None,
                  **kwargs):
@@ -284,9 +279,9 @@ class DatasetItemFile(DatasetItem):
         # Collect args from super set
         super().__init__(create, data_obj, self.data_type, **kwargs)
 
-    def set_type_attributes(self, data_obj: Data):
-        self.file_size_in_bytes = data_obj.details.file_size_in_bytes
-        self.object_e_tag = data_obj.details.object_e_tag
+    def set_type_attributes(self, data_obj: ProjectData):
+        self.file_size_in_bytes = data_obj.data.details.file_size_in_bytes
+        self.object_e_tag = data_obj.data.details.object_e_tag
 
     def type_attributes_to_dict(self) -> OrderedDict:
         return OrderedDict({
@@ -298,17 +293,9 @@ class DatasetItemFile(DatasetItem):
         # Confirm that data obj etag matches etag
         self.set_data_obj_attribute()
 
-        if not self.object_e_tag == self.data_obj.details.object_e_tag:
+        if not self.object_e_tag == self.data_obj.data.details.object_e_tag:
             logger.error("File object etag is different than expected")
             raise InvalidDataItem
-
-    @classmethod
-    def from_dict(cls, dataset_dict: Dict):
-        return cls(
-            create=False,
-            data_obj=dataset_dict.get("data_obj", None),
-            **dataset_dict
-        )
 
 
 class Dataset:
@@ -353,7 +340,7 @@ class Dataset:
             tenant_name: str,
             create: bool,
             dataset_items: Optional[List[DatasetItem]] = None,
-            data_objs: Optional[List[Data]] = None,
+            data_objs: Optional[List[ProjectData]] = None,
             dataset_creation_time: Optional[datetime] = None,
             region_obj: Optional[Region] = None,
             dataset_region_id: Optional[str] = None,
@@ -376,13 +363,12 @@ class Dataset:
             self.dataset_region_city_name = dataset_region_city_name
         else:
             # Items if dataset does not exist
-            self.data_objs: Optional[List[Data]] = data_objs
+            self.data_objs: Optional[List[ProjectData]] = data_objs
             self.dataset_creation_time: Optional[datetime] = datetime.now().astimezone(timezone.utc)
 
             # Get the region id
             self.region_obj: Region = get_region_obj_from_project_id(
-                data_objs[0].details.owning_project_id,
-                get_icav2_configuration()
+                data_objs[0].data.details.owning_project_id,
             )
             self.dataset_region_id = self.region_obj.id
             self.dataset_region_city_name = self.region_obj.city_name
@@ -399,7 +385,7 @@ class Dataset:
                 create=True,
                 data_obj=data_obj,
             )
-            if data_obj.details.data_type == "FILE"
+            if data_obj.data.details.data_type == "FILE"
             else
             DatasetItemFolder(
                 create=True,
@@ -739,7 +725,7 @@ class BunchVersion:
         Set version creation date as utc timestamp
         :return:
         """
-        self.version_creation_date = datetime.utcnow().isoformat(sep="T", timespec="seconds") + "Z"
+        self.version_creation_date = datetime.now(timezone.utc).isoformat(sep="T", timespec="seconds") + "Z"
 
     def to_dict(self) -> Dict:
         """
@@ -848,7 +834,7 @@ class BunchVersion:
         bunch_version = self.version
 
         if version_suffix is None:
-            version_suffix = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            version_suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
 
         return bunch_version + "__" + version_suffix
 
@@ -948,7 +934,7 @@ class BunchVersion:
         bunch_name = self.parent_bunch.bunch_name
 
         if version_suffix is None:
-            version_suffix = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            version_suffix = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
 
         return bunch_name + "__" + version_suffix
 
