@@ -117,7 +117,8 @@ Example:
         get_branch_name_returncode, get_branch_name_stdout, get_branch_name_stderr = run_subprocess_proc(
             [
                 "git", "rev-parse", "--abbrev-ref", "HEAD"
-            ]
+            ],
+            capture_output=True
         )
         if get_branch_name_returncode != 0:
             logger.error("Please ensure you are on the main branch before continuing")
@@ -131,16 +132,16 @@ Example:
                 raise CheckArgumentError
 
         # Check we're in sync with the remote branch
-        get_remote_branch_proc = run_subprocess_proc(
+        get_remote_branch_returncode, get_remote_branch_stdout, get_remote_branch_stderr = run_subprocess_proc(
             [
                 "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"
             ],
             capture_output=True
         )
-        if get_remote_branch_proc.returncode != 0:
+        if get_remote_branch_returncode != 0:
             logger.error("Could not get the upstream branch for this ")
             raise CheckArgumentError
-        remote_branch = get_remote_branch_proc.stdout.strip()
+        remote_branch = get_remote_branch_stdout.strip()
 
         # Check diffs between remote and local
         diff_returncode, diff_stdout, diff_stderr = run_subprocess_proc(
@@ -157,7 +158,7 @@ Example:
         logger.info("Generating tag")
         tag_returncode, tag_stdout, tag_stderr = run_subprocess_proc(
             [
-                "git", "tag", self.tag
+                "git", "tag", "--force", self.tag
             ],
             capture_output=True
         )
@@ -174,7 +175,7 @@ Example:
         logger.info(f"Pushing tag {self.tag}")
         push_tag_returncode, push_tag_stdout, push_tag_stderr = run_subprocess_proc(
             [
-                "git", "push", "origin", self.tag
+                "git", "push", "origin", "--force", self.tag
             ],
             capture_output=True
         )
