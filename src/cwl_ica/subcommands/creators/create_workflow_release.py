@@ -92,7 +92,12 @@ Example:
         # Check if draft
         self.draft = self.args.get("--draft", False)
 
+        # Set tag and check remote
+        self.set_tag()
+
         self.git_checks()
+
+
 
     def set_tag(self):
         self.tag = self.name + "/" + self.version
