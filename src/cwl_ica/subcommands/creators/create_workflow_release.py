@@ -154,6 +154,32 @@ Example:
             logger.error("Please ensure you are in sync with the remote branch before continuing")
             raise CheckArgumentError
 
+        # Check if tag is on the remote
+        # "git ls-remote --exit-code --tags origin v1.2.3"
+        og_log_level = logger.level
+        logger.setLevel("CRITICAL")
+        tag_remote_returncode, tag_remote_stdout, tag_remote_stderr = run_subprocess_proc(
+            [
+                "git", "ls-remote", "--exit-code", "--tags", "origin", self.tag
+            ],
+            capture_output=True
+        )
+        # Set back log level
+        logger.setLevel(og_log_level)
+
+        # Delete tag from origin
+        if tag_remote_returncode == 0:
+            logger.info(f"Tag {self.tag} exists on the remote, will need to delete first")
+
+            # Delete tag
+            delete_tag_returncode, delete_tag_stdout, delete_tag_stderr = run_subprocess_proc(
+                [
+                    "git", "push", "--delete", "origin", self.tag
+                ],
+                capture_output=True
+            )
+
+
     def generate_tag(self):
         logger.info("Generating tag")
         tag_returncode, tag_stdout, tag_stderr = run_subprocess_proc(
