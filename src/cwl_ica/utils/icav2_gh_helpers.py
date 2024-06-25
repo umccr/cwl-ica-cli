@@ -13,6 +13,7 @@ from typing import List, Tuple, Dict, Optional
 from urllib.parse import urlparse
 import json
 from ruamel.yaml import YAML, CommentedMap, CommentedSeq
+from wrapica.bundle import get_bundle_obj_from_bundle_id
 
 # Wrapica
 from wrapica.data import Data
@@ -514,7 +515,7 @@ def generate_empty_bundle(
     categories: List[str],
     pipeline_release_url: str,
     icav2_access_token: str
-):
+) -> str:
     """
     Generate an empty bundle
     :param bundle_name:
@@ -525,7 +526,7 @@ def generate_empty_bundle(
     :param categories:
     :param pipeline_release_url:
     :param icav2_access_token:
-    :return:
+    :return: The bundle id
     """
     # Create pipeline from GitHub release
     proc_environ = os.environ.copy()
@@ -537,7 +538,7 @@ def generate_empty_bundle(
         }
     )
 
-    link_data_command = [
+    generate_empty_bundle_command = [
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
         f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
         "bundles",
@@ -546,22 +547,25 @@ def generate_empty_bundle(
         "--short-description", bundle_description,
         "--bundle-version", bundle_version,
         "--bundle-version-description", bundle_version_description,
+        "--json"
     ]
 
     # Extend with categories
     for category in categories:
-        link_data_command.extend(["--category", category])
+        generate_empty_bundle_command.extend(["--category", category])
 
-    link_data_returncode, link_data_stdout, link_data_stderr = run_subprocess_proc(
-        link_data_command,
+    generate_empty_bundle_returncode, generate_empty_bundle_stdout, generate_empty_bundle_stderr = run_subprocess_proc(
+        generate_empty_bundle_command,
         env=proc_environ,
         capture_output=True
     )
 
-    if not link_data_returncode == 0:
-        logger.error(f"{link_data_stdout}")
-        logger.error(f"{link_data_stderr}")
+    if not generate_empty_bundle_returncode == 0:
+        logger.error(f"{generate_empty_bundle_stdout}")
+        logger.error(f"{generate_empty_bundle_stderr}")
         raise ChildProcessError
+
+    return json.loads(generate_empty_bundle_stdout).get("id")
 
 
 def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):

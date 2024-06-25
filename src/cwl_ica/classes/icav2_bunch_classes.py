@@ -1057,7 +1057,7 @@ class Bundle:
         :return:
         """
 
-        bundle_obj = generate_empty_bundle(
+        self.bundle_id = generate_empty_bundle(
             bundle_name=self.bundle_name,
             bundle_version=self.bundle_version,
             bundle_description=self.bundle_description,
@@ -1067,9 +1067,6 @@ class Bundle:
             pipeline_release_url=self.pipeline_release_url,
             icav2_access_token=icav2_access_token,
         )
-
-        # Get bundle id
-        self.bundle_id = bundle_obj.id
 
         # Set bundle url
         self.bundle_url = f"https://ica.illumina.com/ica/bundles/{self.bundle_id}/bundleDetails"
