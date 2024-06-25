@@ -1,10 +1,10 @@
-FROM docker.io/condaforge/mambaforge:24.1.2-0
+FROM ubuntu:24.04
 
 # Set args
-ARG CONDA_GROUP_NAME="cwl_ica_group"
-ARG CONDA_GROUP_ID=1000
-ARG CONDA_USER_NAME="cwl_ica_user"
+ARG CONDA_USER_NAME="ubuntu"
+ARG CONDA_GROUP_NAME="ubuntu"
 ARG CONDA_USER_ID=1000
+ARG CONDA_GROUP_ID=1000
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
 ARG ICAV2_CLI_VERSION="2.26.0"
@@ -15,121 +15,115 @@ ARG CURL_VERSION="7.81.0"
 ARG CWL_UTILS_REPO_PATH="https://github.com/alexiswl/cwl-utils"
 ARG CWL_UTILS_REPO_BRANCH="enhancement/cwl-inputs-schema-gen"
 
-ARG TARGETPLATFORM
+ARG MINIFORGE_NAME="Miniforge3"
+ARG MINIFORGE_VERSION="24.3.0-0"
+ARG TARGETPLATFORM="linux/amd64"
+
+ENV CONDA_DIR=/opt/conda
 
 RUN export DEBIAN_FRONTEND=noninteractive && \
-    echo "Updating Apt" 1>&2 && \
-    apt-get update -y -q && \
-    echo "Installing jq, nodejs, rsync, graphviz and parallel" 1>&2 && \
-    apt-get install -y -q \
-      jq \
-      nodejs \
-      rsync \
-      graphviz \
-      parallel \
-      gcc \
-      python3-dev \
-      curl \
-      build-essential \
-      automake \
-      autoconf \
-      libtool \
-      unzip \
-      nghttp2 \
-      libnghttp2-dev \
-      libssl-dev \
-      wget \
-      autoconf \
-      busybox && \
-    echo "Cleaning up after apt installations" 1>&2 && \
-    apt-get clean -y && \
-    echo "Installing yq" 1>&2 && \
-    wget --quiet \
-      --output-document /usr/bin/yq \
-      "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" && \
-    chmod +x /usr/bin/yq && \
-    echo "Installing gh binary" && \
-    curl --fail --silent --show-error --location \
-      "https://cli.github.com/packages/githubcli-archive-keyring.gpg" | \
-    dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
-    chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
-    tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
-    apt-get update -y -q && \
-    apt install gh -y -q && \
-    echo "Installing aws cli" 1>&2 && \
-    wget --quiet "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
-      --output-document "awscliv2.zip" && \
-    unzip -qq awscliv2.zip && \
-    ./aws/install && \
-    rm -rf aws/ awscliv2.zip && \
-    echo "Removing existing installation of curl" && \
-    apt-get purge -y -q --auto-remove curl && \
-    echo "Installing curl (that supports --fail-with-body parameter)" 1>&2 && \
     ( \
-      wget "https://curl.haxx.se/download/curl-${CURL_VERSION}.tar.gz" && \
-      tar -xzf "curl-${CURL_VERSION}.tar.gz" && \
-      cd "curl-${CURL_VERSION}" && \
-      autoreconf -fi && \
-      ./configure \
-        --prefix=/usr \
-        --with-ssl \
-        --with-nghttp2 && \
-      make -j4 && \
-      make install && \
-      ldconfig \
+      echo "Updating Apt" 1>&2 && \
+      apt update -y -q && \
+      echo "Installing jq, nodejs, rsync, graphviz and parallel" 1>&2 && \
+      apt install -y -q \
+        jq \
+        nodejs \
+        rsync \
+        graphviz \
+        parallel \
+        gcc \
+        python3-dev \
+        curl \
+        build-essential \
+        automake \
+        autoconf \
+        libtool \
+        unzip \
+        nghttp2 \
+        libnghttp2-dev \
+        libssl-dev \
+        wget \
+        autoconf \
+        busybox \
+        bzip2 \
+        ca-certificates \
+        git \
+        tini &&  \
+      echo "Cleaning up after apt installations" 1>&2 && \
+      apt clean -y -q \
     ) && \
-    rm -rf curl-${CURL_VERSION}/ curl-${CURL_VERSION}.tar.gz && \
-    echo "Updating conda" 1>&2 && \
-    conda update --yes \
-      --name base \
-      --channel conda-forge \
-      --channel defaults \
-      conda && \
-    echo "Updating mamba" 1>&2 && \
-    mamba update --yes \
-      --quiet \
-      --name base \
-      --channel conda-forge \
-      --channel defaults \
-      mamba && \
-    echo "Cleaning conda" 1>&2 && \
-    conda clean --all --yes --quiet && \
-    echo "Cleaning mamba "1>&2 && \
-    mamba clean --all --yes --quiet && \
-    echo "Adding user groups" 1>&2 && \
-    addgroup \
-      --gid "${CONDA_GROUP_ID}" \
-      "${CONDA_GROUP_NAME}" && \
-    adduser \
-      --disabled-password \
-      --gid "${CONDA_GROUP_ID}" \
-      --uid "${CONDA_USER_ID}" "${CONDA_USER_NAME}"
+    ( \
+      echo "Installing conda" 1>&2 && \
+      CONDA_TARGETPLATFORM_NAME="$(echo "${TARGETPLATFORM#linux/}" | sed 's/amd64/x86_64/g')" && \
+      echo "https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-${CONDA_TARGETPLATFORM_NAME}.sh" && \
+      wget --no-hsts --quiet \
+        --output-document /tmp/miniforge.sh \
+        "https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_VERSION}/${MINIFORGE_NAME}-${MINIFORGE_VERSION}-Linux-${CONDA_TARGETPLATFORM_NAME}.sh" && \
+      /bin/bash /tmp/miniforge.sh -b -p ${CONDA_DIR} && \
+      rm /tmp/miniforge.sh && \
+      echo "Updating conda" 1>&2 && \
+      "${CONDA_DIR}/bin/conda" update --yes \
+        --name base \
+        --channel conda-forge \
+        --channel defaults \
+        conda && \
+      "${CONDA_DIR}/bin/conda" clean --tarballs --index-cache --packages --yes && \
+      find ${CONDA_DIR} -follow -type f -name '*.a' -delete && \
+      find ${CONDA_DIR} -follow -type f -name '*.pyc' -delete && \
+      "${CONDA_DIR}/bin/conda" clean --force-pkgs-dirs --all --yes  && \
+      echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> /etc/skel/.bashrc && \
+      echo ". ${CONDA_DIR}/etc/profile.d/conda.sh && conda activate base" >> ~/.bashrc \
+    ) && \
+    ( \
+      echo "Installing yq" 1>&2 && \
+      wget --quiet \
+        --output-document /usr/bin/yq \
+        "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64" && \
+      chmod +x /usr/bin/yq \
+    ) && \
+    ( \
+      echo "Installing gh binary" && \
+      curl --fail --silent --show-error --location \
+        "https://cli.github.com/packages/githubcli-archive-keyring.gpg" | \
+      dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+      chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+      echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | \
+      tee /etc/apt/sources.list.d/github-cli.list > /dev/null && \
+      apt update -y -q && \
+      apt install gh -y -q && \
+      apt clean -y -q \
+    ) && \
+    ( \
+      echo "Installing aws cli" 1>&2 && \
+      wget --quiet "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+        --output-document "awscliv2.zip" && \
+      unzip -qq awscliv2.zip && \
+      ./aws/install && \
+      rm -rf aws/ awscliv2.zip \
+    ) && \
+    ( \
+      echo "Installing ICAv2 CLI" 1>&2 && \
+      wget --quiet \
+        --output-document "/dev/stdout" \
+        "https://stratus-documentation-us-east-1-public.s3.amazonaws.com/cli/${ICAV2_CLI_VERSION}/ica-linux-${TARGETPLATFORM#linux/}.zip" | \
+      busybox unzip -p - "linux-${TARGETPLATFORM#linux/}/icav2" > "/usr/local/bin/icav2" && \
+      chmod +x "/usr/local/bin/icav2" \
+    )
 
-# Install ICAv2 CLI
-# Important for projectpipelines get command
-# Where we want to swap out the tokens depending on the tenant
-RUN \
-  echo "Installing ICAv2 CLI" 1>&2 && \
-  wget --quiet \
-    --output-document "/dev/stdout" \
-    "https://stratus-documentation-us-east-1-public.s3.amazonaws.com/cli/${ICAV2_CLI_VERSION}/ica-linux-${TARGETPLATFORM#linux/}.zip" | \
-  busybox unzip -p - "linux-${TARGETPLATFORM#linux/}/icav2" > "/usr/local/bin/icav2" && \
-  chmod +x "/usr/local/bin/icav2"
 
-
-# Copy over source to . for user
+# Copy over source to . for user to install
 COPY . "/cwl-ica-src-temp/"
 
-RUN \
-    cp -r "/cwl-ica-src-temp/." "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
-    chown -R "${CONDA_USER_ID}:${CONDA_GROUP_ID}" "/home/${CONDA_USER_NAME}/cwl-ica-src/" && \
-    rm -rf  "/cwl-ica-src-temp/"
-
+RUN ( \
+      rsync \
+        --archive --remove-source-files \
+        --chown "${CONDA_USER_ID}:${CONDA_GROUP_ID}" "/cwl-ica-src-temp/" "/home/${CONDA_USER_NAME}/cwl-ica-src/" \
+    )
 
 # Switch to conda user
 USER "${CONDA_USER_NAME}"
-ENV USER="${CONDA_USER_NAME}"
+ENV PATH="${CONDA_DIR}/bin:${PATH}"
 
 # Add conda command
 RUN echo "Adding in package and env paths to conda arc" 1>&2 && \
@@ -149,7 +143,7 @@ ENV CONDA_DEFAULT_ENV="${CONDA_ENV_NAME}"
 RUN ( \
       cd "/home/${CONDA_USER_NAME}" && \
       echo "Creating ${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME} environment for icav2 cli plugins" 1>&2 && \
-      mamba create --yes \
+      conda create --yes \
         --name "${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}" \
         python="${ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION}" && \
       echo "Installing ICAv2 CLI Plugins" 1>&2 && \
