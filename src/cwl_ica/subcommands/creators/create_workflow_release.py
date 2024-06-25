@@ -144,7 +144,7 @@ Example:
             capture_output=True
         )
         if get_remote_branch_returncode != 0:
-            logger.error("Could not get the upstream branch for this ")
+            logger.error("Could not get the upstream branch for this")
             raise CheckArgumentError
         remote_branch = get_remote_branch_stdout.strip()
 
@@ -169,12 +169,13 @@ Example:
             ],
             capture_output=True
         )
+
         # Set back log level
         logger.setLevel(og_log_level)
 
         # Delete tag from origin
         if tag_remote_returncode == 0:
-            logger.info(f"Tag {self.tag} exists on the remote, will need to delete first")
+            logger.info(f"Tag {self.tag} exists on the remote, will delete on remote first")
 
             # Delete tag
             delete_tag_returncode, delete_tag_stdout, delete_tag_stderr = run_subprocess_proc(

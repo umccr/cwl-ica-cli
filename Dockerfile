@@ -1,10 +1,10 @@
 FROM ubuntu:24.04
 
 # Set args
-ARG CONDA_USER_NAME="ubuntu"
-ARG CONDA_GROUP_NAME="ubuntu"
-ARG CONDA_USER_ID=1000
-ARG CONDA_GROUP_ID=1000
+ARG GITHUB_ACTIONS_USERNAME="runner"
+ARG GITHUB_ACTIONS_USER_ID=1001
+ARG GITHUB_ACTIONS_GROUP_NAME="docker"
+ARG GITHUB_ACTIONS_GROUP_ID=121
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
 ARG ICAV2_CLI_VERSION="2.26.0"
@@ -109,6 +109,16 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         "https://stratus-documentation-us-east-1-public.s3.amazonaws.com/cli/${ICAV2_CLI_VERSION}/ica-linux-${TARGETPLATFORM#linux/}.zip" | \
       busybox unzip -p - "linux-${TARGETPLATFORM#linux/}/icav2" > "/usr/local/bin/icav2" && \
       chmod +x "/usr/local/bin/icav2" \
+    ) && \
+    ( \
+      echo "Adding user groups" 1>&2 && \
+      addgroup \
+        --gid "${GITHUB_ACTIONS_GROUP_ID}" \
+        "${GITHUB_ACTIONS_GROUP_NAME}" && \
+      adduser \
+        --disabled-password \
+        --gid "${GITHUB_ACTIONS_GROUP_ID}" \
+        --uid "${GITHUB_ACTIONS_USER_ID}" "${GITHUB_ACTIONS_USER_NAME}" \
     )
 
 
@@ -118,30 +128,34 @@ COPY . "/cwl-ica-src-temp/"
 RUN ( \
       rsync \
         --archive --remove-source-files \
-        --chown "${CONDA_USER_ID}:${CONDA_GROUP_ID}" "/cwl-ica-src-temp/" "/home/${CONDA_USER_NAME}/cwl-ica-src/" \
+        --chown "${GITHUB_ACTIONS_USER_ID}:${GITHUB_ACTIONS_GROUP_ID}" "/cwl-ica-src-temp/" "/home/${GITHUB_ACTIONS_USER_NAME}/cwl-ica-src/" \
     )
 
+
+
 # Switch to conda user
-USER "${CONDA_USER_NAME}"
+USER "${GITHUB_ACTIONS_USER_NAME}"
 ENV PATH="${CONDA_DIR}/bin:${PATH}"
 
 # Add conda command
-RUN echo "Adding in package and env paths to conda arc" 1>&2 && \
-    conda config --append pkgs_dirs "\$HOME/.conda/pkgs" && \
-    conda config --append envs_dirs "\$HOME/.conda/envs" && \
-    echo "Installing into a conda env" 1>&2 && \
-    ( \
-      cd "/home/${CONDA_USER_NAME}" && \
-      bash "cwl-ica-src/install.sh" -y -s && \
-      rm -rf "cwl-ica-src/" \
+RUN ( \
+      echo "Adding in package and env paths to conda arc" 1>&2 && \
+      conda config --append pkgs_dirs "\$HOME/.conda/pkgs" && \
+      conda config --append envs_dirs "\$HOME/.conda/envs" && \
+      echo "Installing into a conda env" 1>&2 && \
+      ( \
+        cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
+        bash "cwl-ica-src/install.sh" -y -s && \
+        rm -rf "cwl-ica-src/" \
+      ) \
     )
 
 # Set environment variables for user
-ENV CONDA_PREFIX="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}"
+ENV CONDA_PREFIX="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}"
 ENV CONDA_DEFAULT_ENV="${CONDA_ENV_NAME}"
 
 RUN ( \
-      cd "/home/${CONDA_USER_NAME}" && \
+      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
       echo "Creating ${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME} environment for icav2 cli plugins" 1>&2 && \
       conda create --yes \
         --name "${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}" \
@@ -151,27 +165,29 @@ RUN ( \
         --output-document "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
         "https://github.com/umccr/icav2-cli-plugins/releases/download/${ICAV2_PLUGINS_CLI_VERSION}/icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
       unzip -qq "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
-      PATH="/home/${CONDA_USER_NAME}/.conda/envs/${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}/bin:${PATH}" \
+      PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}/bin:${PATH}" \
       bash "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}/install.sh" "--no-autocompletion" && \
       rm -rf "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}" "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
     )
 
-ENV PATH="/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
-ENV ICAV2_CLI_PLUGINS_HOME="/home/${CONDA_USER_NAME}/.icav2-cli-plugins/"
+# Add conda env to path
+ENV PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
+# Set ICAv2 CLI plugins home
+ENV ICAV2_CLI_PLUGINS_HOME="/home/${GITHUB_ACTIONS_USER_NAME}/.icav2-cli-plugins/"
 
 # Add cwl-utils (with cwl-inputs-schema-gen) to cwl-ica environment
 RUN ( \
-      cd "/home/${CONDA_USER_NAME}" && \
+      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
       echo "Cloning cwl-utils" 1>&2 && \
       git clone --branch "${CWL_UTILS_REPO_BRANCH}" "${CWL_UTILS_REPO_PATH}" "cwl-utils" && \
       echo "Installing cwl-utils" 1>&2 && \
       ( \
         cd 'cwl-utils' && \
-        "/home/${CONDA_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
+        "/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
       ) && \
       echo "Cleaning up" 1>&2 && \
       rm -rf cwl-utils \
     )
 
-
+# Set entrypoint
 CMD "cwl-ica"
