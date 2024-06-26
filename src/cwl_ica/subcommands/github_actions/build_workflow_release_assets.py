@@ -1074,7 +1074,7 @@ Environment Variables
             "gh", "pr", "create",
             "--base", "main",  # FIXME - use dev if this is a pre-release
             "--head", self.artifacts_branch,
-            "--title", f"Images and configuration commits for release {self.release_name}",
+            "--title", f"[GitHub Actions] Images and configuration commits for release {self.release_name}",
             "--body", f"See {self.release_url} for more information."
         ]
 
