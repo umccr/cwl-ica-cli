@@ -12,8 +12,9 @@ from hashlib import md5
 from typing import List, Tuple, Dict, Optional
 from urllib.parse import urlparse
 import json
-from ruamel.yaml import YAML, CommentedMap, CommentedSeq
-from wrapica.bundle import get_bundle_obj_from_bundle_id
+from ruamel.yaml import (
+    YAML, CommentedMap, CommentedSeq
+)
 
 # Wrapica
 from wrapica.data import Data
@@ -762,27 +763,16 @@ def get_project_name_from_project_id(tenant_name: str, project_id: str) -> str:
 
 
 def get_pipeline_code_from_pipeline_id(pipeline_id, icav2_access_token) -> str:
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
-
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
-    )
-
     pipelines_get_command = [
-        "icav2",
-        "projectpipelines",
-        "get",
-        pipeline_id,
-        "--output-format", "json"
+        "curl",
+        "--fail-with-body", "--silent", "--show-error", "--location",
+        "--header", "Accept: application/vnd.illumina.v3+json",
+        "--header", f"Authorization: Bearer {icav2_access_token}",
+        "--url", f"{ICAV2_DEFAULT_BASE_URL}/api/pipelines/{pipeline_id}"
     ]
 
     pipelines_get_returncode, pipelines_get_stdout, pipelines_get_stderr = run_subprocess_proc(
         pipelines_get_command,
-        env=proc_environ,
         capture_output=True
     )
 
