@@ -606,7 +606,7 @@ Environment Variables
 
         # Yaml header
         self.md_file_obj.new_header(
-            level=3, title="Yaml"
+            level=3, title="Yaml", add_table_of_contents="n"
         )
 
         self.md_file_obj.new_line("<details>")
@@ -627,7 +627,7 @@ Environment Variables
 
         # JSon Template
         self.md_file_obj.new_header(
-            level=3, title="Json"
+            level=3, title="Json", add_table_of_contents="n"
         )
 
         self.md_file_obj.new_line("<details>")
