@@ -1221,7 +1221,7 @@ Environment Variables
             f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
             f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
             "projectpipelines",
-            "create-cwl-workflow-from-github-release",
+            "create-cwl-pipeline-from-github-release",
             self.release_url,
             "--json"  # Return pipeline_id
         ]
