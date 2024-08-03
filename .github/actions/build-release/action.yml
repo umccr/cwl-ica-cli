@@ -89,6 +89,8 @@ runs:
           "--include=*-conda-env.yaml" \
           "--include=pyproject.toml" \
           "--include=install.sh" \
+          "--include=scripts/***" \
+          "--include=README.md" \
           "--exclude=*" \
           "./" "release-${{ inputs.git_tag }}/"
         # Update version.py for release
