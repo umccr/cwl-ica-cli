@@ -199,7 +199,7 @@ ICAV2_CONTAINER_MAPPINGS = [
 
 ICAV2_DRAGEN_TEMPSPACE_MAPPINGS = {
     "v1": "\"/ephemeral/\"",
-    "v2": "\"/tmp/\""
+    "v2": "\"/scratch/\""
 }
 
 MATCH_RUN_LINE_REGEX_OBJ = re.compile(r"run: (/)?([^/\0]+(/)?)+$")
