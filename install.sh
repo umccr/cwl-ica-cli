@@ -143,39 +143,6 @@ _verlt() {
   [ "$1" = "$2" ] && return 1 || verlte "$1" "$2"
 }
 
-############
-# CONDA
-############
-
-get_conda_version() {
-  local version
-  version="$($(get_conda_binary) --version | grep conda | cut -d' ' -f2)"
-
-  echo "${version}"
-}
-
-has_mamba(){
-  : '
-  Check if mamba exists
-  '
-  if ! type mamba 1>/dev/null 2>&1; then
-    return 1
-  fi
-  return 0
-
-}
-
-get_conda_binary(){
-  : '
-  Use mamba if possible
-  '
-  if has_mamba; then
-    echo "mamba"
-  else
-    echo "conda"
-  fi
-
-}
 
 has_conda_env() {
   : '
@@ -280,16 +247,6 @@ update_conda_env() {
   fi
 }
 
-check_conda_version() {
-  : '
-  Make sure at the latest conda version
-  '
-  if ! _verlte "${REQUIRED_CONDA_VERSION}" "$(get_conda_version)"; then
-    echo_stderr "Your conda version is too old"
-    return 1
-  fi
-}
-
 run_conda_create() {
   : '
   Run the conda create command
@@ -298,7 +255,7 @@ run_conda_create() {
   local name="$1"
   local env_file="$2"
 
-  "$(get_conda_binary)" env create \
+  conda env create \
     --quiet \
     --name="${name}" \
     --file="${env_file}"
@@ -312,7 +269,7 @@ run_conda_update() {
   local name="$1"
   local env_file="$2"
 
-  "$(get_conda_binary)" env update \
+  conda env update \
     --quiet \
     --name="${name}" \
     --file="${env_file}"
@@ -386,13 +343,11 @@ set -u
 # Installations
 echo_stderr "Checking conda, jq and node/nodejs/docker are installed"
 
-if ! has_mamba; then
-  echo_stderr "'mamba' not found, if you find that the installation of the conda env is slow, please try again by installing mamba through 'conda install -c conda-forge mamba'"
-  if ! has_conda; then
-    echo_stderr "Error, could not find conda binary."
-    echo_stderr "Please install conda and ensure it is in your \"\$PATH\" environment variable before continuing"
-    exit 1
-  fi
+
+if ! has_conda; then
+  echo_stderr "Error, could not find conda binary."
+  echo_stderr "Please install conda and ensure it is in your \"\$PATH\" environment variable before continuing"
+  exit 1
 fi
 
 if ! has_jq; then
@@ -403,11 +358,6 @@ fi
 
 if ! has_node; then
   echo_stderr "Could not one of node, nodejs or docker, required for cwltool commands"
-  exit 1
-fi
-
-if ! check_conda_version; then
-  echo_stderr "Your conda version is out of date, please run \"conda update -n base -c defaults conda\" before continuing"
   exit 1
 fi
 
