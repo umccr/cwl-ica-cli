@@ -842,7 +842,7 @@ Environment Variables
                 cwl_file_path=get_workflows_dir() / name / version / (name + "__" + version + ".cwl"),
                 name=name,
                 version=version)
-            workflow_obj()
+            workflow_obj(validate=False)
             workflow_obj.generate_workflow_image(
                 workflow_image_path
             )
