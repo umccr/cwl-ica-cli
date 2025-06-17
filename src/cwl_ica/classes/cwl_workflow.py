@@ -51,7 +51,7 @@ class CWLWorkflow(CWL):
         if Path(self.temp_packed_file).is_file():
             os.remove(self.temp_packed_file)
 
-    def validate_object(self):
+    def validate_object(self, skip_packed=False):
         """
         Validate a cwl workflow
 
@@ -144,6 +144,12 @@ class CWLWorkflow(CWL):
 
         # Run cwltool --validate
         self.run_cwltool_validate(self.cwl_file_path)
+
+        # Skip packing
+        if skip_packed:
+            if not validation_passing:
+                logger.error(f"There were a total of {issue_count} issues.")
+                raise CWLValidationError
 
         # Pack workflow
         self.temp_packed_file = NamedTemporaryFile(

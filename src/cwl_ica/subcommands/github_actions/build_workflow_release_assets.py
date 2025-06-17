@@ -843,9 +843,13 @@ Environment Variables
                 name=name,
                 version=version)
             workflow_obj(validate=False)
-            workflow_obj.generate_workflow_image(
-                workflow_image_path
-            )
+            try:
+                workflow_obj.generate_workflow_image(
+                    workflow_image_path
+                )
+            except Exception as e:
+                logger.error(f"Could not generate image for {workflow_image_path} - {e}")
+                continue
             workflow_paths.append(
                 (workflow.name, workflow_image_path, workflow_image_url)
             )
