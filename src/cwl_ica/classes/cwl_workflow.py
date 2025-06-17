@@ -150,6 +150,7 @@ class CWLWorkflow(CWL):
             if not validation_passing:
                 logger.error(f"There were a total of {issue_count} issues.")
                 raise CWLValidationError
+            return
 
         # Pack workflow
         self.temp_packed_file = NamedTemporaryFile(
