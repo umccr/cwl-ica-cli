@@ -12,7 +12,7 @@ ARG ICAV2_PLUGINS_CLI_VERSION="v2.27.0"
 ARG ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION="3.12"
 ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.12"
 ARG CWL_UTILS_REPO_PATH="https://github.com/alexiswl/cwl-utils"
-ARG CWL_UTILS_REPO_BRANCH="enhancement/cwl-inputs-schema-gen"
+ARG CWL_UTILS_REPO_BRANCH="bugfix/auto-return-input-array-schema-type"
 
 ARG MINIFORGE_NAME="Miniforge3"
 ARG MINIFORGE_VERSION="24.3.0-0"
@@ -173,6 +173,20 @@ RUN ( \
 ENV PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
 # Set ICAv2 CLI plugins home
 ENV ICAV2_CLI_PLUGINS_HOME="/home/${GITHUB_ACTIONS_USER_NAME}/.icav2-cli-plugins/"
+
+# Add cwl-utils (with cwl-inputs-schema-gen) to cwl-ica environment
+RUN ( \
+      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
+      echo "Cloning cwl-utils" 1>&2 && \
+      git clone --branch "${CWL_UTILS_REPO_BRANCH}" "${CWL_UTILS_REPO_PATH}" "cwl-utils" && \
+      echo "Installing cwl-utils" 1>&2 && \
+      ( \
+        cd 'cwl-utils' && \
+        "/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
+      ) && \
+      echo "Cleaning up" 1>&2 && \
+      rm -rf cwl-utils \
+    )
 
 # Set entrypoint
 CMD "cwl-ica"
