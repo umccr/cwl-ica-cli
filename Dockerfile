@@ -174,19 +174,5 @@ ENV PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${
 # Set ICAv2 CLI plugins home
 ENV ICAV2_CLI_PLUGINS_HOME="/home/${GITHUB_ACTIONS_USER_NAME}/.icav2-cli-plugins/"
 
-# Add cwl-utils (with cwl-inputs-schema-gen) to cwl-ica environment
-RUN ( \
-      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
-      echo "Cloning cwl-utils" 1>&2 && \
-      git clone --branch "${CWL_UTILS_REPO_BRANCH}" "${CWL_UTILS_REPO_PATH}" "cwl-utils" && \
-      echo "Installing cwl-utils" 1>&2 && \
-      ( \
-        cd 'cwl-utils' && \
-        "/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
-      ) && \
-      echo "Cleaning up" 1>&2 && \
-      rm -rf cwl-utils \
-    )
-
 # Set entrypoint
 CMD "cwl-ica"
