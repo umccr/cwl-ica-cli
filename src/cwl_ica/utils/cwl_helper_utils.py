@@ -293,11 +293,13 @@ def get_workflow_type_from_array_type(workflow_parameter: WorkflowParameterType)
     :param workflow_parameter:
     :return:
     """
-    if not workflow_parameter.type_[0] == "null":
-        logger.error("Unsure what to do with input of type list where first element is not null")
-        raise ValueError
     workflow_input_new = deepcopy(workflow_parameter)
-    workflow_input_new.type_ = workflow_parameter.type_[1]
+    if not workflow_parameter.type_[0] == "null":
+        logger.warning(f"Expected first type in list to be 'null', not {workflow_parameter.type_[0]}")
+        # But we assume this is a multi-type input, we take the first type
+        workflow_input_new.type_ = workflow_parameter.type_[0]
+    else:
+        workflow_input_new.type_ = workflow_parameter.type_[1]
     return get_workflow_input_template_value(workflow_input_new)
 
 
