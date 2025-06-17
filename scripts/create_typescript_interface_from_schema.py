@@ -38,13 +38,13 @@ console_hander.setFormatter(formatter)
 
 
 # Helper functions
-def camel_case(s: str) -> str:
+def to_pascal_case(s: str) -> str:
     """
     Convert "bclconvert_settings" to "BclconvertSettings"
     :param s:
     :return:
     """
-    s = re.sub(r"[_|-]+", " ", s).title().replace(" ", "")
+    s = re.sub(r"[_-]+", " ", s).title().replace(" ", "")
     return ''.join(s)
 
 
@@ -141,8 +141,12 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
 
     # Other local vars
     if schema_name is None:
-        schema_name: str = camel_case(schema_path.stem.split("__", 1)[0])
+        schema_name: str = to_pascal_case(schema_path.stem.split("__", 1)[0])
     sanitised_schema: Dict = {}
+
+    if schema_json.get("fields") is None:
+        print("Warning - No fields found in schema")
+        return sanitised_schemas, imported_interfaces, new_enum_classes
 
     field: Dict
     for field in schema_json.get("fields"):
@@ -207,11 +211,16 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
             # Collect symbols
             symbols = [
                 Path(symbol).name
+                if isinstance(symbol, str)
+                else symbol
                 for symbol in field_type.get("symbols")
             ]
 
             # Collect new field type name
-            new_field_type = camel_case(Path(field_type.get("symbols")[0]).parent.name)
+            if field_type.get("name") is not None:
+                new_field_type = to_pascal_case(Path(field_type.get("name")).name)
+            else:
+                new_field_type = to_pascal_case(Path(field_type.get("symbols")[0]).parent.name)
 
             field_type = new_field_type
 
@@ -232,14 +241,14 @@ def sanitise_schema_types(schema_json: Dict, schema_path: Path, schema_name: Uni
                 re_new_enum_classes: List
                 re_sanitised_schemas, re_imported_interfaces, re_new_enum_classes = \
                     sanitise_schema_types(field_type, schema_path,
-                                          schema_name=camel_case(Path(field_type.get("name")).name))
+                                          schema_name=to_pascal_case(Path(field_type.get("name")).name))
                 sanitised_schemas.update(re_sanitised_schemas)
                 imported_interfaces.update(re_imported_interfaces)
                 new_enum_classes.extend(re_new_enum_classes)
-                field_type = camel_case(Path(field_type.get("name")).name)
+                field_type = to_pascal_case(Path(field_type.get("name")).name)
             else:
                 # Add to list of interfaces to import
-                new_interface_name = camel_case(Path(field_type.get("name")).name)
+                new_interface_name = to_pascal_case(Path(field_type.get("name")).name)
                 imported_interfaces[new_interface_name] = field_type.get("name")
                 field_type = new_interface_name
 
@@ -309,7 +318,7 @@ def write_interface_file(schema_dicts: Dict, imported_interfaces: Dict,
         for _enum in enum_classes:
             interface_h.write("export enum %s {\n" % _enum.get("name"))
             for index, symbol in enumerate(_enum.get("symbols")):
-                interface_h.write("\t\"%s\" = \"%s\"" % (symbol, symbol))
+                interface_h.write("\t\"%s\" = %s" % (symbol, json.dumps(symbol)))
                 if not index == len(_enum.get("symbols")) - 1:
                     # Add comma
                     interface_h.write(",")

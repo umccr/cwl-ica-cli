@@ -238,7 +238,7 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     all_workflow_paths = collect_objects_by_print_deps(cwl_obj.cwl_file_path)
 
     # Create a temporary directory
-    output_tempdir_obj = TemporaryDirectory()
+    output_tempdir_obj = TemporaryDirectory(delete=False)
     output_tempdir = Path(output_tempdir_obj.name) / output_zip_path.stem
 
     # And we want to make sure it doesn't already exist
