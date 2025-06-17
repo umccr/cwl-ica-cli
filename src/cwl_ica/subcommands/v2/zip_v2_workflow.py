@@ -138,7 +138,7 @@ Example:
 
     def __call__(self):
         logger.info("Validating workflow before copying over files")
-        self.cwl_workflow_obj.validate_object()
+        self.cwl_workflow_obj.validate_object(skip_packed=True)
 
         logger.info("Ensuring workflow does not have steps with names greater than 21 characters")
         check_workflow_step_lengths(self.cwl_workflow_obj.cwl_obj, self.cwl_file_path)
