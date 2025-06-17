@@ -77,7 +77,7 @@ class CWL:
         # Make sure cwl_type attribute exists though
         # Can we do this for a record schema object?
 
-    def __call__(self):
+    def __call__(self, validate=True):
         """
         If we're invoking the create method then we just write out the object to the cwl_file_path
         Otherwise we validate the object
@@ -88,6 +88,8 @@ class CWL:
             self.create_object(self.user_obj)
             # Now write out the object to the file path
             self.write_object(self.user_obj)
+        if not validate:
+            return
         else:
             # Just validate the object
             self.validate_object()
