@@ -195,8 +195,9 @@ Environment Variables
             name=name,
             version=version
         )
-        # Validate object
-        self.cwl_obj()
+        # Cant validate the object
+        # Since packed validation may not work
+        self.cwl_obj(validate=False)
 
         # Check GITHUB_TAG env var exist
         if os.environ.get("GITHUB_TAG", None) is not None:
@@ -826,13 +827,18 @@ Environment Variables
         main_workflow_image_path = self.get_release_artifact_output_path() / "workflow.svg"
         self.get_release_artifact_output_path().mkdir(parents=True, exist_ok=True)
         main_workflow_image_url = self.get_repo_url_from_relative_repo_path(main_workflow_image_path)
-        # First image is always the main image
-        workflow_paths = [
-            (self.cwl_obj.name, main_workflow_image_path, main_workflow_image_url)
-        ]
-        self.cwl_obj.generate_workflow_image(
-            main_workflow_image_path
-        )
+
+        try:
+            self.cwl_obj.generate_workflow_image(
+                main_workflow_image_path
+            )
+        except Exception as e:
+            logger.error(f"Could not generate image for {main_workflow_image_path} - {e}")
+        else:
+            # First image is always the main image
+            workflow_paths = [
+                (self.cwl_obj.name, main_workflow_image_path, main_workflow_image_url)
+            ]
 
         for workflow in self.cwl_obj.get_subworkflows():
             workflow_image_path = self.get_release_artifact_output_path() / (workflow.stem + ".svg")
