@@ -833,7 +833,8 @@ Environment Variables
                 main_workflow_image_path
             )
         except Exception as e:
-            logger.error(f"Could not generate image for {main_workflow_image_path} - {e}")
+            logger.error(f"Could not generate image for {main_workflow_image_path} - {e}, skip subworkflows")
+            return []
         else:
             # First image is always the main image
             workflow_paths = [
