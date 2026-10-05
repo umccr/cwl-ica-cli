@@ -1276,7 +1276,7 @@ Environment Variables
                     pipeline_code=pipeline_code,
                     zip_path=self.zipped_workflow_path,
                     analysis_storage=get_analysis_storage_from_analysis_storage_size(
-                        pipeline_project_id, AnalysisStorageSize.SMALL
+                        pipeline_project_id, AnalysisStorageSize.SMALL.value
                     ),
                     workflow_description=f"GitHub Release URL: {self.release_url}"
                 )
