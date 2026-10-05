@@ -26,6 +26,13 @@ from wrapica.project_data import (
     get_project_data_obj_by_id, 
     is_data_id_format
 )
+from wrapica.bundle import (
+    generate_empty_bundle as wrapica_generate_empty_bundle,
+    add_pipeline_to_bundle as wrapica_add_pipeline_to_bundle,
+    add_data_to_bundle as wrapica_add_data_to_bundle,
+    release_bundle as wrapica_release_bundle,
+    link_bundle_to_project as wrapica_link_bundle_to_project
+)
 from wrapica.enums import DataType
 
 # Local Utils
@@ -476,35 +483,11 @@ def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token:
     :param icav2_access_token:
     :return:
     """
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
+    # Set the environment variables that wrapica authenticates against
+    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
 
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
-    )
-
-    link_pipeline_command = [
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-        "bundles",
-        "add-pipeline",
-        bundle_id,
-        "--pipeline", pipeline_id
-    ]
-
-    link_pipeline_returncode, link_pipeline_stdout, link_pipeline_stderr = run_subprocess_proc(
-        link_pipeline_command,
-        env=proc_environ,
-        capture_output=True
-    )
-
-    if not link_pipeline_returncode == 0:
-        logger.error(f"{link_pipeline_stdout}")
-        logger.error(f"{link_pipeline_stderr}")
-        raise ChildProcessError
+    wrapica_add_pipeline_to_bundle(bundle_id, pipeline_id)
 
 
 def generate_empty_bundle(
@@ -529,44 +512,21 @@ def generate_empty_bundle(
     :param icav2_access_token:
     :return: The bundle id
     """
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
+    # Set the environment variables that wrapica authenticates against
+    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
 
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
+    bundle_obj = wrapica_generate_empty_bundle(
+        bundle_name=bundle_name,
+        bundle_version=bundle_version,
+        short_description=bundle_description,
+        version_comment=bundle_version_description,
+        region_id=region_id,
+        categories=categories,
+        pipeline_release_url=pipeline_release_url
     )
 
-    generate_empty_bundle_command = [
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-        "bundles",
-        "init",
-        bundle_name,
-        "--short-description", bundle_description,
-        "--bundle-version", bundle_version,
-        "--bundle-version-description", bundle_version_description,
-        "--json"
-    ]
-
-    # Extend with categories
-    for category in categories:
-        generate_empty_bundle_command.extend(["--category", category])
-
-    generate_empty_bundle_returncode, generate_empty_bundle_stdout, generate_empty_bundle_stderr = run_subprocess_proc(
-        generate_empty_bundle_command,
-        env=proc_environ,
-        capture_output=True
-    )
-
-    if not generate_empty_bundle_returncode == 0:
-        logger.error(f"{generate_empty_bundle_stdout}")
-        logger.error(f"{generate_empty_bundle_stderr}")
-        raise ChildProcessError
-
-    return json.loads(generate_empty_bundle_stdout).get("id")
+    return bundle_obj.id
 
 
 def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
@@ -577,35 +537,11 @@ def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
     :param icav2_access_token:
     :return:
     """
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
+    # Set the environment variables that wrapica authenticates against
+    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
 
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
-    )
-
-    link_data_command = [
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-        "bundles",
-        "add-data",
-        bundle_id,
-        "--data", data_id
-    ]
-
-    link_data_returncode, link_data_stdout, link_data_stderr = run_subprocess_proc(
-        link_data_command,
-        env=proc_environ,
-        capture_output=True
-    )
-
-    if not link_data_returncode == 0:
-        logger.error(f"{link_data_stdout}")
-        logger.error(f"{link_data_stderr}")
-        raise ChildProcessError
+    wrapica_add_data_to_bundle(bundle_id, data_id)
 
 
 def release_bundle(bundle_id: str, icav2_access_token: str):
@@ -615,34 +551,11 @@ def release_bundle(bundle_id: str, icav2_access_token: str):
     :param icav2_access_token:
     :return:
     """
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
+    # Set the environment variables that wrapica authenticates against
+    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
 
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
-    )
-
-    release_bundle_command = [
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-        "bundles",
-        "release",
-        bundle_id
-    ]
-
-    release_bundle_returncode, release_bundle_stdout, release_bundle_stderr = run_subprocess_proc(
-        release_bundle_command,
-        env=proc_environ,
-        capture_output=True
-    )
-
-    if not release_bundle_returncode == 0:
-        logger.error(f"{release_bundle_stdout}")
-        logger.error(f"{release_bundle_stderr}")
-        raise ChildProcessError
+    wrapica_release_bundle(bundle_id)
 
 
 def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: str):
@@ -653,35 +566,11 @@ def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: s
     :param icav2_access_token:
     :return:
     """
-    # Create pipeline from GitHub release
-    proc_environ = os.environ.copy()
+    # Set the environment variables that wrapica authenticates against
+    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
 
-    proc_environ.update(
-        {
-            "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-            "ICAV2_ACCESS_TOKEN": icav2_access_token
-        }
-    )
-
-    add_bundle_to_project_command = [
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-        f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-        "bundles",
-        "add-bundle-to-project",
-        bundle_id,
-        "--project", project_id
-    ]
-
-    add_bundle_to_project_returncode, add_bundle_to_project_stdout, add_bundle_to_project_stderr = run_subprocess_proc(
-        add_bundle_to_project_command,
-        env=proc_environ,
-        capture_output=True
-    )
-
-    if not add_bundle_to_project_returncode == 0:
-        logger.error(f"{add_bundle_to_project_stdout}")
-        logger.error(f"{add_bundle_to_project_stderr}")
-        raise ChildProcessError
+    wrapica_link_bundle_to_project(project_id, bundle_id)
 
 
 def get_projects_from_v2_config_yaml() -> List[Dict]:

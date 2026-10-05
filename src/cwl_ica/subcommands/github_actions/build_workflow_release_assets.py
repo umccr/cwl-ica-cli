@@ -34,7 +34,6 @@ import os
 from os import environ
 import re
 from argparse import ArgumentError
-from json import JSONDecodeError
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from urllib.parse import urldefrag
 from zipfile import ZipFile
@@ -46,6 +45,13 @@ from mdutils import MdUtils
 
 # CWL Utils
 from cwl_utils.parser import load_document_by_uri
+
+# Wrapica
+from wrapica.enums import AnalysisStorageSize
+from wrapica.project_pipelines import (
+    create_cwl_workflow_from_zip, release_project_pipeline,
+    get_analysis_storage_from_analysis_storage_size
+)
 
 # Utils
 from ...utils.cwl_helper_utils import (
@@ -1228,21 +1234,8 @@ Environment Variables
             )
         )
 
-        create_cwl_workflow_from_github_release_command = [
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-            "projectpipelines",
-            "create-cwl-pipeline-from-github-release",
-            self.release_url,
-            "--json"  # Return pipeline_id
-        ]
-
-        release_pipeline_command_prefix = [
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/python",
-            f"{os.environ['ICAV2_CLI_PLUGINS_HOME']}/pyenv/bin/icav2-cli-plugins.py",
-            "projectpipelines",
-            "release",
-        ]
+        # Derive the pipeline code from the local zip stem (dots are not permitted in pipeline codes)
+        pipeline_code = self.zipped_workflow_path.stem.replace(".", "_")
 
         pipeline_ids_by_project_by_tenant = {}
         icav2_bundles_by_tenant_by_project = {}
@@ -1271,61 +1264,27 @@ Environment Variables
             for pipeline_project_name in pipeline_project_names_in_tenant:
                 pipeline_project_id = get_project_id_from_project_name(tenant_name, pipeline_project_name)
 
-                # Create pipeline from GitHub release
-                proc_environ = os.environ.copy()
+                # Set the environment variables that wrapica authenticates against for this tenant / project
+                os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
+                os.environ["ICAV2_ACCESS_TOKEN"] = get_tenant_access_token(tenant_name)
 
-                proc_environ.update(
-                    {
-                        "ICAV2_BASE_URL": ICAV2_DEFAULT_BASE_URL,
-                        "ICAV2_PROJECT_ID": pipeline_project_id,
-                        "ICAV2_ACCESS_TOKEN": get_tenant_access_token(tenant_name)
-                    }
+                # Create pipeline directly from the locally built zip
+                # (the zip has already been generated at self.zipped_workflow_path,
+                #  so there is no need to re-download it from GitHub)
+                pipeline_obj = create_cwl_workflow_from_zip(
+                    project_id=pipeline_project_id,
+                    pipeline_code=pipeline_code,
+                    zip_path=self.zipped_workflow_path,
+                    analysis_storage=get_analysis_storage_from_analysis_storage_size(
+                        pipeline_project_id, AnalysisStorageSize.SMALL
+                    ),
+                    workflow_description=f"GitHub Release URL: {self.release_url}"
                 )
 
-                (
-                    create_cwl_workflow_from_github_release_returncode,
-                    create_cwl_workflow_from_github_release_stdout,
-                    create_cwl_workflow_from_github_release_stderr
-                ) = run_subprocess_proc(
-                    create_cwl_workflow_from_github_release_command,
-                    env=proc_environ,
-                    capture_output=True
-                )
-
-                if not create_cwl_workflow_from_github_release_returncode == 0:
-                    logger.error(f"{create_cwl_workflow_from_github_release_stdout}")
-                    logger.error(f"{create_cwl_workflow_from_github_release_stderr}")
-                    raise ChildProcessError
-
-                # Collect pipeline
-                try:
-                    pipeline_id_json_dict = json.loads(create_cwl_workflow_from_github_release_stdout)
-                except JSONDecodeError:
-                    logger.error(f"Could not get release from {create_cwl_workflow_from_github_release_stdout}")
-                    raise JSONDecodeError
-
-                if 'pipeline_id' not in pipeline_id_json_dict:
-                    logger.error(f"Could not get pipeline id key {pipeline_id_json_dict}")
-                    raise KeyError
-                pipeline_id = pipeline_id_json_dict.get("pipeline_id")
+                pipeline_id = pipeline_obj.id
 
                 # Release pipeline
-                release_pipeline_command = release_pipeline_command_prefix + [pipeline_id]
-
-                (
-                    release_pipeline_returncode,
-                    release_pipeline_stdout,
-                    release_pipeline_stderr
-                ) = run_subprocess_proc(
-                    release_pipeline_command,
-                    env=proc_environ,
-                    capture_output=True
-                )
-
-                if not release_pipeline_returncode == 0:
-                    logger.error(f"{release_pipeline_stdout}")
-                    logger.error(f"{release_pipeline_stderr}")
-                    raise ChildProcessError
+                release_project_pipeline(pipeline_project_id, pipeline_id)
 
                 # Update pipeline list
                 pipeline_ids_by_project_by_tenant[tenant_name][pipeline_project_id] = pipeline_id
