@@ -22,22 +22,6 @@ subcommands:
         type: dir
         summary: |
           path to local cwl-ica repository
-  configure-tenant:
-    summary: |
-      Create mapping of tenancy ids to tenancy names, convenience to save time typing out tenancy names.
-      Each project is linked to a tenancy id
-    options:
-      - name: tenant-id
-        type: string
-        summary: |
-          The id of the tenant
-      - name: tenant-name
-        type: string
-        summary: |
-          The name of the tenant
-      - name: set-as-default
-        summary: |
-          Set as default tenant
   configure-user:
     summary: |
       Add a user to user.yaml
@@ -62,49 +46,6 @@ subcommands:
   ##########################
   # ICA Initialisers
   ##########################
-  project-init:
-    summary: |
-      Initialise a project in ${CWL_ICA_REPO_PATH}/config/project.yaml
-    options:
-      - name: project-id
-        summary: |
-          The ICA project id
-        type: string
-      - name: project-name
-        type: string
-        summary: |
-          The name of the project
-      - name: project-api-key-name
-        type: string
-        summary: |
-          Required, this is NOT an api-key, but merely an api-key with a workgroup
-          context that can create an access-token for this project
-      - name: project-description
-        type: string
-        summary: |
-          Required, a short summary of the project
-      - name: project-abbr
-        type: string
-        summary: |
-          Required, a quick abbreviation of the project name - used to append
-          to workflow names
-      - name: production
-        summary: |
-          Optional, boolean, if set, the project is a production project
-      - name: tenant-name
-        type: string
-        summary: |
-          Optional, the tenant name
-        completion:
-          # This prints out all of the tenants from tenant.yaml
-          command_string: |-
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
-      - name: set-as-default
-        summary: |
-          Optional, set as the default project
-
   category-init:
     summary: |
       Initialise a category in ${CWL_ICA_REPO_PATH}/config/category.yaml
@@ -122,32 +63,6 @@ subcommands:
   ########################
   # Set Defaults Commands
   ########################
-  set-default-tenant:
-    summary: |
-      Set a tenant to the default tenant
-    options:
-      - name: tenant-name
-        summary: |
-          Name of tenant
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
-  set-default-project:
-    summary: |
-      Set a project to the default project
-    options:
-      - name: project-name
-        summary: |
-          Name of project
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
   set-default-user:
     summary: |
       Set a user to the default user
@@ -168,22 +83,6 @@ subcommands:
   list-categories:
     summary: |
       List registered categories
-  list-projects:
-    summary: |
-      List registered projects
-    options:
-      - name: tenant-name
-        summary: |
-          Name of tenant
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
-  list-tenants:
-    summary: |
-      List registered tenants
   list-users:
     summary: |
       List registered users
@@ -283,7 +182,7 @@ subcommands:
         completion:
           command_string: |
             python - <<EOF
-            __cwl-ica_list_registered_expression_paths.py
+            __cwl-ica_list_all_expression_paths.py
             EOF
   schema-validate:
     summary: |
@@ -327,19 +226,6 @@ subcommands:
   validate-config-yamls:
     summary: |
       Confirm all config yamls are legitimate
-  validate-api-key-script:
-    summary: |
-      Confirm your api-key script works for a given project
-    options:
-      - name: project-name
-        summary: |
-          Name of your project
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
 
   ###############
   # Init Commands
@@ -372,7 +258,7 @@ subcommands:
             EOF
   tool-init:
     summary: |
-      Register a tool in ${CWL_ICA_REPO_PATH}/config/tool.yaml and with ICA projects
+      Register a tool in ${CWL_ICA_REPO_PATH}/config/tool.yaml
     options:
       - name: tool-path
         summary: |
@@ -382,24 +268,6 @@ subcommands:
           command_string: |-
             python - <<EOF
             __cwl-ica_list_unregistered_tool_paths.py
-            EOF
-      - name: projects
-        summary: |
-          List of projects to add the tool to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: tenants
-        summary: |
-          List of tenants to filter by when project set to 'all'
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
             EOF
       - name: categories
         summary: |
@@ -412,7 +280,7 @@ subcommands:
             EOF
   workflow-init:
     summary: |
-      Register a workflow in ${CWL_ICA_REPO_PATH}/config/workflow.yaml and with ICA projects
+      Register a workflow in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
     options:
       - name: workflow-path
         summary: |
@@ -423,24 +291,6 @@ subcommands:
             python - <<EOF
             __cwl-ica_list_unregistered_workflow_paths.py
             EOF
-      - name: projects
-        summary: |
-          List of projects to add the tool to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: tenants
-        summary: |
-          List of tenants to filter by when project set to 'all'
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
       - name: categories
         summary: |
           List of categories to add to tool
@@ -450,171 +300,6 @@ subcommands:
             python - <<EOF
             __cwl-ica_list_category_names.py
             EOF
-
-  ########################
-  # Sync-to-project Commands
-  ########################
-  expression-sync:
-    summary: |
-      Sync an expression in ${CWL_ICA_REPO_PATH}/config/expression.yaml
-    options:
-      - name: expression-path
-        summary: |
-          Path to the expression
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_expression_paths.py
-            EOF
-  tool-sync:
-    summary: |
-      Sync a tool md5sum in ${CWL_ICA_REPO_PATH}/config/tool.yaml
-      and update definition on ICA
-    options:
-      - name: tool-path
-        summary: |
-          Path to the tool
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_tool_paths.py
-            EOF
-      - name: projects
-        summary: |
-          List of projects to sync the tool to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: tenants
-        summary: |
-          List of tenants to filter by when project set to 'all'
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
-  schema-sync:
-    summary: |
-      Sync a schema in ${CWL_ICA_REPO_PATH}/config/schema.yaml
-    options:
-      - name: schema-path
-        summary: |
-          Path to the schema
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_schema_paths.py
-            EOF
-      - name: force
-        summary: |
-          Overwrite on ICA even if mod time in yaml is behind
-  workflow-sync:
-    summary: |
-      Sync a workflows md5sum in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
-      and update definition on ICA
-    options:
-      - name: workflow-path
-        summary: |
-          Path to the workflow
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_workflow_paths.py
-            EOF
-      - name: projects
-        summary: |
-          List of projects to sync the workflow to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: tenants
-        summary: |
-          List of tenants to filter by when project set to 'all'
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_tenant_names.py
-            EOF
-      - name: force
-        summary: |
-          Overwrite on ICA even if mod time in yaml is behind
-
-  #######################
-  # Add-to-project Commands
-  #######################
-  add-tool-to-project:
-    summary: |
-      Add an existing tool to another project
-    options:
-      - name: tool-path
-        summary: |
-          Path to the tool
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_tool_paths.py
-            EOF
-      - name: project
-        summary: |
-          Name of the project
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-  add-workflow-to-project:
-    summary: |
-      Add an existing workflow to another project
-    options:
-      - name: workflow-path
-        summary: |
-          Path to the workflow
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_workflow_paths.py
-            EOF
-      - name: project
-        summary: |
-          Name of the project to add the workflow to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-  add-linked-project:
-    summary: |
-      Add a linked project to another project
-    options:
-      - name: src-project
-        summary: |
-          The name of your project in project.yaml
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: target-project
-        summary: |
-          ID of the target project to receive all ica workflows and ica workflow versions
-        type: string
 
   ########################
   # Add-category Commands
@@ -737,52 +422,6 @@ subcommands:
             __cwl-ica_list_user_names.py
             EOF
 
-  #############################
-  # Run-register Commands
-  #############################
-  register-tool-run-instance:
-    summary: |
-      Register an ICA workflow run instance of a tool for a given project
-    options:
-      - name: ica-workflow-run-instance-id
-        summary: |
-          A workflow run instance id (starts with wfr.)
-        type: string
-      - name: project-name
-        summary: |
-          Name of project
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: access-token
-        summary: |
-          ica access token, if run instance was executed in a linked project context
-        type: string
-  register-workflow-run-instance:
-    summary: |
-      Register an ICA workflow run instance of a workflow for a given project
-    options:
-      - name: ica-workflow-run-instance-id
-        summary: |
-          A workflow run instance id (starts with wfr.)
-        type: string
-      - name: project-name
-        summary: |
-          Name of project
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-      - name: access-token
-        summary: |
-          ica access token, if run instance was executed in a linked project context
-        type: string
-
   #######################
   # Query workflow Commands
   #######################
@@ -800,412 +439,9 @@ subcommands:
             __cwl-ica_list_all_workflow_paths.py
             EOF
 
-  ##################
-  # Run-list Commands
-  ##################
-  list-tool-runs:
-    summary: |
-      List registered tool runs for a CWL tool in a given project
-    options:
-      - name: tool-path
-        summary: |
-          A cwl tool file
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_tool_paths.py
-            EOF
-      - name: project
-        summary: |
-          A project name
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
-  list-workflow-runs:
-    summary: |
-      List registered workflows runs for a CWL workflow in a given project
-    options:
-      - name: workflow-path
-        summary: |
-          A cwl workflow file
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_registered_workflows.py
-            EOF
-      - name: project
-        summary: |
-          A project name
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_project_names.py
-            EOF
 
-  ####################################
-  # Create submission templates commands
-  ####################################
-  create-tool-submission-template:
-    summary: |
-      Create a ICA input template and bash script for a tool
-    options:
-      - name: tool-path
-        summary: |
-          Path to CWL tool
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-              __cwl-ica_list_all_tool_paths.py
-            EOF
-      - name: prefix
-        summary: |
-          Output prefix name
-        type: string
-      - name: project
-        summary: |
-          Project that tool belongs to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-              __cwl-ica_list_project_names.py
-            EOF
-      - name: launch-project
-        summary: |
-          Name of the launch project
-        type: string
-      - name: ica-workflow-run-instance-id
-        summary: |
-          The workflow run instance id, starts with wfr.
-        type: string
-      - name: access-token
-        summary: |
-          The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
-        type: string
-      - name: curl
-        summary: |
-          Use curl binary over ica binary to launch tool
-      - name: ignore-workflow-id-mismatch
-        summary: |
-          Ignore workflow id mismatch, useful for when creating a template for a different context
-      - name: gds-prefix
-        summary: |
-          Prefix for engine parameters workDirectory, outputDirectory
-        type: string
-        completion:
-          command_string: |
-            bash - <<EOF
-              __cwl-ica_list_gds_folders.sh
-            EOF
-      - name: gds-work-prefix
-        summary: |
-          Prefix for engine parameters workDirectory
-        type: string
-        completion:
-          command_string: |
-            bash - <<EOF
-              __cwl-ica_list_gds_folders.sh
-            EOF
-      - name: gds-output-prefix
-        summary: |
-          Prefix for engine parameters outputDirectory
-        type: string
-        completion:
-          command_string: |
-            bash - <<EOF
-              __cwl-ica_list_gds_folders.sh
-            EOF
-      - name: gds-work-directory
-        summary: |
-          Set engine parameters workDirectory
-        type: string
-        completion:
-          command_string: |
-            bash - <<EOF
-              __cwl-ica_list_gds_folders.sh
-            EOF
-      - name: gds-output-directory
-        summary: |
-          Set engine parameters outputDirectory
-        type: string
-        completion:
-          command_string: |
-            bash - <<EOF
-              __cwl-ica_list_gds_folders.sh
-            EOF
-  create-workflow-submission-template:
-    summary: |
-      Create a ICA input template and bash script for a workflow
-    options:
-      - name: workflow-path
-        summary: |
-          Path to CWL workflow
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-              __cwl-ica_list_all_workflow_paths.py
-            EOF
-      - name: prefix
-        summary: |
-          Output prefix name
-        type: string
-      - name: project
-        summary: |
-          Project that workflow belongs to
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-              __cwl-ica_list_project_names.py
-            EOF
-      - name: launch-project
-        summary: |
-          Name of the launch project
-        type: string
-      - name: ica-workflow-run-instance-id
-        summary: |
-          The workflow run instance id, starts with wfr.
-        type: string
-      - name: access-token
-        summary: |
-          The ica access token, ideally use env var ICA_ACCESS_TOKEN instead
-        type: string
-      - name: curl
-        summary: |
-          Use curl binary over ica binary to launch workflow
-      - name: ignore-workflow-id-mismatch
-        summary: |
-          Ignore workflow id mismatch, useful for when creating a template for a different context
-      - name: gds-prefix
-        summary: |
-          Prefix for engine parameters workDirectory, outputDirectory
-        type: string
-        completion:
-          command_string: |
-            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
-              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
-              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
-              if [[ -z "${volume_name}" || -z "${path}" ]]; then
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.name)/") |
-                    .[]
-                  ';
-              else
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.volumeName)\(.path)") | 
-                    .[]
-                  ';
-              fi
-            fi
-      - name: gds-work-prefix
-        summary: |
-          Prefix for engine parameters workDirectory
-        type: string
-        completion:
-          command_string: |
-            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
-              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
-              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
-              if [[ -z "${volume_name}" || -z "${path}" ]]; then
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.name)/") |
-                    .[]
-                  ';
-              else
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.volumeName)\(.path)") | 
-                    .[]
-                  ';
-              fi
-            fi
-      - name: gds-output-prefix
-        summary: |
-          Prefix for engine parameters outputDirectory
-        type: string
-        completion:
-          command_string: |
-            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
-              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
-              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
-              if [[ -z "${volume_name}" || -z "${path}" ]]; then
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.name)/") |
-                    .[]
-                  ';
-              else
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.volumeName)\(.path)") | 
-                    .[]
-                  ';
-              fi
-            fi
-      - name: gds-work-directory
-        summary: |
-          Set engine parameters workDirectory
-        type: string
-        completion:
-          command_string: |
-            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
-              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
-              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
-              if [[ -z "${volume_name}" || -z "${path}" ]]; then
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.name)/") |
-                    .[]
-                  ';
-              else
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.volumeName)\(.path)") | 
-                    .[]
-                  ';
-              fi
-            fi
-      - name: gds-output-directory
-        summary: |
-          Set engine parameters outputDirectory
-        type: string
-        completion:
-          command_string: |
-            if [[ -n "${ICA_ACCESS_TOKEN-}" && -n "${ICA_BASE_URL}" ]]; then
-              volume_name="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").netloc)")";
-              path="$(python -c "from urllib.parse import urlparse; print(urlparse(\"${CURRENT_WORD}\").path)")";
-              if [[ -z "${volume_name}" || -z "${path}" ]]; then
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/volumes?pageSize=1000" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.name)/") |
-                    .[]
-                  ';
-              else
-                curl --fail --silent --location \
-                  --request GET \
-                  --header "Accept: application/json" \
-                  --header "Authorization: Bearer ${ICA_ACCESS_TOKEN}" \
-                  --url "${ICA_BASE_URL}/v1/folders?volume.name=${volume_name}&pageSize=1000&recursive=false&path=${path}*" | \
-                jq --raw-output \
-                  '
-                    .items |
-                    map("gds://\(.volumeName)\(.path)") | 
-                    .[]
-                  ';
-              fi
-            fi      
-
-  ################################
-  # Get Run-templates Commands
-  ################################
-  copy-tool-submission-template:
-    summary: |
-      Copy a tool submission template for an upcoming tool run
-    options:
-      - name: ica-workflow-run-instance-id
-        summary: |
-          A ica workflow run instance id
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_run_instance_ids.py
-            EOF
-      - name: prefix
-        summary: |
-          The prefix to the outputs files and name attribute in the json file
-        type: string
-      - name: curl
-        summary: |
-          Use curl binary over ica binary to launch workflow
-  copy-workflow-submission-template:
-    summary: |
-      Copy a workflow submission template for an upcoming workflow run
-    options:
-      - name: ica-workflow-run-instance-id
-        summary: |
-          A ica workflow run instance id
-        type: string
-        completion:
-          command_string: |
-            python - <<EOF
-            __cwl-ica_list_run_instance_ids.py
-            EOF
-      - name: prefix
-        summary: |
-          The prefix to the outputs files and name attribute in the json file
-        type: string
-      - name: curl
-        summary: |
-          Use curl binary over ica binary to launch workflow
-          
   #######################
-  # Creation Commands
+  # Typescript Extensions Commands
   #######################
   create-typescript-expression-from-template:
     summary: |
