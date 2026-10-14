@@ -673,6 +673,30 @@ def get_pipeline_code_from_pipeline_id(pipeline_id, icav2_access_token) -> str:
     return json.loads(pipelines_get_stdout).get("code")
 
 
+def get_pipeline_name_version_from_pipeline_id(pipeline_id, icav2_access_token) -> Tuple[str, str]:
+    pipelines_get_command = [
+        "curl",
+        "--fail-with-body", "--silent", "--show-error", "--location",
+        "--header", "Accept: application/vnd.illumina.v4+json",
+        "--header", f"Authorization: Bearer {icav2_access_token}",
+        "--url", f"{ICAV2_DEFAULT_BASE_URL}/api/pipelines/{pipeline_id}"
+    ]
+
+    pipelines_get_returncode, pipelines_get_stdout, pipelines_get_stderr = run_subprocess_proc(
+        pipelines_get_command,
+        capture_output=True
+    )
+
+    if not pipelines_get_returncode == 0:
+        logger.error(f"{pipelines_get_stdout}")
+        logger.error(f"{pipelines_get_stderr}")
+        raise ChildProcessError
+
+    pipeline_dict = json.loads(pipelines_get_stdout)
+
+    return pipeline_dict.get("name"), pipeline_dict.get("version")
+
+
 def get_tenant_access_token(tenant_name) -> str:
     tenant_env_var_name = f"ICAV2_ACCESS_TOKEN_{tenant_name.replace('-', '_').upper()}"
     tenant_env_var = os.environ.get(tenant_env_var_name, None)
