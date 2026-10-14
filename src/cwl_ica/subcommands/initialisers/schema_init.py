@@ -44,7 +44,6 @@ Example:
     def __init__(self, command_argv):
         # Call super class
         super(SchemaInitialiser, self).__init__(command_argv,
-                                                update_projects=False,
                                                 item_dir=get_schemas_dir(),
                                                 item_yaml_path=get_schema_yaml_path(non_existent_ok=True),
                                                 item_type_key="schemas",
@@ -59,8 +58,6 @@ Example:
     def check_args(self):
         """
         Checks --schema-path exists
-        For --projects, if set to --all, then checks if --tenants set or CWL_ICA_DEFAULT_TENANT set
-        If --projects not set, checks CWL_ICA_DEFAULT_PROJECT
         :return:
         """
 

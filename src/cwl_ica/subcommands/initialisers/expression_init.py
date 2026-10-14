@@ -45,7 +45,6 @@ Example:
     def __init__(self, command_argv):
         # Call super class
         super(ExpressionInitialiser, self).__init__(command_argv,
-                                                    update_projects=False,
                                                     item_dir=get_expressions_dir(),
                                                     item_yaml_path=get_expression_yaml_path(non_existent_ok=True),
                                                     item_type_key="expressions",
@@ -60,8 +59,6 @@ Example:
     def check_args(self):
         """
         Checks --expression-path exists
-        For --projects, if set to --all, then checks if --tenants set or CWL_ICA_DEFAULT_TENANT set
-        If --projects not set, checks CWL_ICA_DEFAULT_PROJECT
         :return:
         """
 

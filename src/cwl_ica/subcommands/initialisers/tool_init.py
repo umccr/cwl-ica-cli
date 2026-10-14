@@ -27,8 +27,6 @@ class ToolInitialiser(Initialiser):
     """Usage:
     cwl-ica [options] tool-init help
     cwl-ica [options] tool-init (--tool-path /path/to/tool.cwl)
-                                [--projects="project[,additional-projects]"]
-                                [--tenants="tenant-name[,additional-tenants]"]
                                 [--categories="comma,separated,list"]
 
 
@@ -36,33 +34,21 @@ Description:
     Add in a tool to 'tool.yaml' in the configuration folder.
     The should have been created with cwl-ica create-tool-from-template and then validated with tool-validate.
     We will also run a validation on the tool.
-    For each project listed, a new workflow id is created if no other version of this tool exists.
-    A workflow version is also created for non-production projects.
-    When --projects=all, --tenants is checked. If --tenants=all or --tenants is not defined and CWL_ICA_DEFAULT_TENANT
-    is not defined then all projects across all tenants are def
 
 
 Options:
     --tool-path=<the tool path>                         Required, the path to the cwl tool
-    --projects=<the list of projects>                   Optional, the list of projects
-    --tenants=<the list of tenants>                     Optional, the list of tenants
     --categories=<a list of categories for this tool>   A list of categories, a short summary of the project
-
-Environment Variables:
-    CWL_ICA_DEFAULT_PROJECT    Can be used as an alternative for --projects.
-    CWL_ICA_DEFAULT_TENANT     Used when --projects=all.
 
 Example:
     cwl-ica tool-init --tool-path "tools/samtools-fastq/1.10/samtools-fastq__1.10.cwl"
-    cwl-ica tool-init --tool-path "tools/samtools-fastq/1.10/samtools-fastq__1.10.cwl" --projects "development" --categories 'File Format Conversion'
-    cwl-ica tool-init --tool-path "tools/samtools-fastq/1.10/samtools-fastq__1.10.cwl" --projects "development,production" --categories 'File Format Conversion,Samtools Subcommands'
+    cwl-ica tool-init --tool-path "tools/samtools-fastq/1.10/samtools-fastq__1.10.cwl" --categories 'File Format Conversion'
     """
 
     def __init__(self, command_argv):
         # Call super class
         super(ToolInitialiser, self).__init__(
             command_argv,
-            update_projects=True,
             item_dir=get_tools_dir(),
             item_yaml_path=get_tool_yaml_path(non_existent_ok=True),
             item_type_key="tools",
@@ -78,8 +64,6 @@ Example:
     def check_args(self):
         """
         Checks --tool-path exists
-        For --projects, if set to --all, then checks if --tenants set or CWL_ICA_DEFAULT_TENANT set
-        If --projects not set, checks CWL_ICA_DEFAULT_PROJECT
         :return:
         """
 
@@ -105,12 +89,6 @@ Example:
 
         # Get the name and version attributes
         self.set_name_and_version_from_file_path()
-
-        # Get tenants
-        self.set_tenants_list()
-
-        # Get projects
-        self.set_projects_list()
 
         # Set categories
         self.set_categories_list()
