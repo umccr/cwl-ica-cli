@@ -17,22 +17,17 @@ Command:
     Configuration Commands
     ######################
     configure-repo                      One-time command to point to the cwl-ica git repository
-    configure-tenant                    Create mapping of tenancy ids to tenancy names, convenience to save time typing out tenancy names
-                                        Each project is linked to a tenancy id
     configure-user                      Add a user to user.yaml
 
     ##########################
     ICA Initialisers
     ##########################
-    project-init                        Initialise a project in ${CWL_ICA_REPO_PATH}/config/project.yaml
     category-init                       Initialise a category in ${CWL_ICA_REPO_PATH}/config/category.yaml
 
 
     ########################
     Set Defaults Commands
     ########################
-    set-default-tenant                  Set a tenant to the default tenant
-    set-default-project                 Set a project to the default project
     set-default-user                    Set a user to the default user
 
 
@@ -40,8 +35,6 @@ Command:
     # List Commands
     #########################
     list-categories                     List registered categories
-    list-projects                       List registered projects
-    list-tenants                        List registered tenants
     list-users                          List registered users
 
 
@@ -62,7 +55,6 @@ Command:
     tool-validate                       Validate a CWL tool ready for initialising on ICA
     workflow-validate                   Validate a CWL workflow ready for initialising on ICA
     validate-config-yamls               Confirms configuration files are legit
-    validate-api-key-script             Confirm an api-key-script works for a given project
 
 
     ###############
@@ -70,27 +62,8 @@ Command:
     ###############
     expression-init                     Register an expression in ${CWL_ICA_REPO_PATH}/config/expression.yaml
     schema-init                         Register a schema in ${CWL_ICA_REPO_PATH}/config/schema.yaml
-    tool-init                           Register a tool in ${CWL_ICA_REPO_PATH}/config/tool.yaml and with ICA projects
-    workflow-init                       Register a workflow in ${CWL_ICA_REPO_PATH}/config/workflow.yaml and with ICA projects
-
-
-    ########################
-    Sync-to-project Commands
-    ########################
-    expression-sync                     Sync an expression in ${CWL_ICA_REPO_PATH}/config/expression.yaml
-    tool-sync                           Sync a tool's md5sum in ${CWL_ICA_REPO_PATH}/config/tool.yaml
-                                        and update definition on ICA
-    schema-sync                         Sync a schema in ${CWL_ICA_REPO_PATH}/config/schema.yaml
-    workflow-sync                       Sync a workflow's md5sum in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
-                                        and update definition on ICA
-
-
-    #######################
-    Add-to-project Commands
-    #######################
-    add-tool-to-project                 Add an existing tool to another project
-    add-workflow-to-project             Add an existing workflow to another project
-    add-linked-project                  Link an existing project-id to an initialised project in project.yaml
+    tool-init                           Register a tool in ${CWL_ICA_REPO_PATH}/config/tool.yaml
+    workflow-init                       Register a workflow in ${CWL_ICA_REPO_PATH}/config/workflow.yaml
 
 
     #######################
@@ -113,37 +86,10 @@ Command:
     add-maintainer-to-workflow          Acknowledge a user as a maintainer of a cwl workflow
 
 
-    ###################################
-    Submission Template Commands
-    ###################################
-    create-tool-submission-template         Create a input template and run script for a tool on ICA
-    create-workflow-submission-template     Create a input template and run script for a workflow on ICA
-
-
-    #############################
-    Run-register Commands
-    #############################
-    register-tool-run-instance          Register an ICA workflow run instance of a tool for a given project
-    register-workflow-run-instance      Register an ICA workflow run instance of a workflow for a given project
-
-
     #######################
     Query workflow Commands
     #######################
     get-workflow-step-ids               Get the step ids of a CWL workflow
-
-    ##################
-    Run-list Commands
-    ##################
-    list-tool-runs                      List registered tool runs for a CWL tool in a given project
-    list-workflow-runs                  List registered workflows runs for a CWL workflow in a given project
-
-
-    ################################
-    Get Run-templates Commands
-    ################################
-    copy-tool-submission-template       Copy a tool submission template for an upcoming tool run
-    copy-workflow-submission-template   Copy a workflow submission template for an upcoming workflow run
 
 
     #################################
@@ -161,14 +107,6 @@ Command:
     #################################
     GitHub Actions Scripts
     #################################
-    github-actions-sync-schemas                  Sync all schemas to schema.yaml
-    github-actions-sync-expressions              Sync all expressions to expression.yaml
-    github-actions-sync-tools                    Sync all tools to tool.yaml and to all projects with that tool version
-    github-actions-sync-workflows                Sync workflows to workflow.yaml and to all projects with that workflow version
-    github-actions-create-expression-markdown    Create a markdown help report file for a cwl expression
-    github-actions-create-tool-markdown          Create a markdown help report file for a cwl tool
-    github-actions-create-workflow-markdown      Create a markdown help report file for a cwl workflow
-    github-actions-create-catalogue              Create the catalogue markdown file
     github-actions-build-workflow-release-asset  Create the release asset and push to release
 
     #################################
@@ -225,32 +163,20 @@ def _dispatch():
     # Configuration commands
     elif cmd == "configure-repo":
         from ..subcommands.configure.configure_repo import ConfigureRepo as command_to_call
-    elif cmd == "configure-tenant":
-        from ..subcommands.configure.configure_tenant import ConfigureTenant as command_to_call
     elif cmd == "configure-user":
         from ..subcommands.configure.configure_user import ConfigureUser as command_to_call
 
     # Config initialiser commands
     elif cmd == "category-init":
         from ..subcommands.initialisers.category_init import CategoryInit as command_to_call
-    elif cmd == "project-init":
-        from ..subcommands.initialisers.project_init import ProjectInit as command_to_call
 
     # Set default commands
-    elif cmd == "set-default-tenant":
-        from ..subcommands.updaters.set_default_tenant import SetDefaultTenant as command_to_call
-    elif cmd == "set-default-project":
-        from ..subcommands.updaters.set_default_project import SetDefaultProject as command_to_call
     elif cmd == "set-default-user":
         from ..subcommands.updaters.set_default_user import SetDefaultUser as command_to_call
 
     # List commands
     elif cmd == "list-categories":
         from ..subcommands.listers.list_categories import ListCategories as command_to_call
-    elif cmd == "list-projects":
-        from ..subcommands.listers.list_projects import ListProjects as command_to_call
-    elif cmd == "list-tenants":
-        from ..subcommands.listers.list_tenants import ListTenants as command_to_call
     elif cmd == "list-users":
         from ..subcommands.listers.list_users import ListUsers as command_to_call
 
@@ -275,8 +201,6 @@ def _dispatch():
         from ..subcommands.validators.workflow_validate import WorkflowValidate as command_to_call
     elif cmd == "validate-config-yamls":
         from ..subcommands.validators.validate_config_yamls import ValidateConfigYamls as command_to_call
-    elif cmd == "validate-api-key-script":
-        from ..subcommands.validators.validate_api_key_script import ValidateApiKeyScript as command_to_call
 
     # Initialisation commands
     elif cmd == "expression-init":
@@ -287,22 +211,6 @@ def _dispatch():
         from ..subcommands.initialisers.tool_init import ToolInitialiser as command_to_call
     elif cmd == "workflow-init":
         from ..subcommands.initialisers.workflow_init import WorkflowInitialiser as command_to_call
-
-    # Sync to project commands
-    elif cmd == "expression-sync":
-        from ..subcommands.sync.sync_expression import ExpressionSync as command_to_call
-    elif cmd == "schema-sync":
-        from ..subcommands.sync.sync_schema import SchemaSync as command_to_call
-    elif cmd == "tool-sync":
-        from ..subcommands.sync.sync_tool import ToolSync as command_to_call
-    elif cmd == "workflow-sync":
-        from ..subcommands.sync.sync_workflow import WorkflowSync as command_to_call
-
-    # Add to project commands --
-    elif cmd == "add-tool-to-project":
-        from ..subcommands.updaters.add_tool_to_project import AddToolToProject as command_to_call
-    elif cmd == "add-workflow-to-project":
-        from ..subcommands.updaters.add_workflow_to_project import AddWorkflowToProject as command_to_call
 
     # Add workflow sync
     elif cmd == "workflow-release":
@@ -322,48 +230,10 @@ def _dispatch():
     elif cmd == "add-maintainer-to-workflow":
         from ..subcommands.updaters.add_maintainer_to_workflow import AddMaintainerToWorkflow as command_to_call
 
-    # Project update command
-    elif cmd == "add-linked-project":
-        from ..subcommands.updaters.add_linked_project import LinkProject as command_to_call
-
-    # Register run instance commands
-    elif cmd == "register-tool-run-instance":
-        from ..subcommands.initialisers.run_tool_init import RegisterToolRunInstance as command_to_call
-    elif cmd == "register-workflow-run-instance":
-        from ..subcommands.initialisers.run_workflow_init import RegisterWorkflowRunInstance as command_to_call
     elif cmd == "get-workflow-step-ids":
         from ..subcommands.query.get_workflow_step_ids import GetWorkflowStepIDs as command_to_call
-    # Get run templates
-    elif cmd == "copy-tool-submission-template":
-        from ..subcommands.query.copy_tool_submission_template import CopyToolSubmissionTemplate as command_to_call
-    elif cmd == "copy-workflow-submission-template":
-        from ..subcommands.query.copy_workflow_submission_template import CopyWorkflowSubmissionTemplate as command_to_call
-    elif cmd == "list-tool-runs":
-        from ..subcommands.listers.list_tool_runs import ListToolRuns as command_to_call
-    elif cmd == "list-workflow-runs":
-        from ..subcommands.listers.list_workflow_runs import ListWorkflowRuns as command_to_call
-    elif cmd == "create-tool-submission-template":
-        from ..subcommands.query.create_tool_submission_template import CreateToolSubmissionTemplate as command_to_call
-    elif cmd == "create-workflow-submission-template":
-        from ..subcommands.query.create_workflow_submission_template import CreateWorkflowSubmissionTemplate as command_to_call
 
     # Github actions
-    elif cmd == "github-actions-sync-schemas":
-        from ..subcommands.sync.sync_github_actions_schema import SyncGitHubActionsSchema as command_to_call
-    elif cmd == "github-actions-sync-expressions":
-        from ..subcommands.sync.sync_github_actions_expression import SyncGitHubActionsExpression as command_to_call
-    elif cmd == "github-actions-sync-tools":
-        from ..subcommands.sync.sync_github_actions_tool import SyncGitHubActionsTool as command_to_call
-    elif cmd == "github-actions-sync-workflows":
-        from ..subcommands.sync.sync_github_actions_workflow import SyncGitHubActionsWorkflow as command_to_call
-    elif cmd == "github-actions-create-expression-markdown":
-        from ..subcommands.github_actions.create_expression_markdown_file import CreateExpressionMarkdownFile as command_to_call
-    elif cmd == "github-actions-create-tool-markdown":
-        from ..subcommands.github_actions.create_tool_markdown_file import CreateToolMarkdownFile as command_to_call
-    elif cmd == "github-actions-create-workflow-markdown":
-        from ..subcommands.github_actions.create_workflow_markdown_file import CreateWorkflowMarkdownFile as command_to_call
-    elif cmd == "github-actions-create-catalogue":
-        from ..subcommands.github_actions.create_catalogue import CreateCatalogue as command_to_call
     elif cmd == "github-actions-build-workflow-release-asset":
         from ..subcommands.github_actions.build_workflow_release_assets import BuildWorkflowReleaseAsset as command_to_call
     elif cmd == "create-typescript-expression-from-template":

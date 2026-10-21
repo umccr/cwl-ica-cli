@@ -27,8 +27,6 @@ class WorkflowInitialiser(Initialiser):
     """Usage:
     cwl-ica [options] workflow-init help
     cwl-ica [options] workflow-init (--workflow-path /path/to/workflow.cwl)
-                                [--projects="project[,additional-projects]"]
-                                [--tenants="tenant-name[,additional-tenants]"]
                                 [--categories="comma,separated,list"]
 
 
@@ -36,33 +34,21 @@ Description:
     Add in a workflow to 'workflow.yaml' in the configuration folder.
     The should have been created with cwl-ica create-workflow-from-template and then validated with workflow-validate.
     We will also run a validation on the workflow.
-    For each project listed, a new workflow id is created if no other version of this workflow exists.
-    A workflow version is also created for non-production projects.
-    When --projects=all, --tenants is checked. If --tenants=all or --tenants is not defined and CWL_ICA_DEFAULT_TENANT
-    is not defined then all projects across all tenants are def
 
 
 Options:
     --workflow-path=<the workflow path>                         Required, the path to the cwl workflow
-    --projects=<the list of projects>                   Optional, the list of projects
-    --tenants=<the list of tenants>                     Optional, the list of tenants
     --categories=<a list of categories for this workflow>   A list of categories, a short summary of the project
-
-Environment Variables:
-    CWL_ICA_DEFAULT_PROJECT    Can be used as an alternative for --projects.
-    CWL_ICA_DEFAULT_TENANT     Used when --projects=all.
 
 Example:
     cwl-ica workflow-init --workflow-path "workflows/samworkflows-fastq/1.10/samworkflows-fastq__1.10.cwl"
-    cwl-ica workflow-init --workflow-path "workflows/samworkflows-fastq/1.10/samworkflows-fastq__1.10.cwl" --projects "development" --categories 'File Format Conversion'
-    cwl-ica workflow-init --workflow-path "workflows/samworkflows-fastq/1.10/samworkflows-fastq__1.10.cwl" --projects "development,production" --categories 'File Format Conversion,Samworkflows Subcommands'
+    cwl-ica workflow-init --workflow-path "workflows/samworkflows-fastq/1.10/samworkflows-fastq__1.10.cwl" --categories 'File Format Conversion'
     """
 
     def __init__(self, command_argv):
         # Call super class
         super(WorkflowInitialiser, self).__init__(
             command_argv,
-            update_projects=True,
             item_dir=get_workflows_dir(),
             item_yaml_path=get_workflow_yaml_path(non_existent_ok=True),
             item_type_key="workflows",
@@ -78,8 +64,6 @@ Example:
     def check_args(self):
         """
         Checks --workflow-path exists
-        For --projects, if set to --all, then checks if --tenants set or CWL_ICA_DEFAULT_TENANT set
-        If --projects not set, checks CWL_ICA_DEFAULT_PROJECT
         :return:
         """
 
@@ -105,12 +89,6 @@ Example:
 
         # Get the name and version attributes
         self.set_name_and_version_from_file_path()
-
-        # Get tenants
-        self.set_tenants_list()
-
-        # Get projects
-        self.set_projects_list()
 
         # Set categories
         self.set_categories_list()
