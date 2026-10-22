@@ -2,7 +2,9 @@
 
 ## Language & Runtime
 
-- **Python** `>= 3.14` (both `pyproject.toml` and the conda env require it).
+- **Python** `>= 3.14, < 3.15` (both `pyproject.toml` and the conda env pin this
+  range; the upper bound keeps the resolver off 3.15 pre-releases, which the dependency
+  stack — `wrapica`, `cwltool`, `numpy` — does not yet support).
 - Packaged with **setuptools** via `pyproject.toml` (`build-backend = setuptools.build_meta`).
 - Distributed as a console script: `cwl-ica = cwl_ica.utils.cli:main`.
 
