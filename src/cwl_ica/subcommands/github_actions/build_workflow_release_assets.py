@@ -1322,7 +1322,7 @@ Environment Variables
                     )
 
                 # Get the pipeline id
-                pipeline_id = project_pipeline_obj.pipeline.id
+                pipeline_id = str(project_pipeline_obj.pipeline.id)
 
                 # Release pipeline
                 if not project_pipeline_obj.pipeline.status == 'RELEASED':
