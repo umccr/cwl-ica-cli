@@ -1283,7 +1283,7 @@ Environment Variables
                 # Create pipeline directly from the locally built zip
                 # (the zip has already been generated at self.zipped_workflow_path,
                 #  so there is no need to re-download it from GitHub)
-                pipeline_obj = create_cwl_workflow_from_zip(
+                project_pipeline_obj = create_cwl_workflow_from_zip(
                     project_id=pipeline_project_id,
                     pipeline_name=pipeline_name,
                     pipeline_version=pipeline_version,
@@ -1294,7 +1294,7 @@ Environment Variables
                     workflow_description=f"GitHub Release URL: {self.release_url}"
                 )
 
-                pipeline_id = pipeline_obj.id
+                pipeline_id = project_pipeline_obj.pipeline.id
 
                 # Release pipeline
                 release_project_pipeline(pipeline_project_id, pipeline_id)
