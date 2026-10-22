@@ -19,7 +19,6 @@ from libica.openapi.v2.model.region import Region
 from wrapica.user import get_user_name_from_user_id
 from wrapica.project_data import get_project_data_obj_by_id, find_project_data_bulk
 from wrapica.region import get_region_obj_from_project_id
-from wrapica.enums import DataType
 
 # Local imports
 # Utils
@@ -190,7 +189,7 @@ class DatasetItemFolder(DatasetItem):
         all_files = find_project_data_bulk(
             project_id=project_id,
             parent_folder_id=data_obj.data.id,
-            data_type=DataType.FILE,
+            data_type="FILE",
         )
 
         # Step 1 -> Find all files within a folder
@@ -224,7 +223,7 @@ class DatasetItemFolder(DatasetItem):
         all_files = find_project_data_bulk(
             project_id=self.owning_project_id,
             parent_folder_id=self.data_obj.id,
-            data_type=DataType.FILE
+            data_type="FILE"
         )
 
         # Confirm we have the expected number of files in the folder

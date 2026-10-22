@@ -33,7 +33,6 @@ from wrapica.bundle import (
     release_bundle as wrapica_release_bundle,
     link_bundle_to_project as wrapica_link_bundle_to_project
 )
-from wrapica.enums import DataType
 
 # Local Utils
 from .errors import ProjectV2NotFoundError, BunchNotFoundError
@@ -195,7 +194,7 @@ def get_folder_specific_dataset_attributes(data_obj: Data) -> Dict:
     all_files = find_project_data_bulk(
         project_id=project_id,
         parent_folder_id=data_obj.id,
-        data_type=DataType.FILE
+        data_type="FILE"
     )
 
     # Step 1 -> Find all files within a folder
