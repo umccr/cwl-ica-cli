@@ -14,7 +14,7 @@ from ruamel.yaml import YAML
 
 # CWL Utils
 from cwl_utils.parser import Workflow
-from cwl_utils.parser.latest import RecordSchema
+from cwl_utils.parser.latest import CWLRecordSchema
 
 # Classes
 from ..classes.cwl_schema import CWLSchema
@@ -41,7 +41,7 @@ class CWLSchemaObj:
     """
 
     def __init__(self, cwl_obj, file_path):
-        self.cwl_obj: RecordSchema = cwl_obj
+        self.cwl_obj: CWLRecordSchema = cwl_obj
         self.cwl_file_path: Path = file_path
 
         # Confirm type is record
@@ -192,7 +192,7 @@ class CWLSchemaObj:
         with open(file_path, "r") as schema_h:
             schema_obj = yaml.load(schema_h)
 
-        return cls(RecordSchema(schema_obj), file_path)
+        return cls(CWLRecordSchema(schema_obj), file_path)
 
 
 def check_dict_field_type_for_imports(field_type, schema_path) -> Optional[Path]:
