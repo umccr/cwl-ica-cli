@@ -526,7 +526,7 @@ def generate_empty_bundle(
         pipeline_release_url=pipeline_release_url
     )
 
-    return bundle_obj.id
+    return str(bundle_obj.id)
 
 
 def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
