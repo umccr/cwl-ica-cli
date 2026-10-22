@@ -33,6 +33,7 @@ import json
 import os
 from os import environ
 import re
+from datetime import datetime, timezone
 from argparse import ArgumentError
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from urllib.parse import urldefrag
@@ -72,7 +73,7 @@ from ...utils.globals import ICAV2_DEFAULT_BASE_URL
 from ...utils.icav2_gh_helpers import (
     read_config_yaml, write_config_yaml, get_icav2_config_yaml_path,
     get_project_id_from_project_name, get_project_name_from_project_id,
-    get_tenant_access_token, get_pipeline_code_from_pipeline_id
+    get_tenant_access_token, get_pipeline_name_version_from_pipeline_id
 )
 from ...utils.logging import get_logger
 from ...utils.miscell import (
@@ -216,7 +217,7 @@ Environment Variables
             logger.error("Expected two tags at this commit")
             raise ArgumentError
         # Check GITHUB Tags are as expected
-        # dragen-pon-qc/3.9.3,dragen-pon-qc/3.9.3__221219235859
+        # dragen-pon-qc/3.9.3,dragen-pon-qc/3.9.3__20221219235859
         full_github_tag_regex_obj = re.fullmatch(r"(\S+/\S+)__(\d+)", self.github_tag[1])
         if full_github_tag_regex_obj is None:
             logger.error(f"GITHUB_TAG env var '{','.join(self.github_tag)}' is not formatted as expected")
@@ -543,13 +544,18 @@ Environment Variables
                     self.md_file_obj.new_paragraph(f"> Description\n {bundle_obj.bundle_description}\n")
                     self.md_file_obj.new_paragraph(f"> Version Description\n {bundle_obj.bundle_version_description}\n")
 
+                    pipeline_name, pipeline_version = get_pipeline_name_version_from_pipeline_id(
+                        bundle_obj.bundle_pipeline_id, get_tenant_access_token(tenant_name)
+                    )
+
                     self.md_file_obj.new_list([
                         f"**Bundle ID**:           {bundle_id}",
                         f"[**Bundle Link**]({bundle_obj.bundle_url})",
                         f"**Pipeline Project ID**: {bundle_obj.pipeline_project_id}",
                         f"**Pipeline Project Name**: {get_project_name_from_project_id(tenant_name, bundle_obj.pipeline_project_id)}",
                         f"**Pipeline ID**: {bundle_obj.bundle_pipeline_id}",
-                        f"**Pipeline Code**: {get_pipeline_code_from_pipeline_id(bundle_obj.bundle_pipeline_id, get_tenant_access_token(tenant_name))}",
+                        f"**Pipeline Name**: {pipeline_name}",
+                        f"**Pipeline Version**: {pipeline_version}",
                     ])
 
                     if not len(bundle_obj.projects) == 0:
@@ -1234,8 +1240,14 @@ Environment Variables
             )
         )
 
-        # Derive the pipeline code from the local zip stem (dots are not permitted in pipeline codes)
-        pipeline_code = self.zipped_workflow_path.stem.replace(".", "_")
+        # Derive the pipeline name and version from the workflow object.
+        # Name is the workflow name; version is '<version>__<UTC YYYYMMDDHHMMSS>'.
+        # The 4-digit-year UTC stamp joined by '__' matches the git tag convention
+        # (e.g. dragen-wgts-dna-pipeline/4.4.6__20260505001558).
+        pipeline_name = self.cwl_obj.name
+        pipeline_version = (
+            f"{self.cwl_obj.version}__{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+        )
 
         pipeline_ids_by_project_by_tenant = {}
         icav2_bundles_by_tenant_by_project = {}
@@ -1273,7 +1285,8 @@ Environment Variables
                 #  so there is no need to re-download it from GitHub)
                 pipeline_obj = create_cwl_workflow_from_zip(
                     project_id=pipeline_project_id,
-                    pipeline_code=pipeline_code,
+                    pipeline_name=pipeline_name,
+                    pipeline_version=pipeline_version,
                     zip_path=self.zipped_workflow_path,
                     analysis_storage=get_analysis_storage_from_analysis_storage_size(
                         pipeline_project_id, AnalysisStorageSize.SMALL.value
