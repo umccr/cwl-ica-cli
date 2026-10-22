@@ -41,7 +41,7 @@ from zipfile import ZipFile
 from time import sleep
 from ruamel.yaml import CommentedSeq, YAML
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, cast
 from mdutils import MdUtils
 
 # CWL Utils
@@ -51,7 +51,7 @@ from cwl_utils.parser import load_document_by_uri
 from wrapica.enums import AnalysisStorageSize
 from wrapica.project_pipelines import (
     create_cwl_workflow_from_zip, release_project_pipeline,
-    get_analysis_storage_from_analysis_storage_size
+    get_analysis_storage_from_analysis_storage_size, get_project_pipeline_obj_from_pipeline_name
 )
 
 # Utils
@@ -1274,30 +1274,43 @@ Environment Variables
             icav2_bundles_by_tenant_by_project[tenant_name] = []
 
             for pipeline_project_name in pipeline_project_names_in_tenant:
-                pipeline_project_id = get_project_id_from_project_name(tenant_name, pipeline_project_name)
+                pipeline_project_id = cast(
+                    str,
+                    get_project_id_from_project_name(tenant_name, pipeline_project_name)
+                )
 
                 # Set the environment variables that wrapica authenticates against for this tenant / project
                 os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
                 os.environ["ICAV2_ACCESS_TOKEN"] = get_tenant_access_token(tenant_name)
 
-                # Create pipeline directly from the locally built zip
-                # (the zip has already been generated at self.zipped_workflow_path,
-                #  so there is no need to re-download it from GitHub)
-                project_pipeline_obj = create_cwl_workflow_from_zip(
-                    project_id=pipeline_project_id,
-                    pipeline_name=pipeline_name,
-                    pipeline_version=pipeline_version,
-                    zip_path=self.zipped_workflow_path,
-                    analysis_storage=get_analysis_storage_from_analysis_storage_size(
-                        pipeline_project_id, AnalysisStorageSize.SMALL.value
-                    ),
-                    workflow_description=f"GitHub Release URL: {self.release_url}"
-                )
+                # See if the pipeline may already exist
+                try:
+                    project_pipeline_obj = get_project_pipeline_obj_from_pipeline_name(
+                        project_id=pipeline_project_id,
+                        pipeline_name=pipeline_name,
+                        pipeline_version=pipeline_version,
+                    )
+                except ValueError:
+                    # Create pipeline directly from the locally built zip
+                    # (the zip has already been generated at self.zipped_workflow_path,
+                    #  so there is no need to re-download it from GitHub)
+                    project_pipeline_obj = create_cwl_workflow_from_zip(
+                        project_id=pipeline_project_id,
+                        pipeline_name=pipeline_name,
+                        pipeline_version=pipeline_version,
+                        zip_path=self.zipped_workflow_path,
+                        analysis_storage=get_analysis_storage_from_analysis_storage_size(
+                            pipeline_project_id, AnalysisStorageSize.SMALL.value
+                        ),
+                        workflow_description=f"GitHub Release URL: {self.release_url}"
+                    )
 
+                # Get the pipeline id
                 pipeline_id = project_pipeline_obj.pipeline.id
 
                 # Release pipeline
-                release_project_pipeline(pipeline_project_id, pipeline_id)
+                if not project_pipeline_obj.pipeline.status == 'RELEASED':
+                    release_project_pipeline(pipeline_project_id, pipeline_id)
 
                 # Update pipeline list
                 pipeline_ids_by_project_by_tenant[tenant_name][pipeline_project_id] = pipeline_id
