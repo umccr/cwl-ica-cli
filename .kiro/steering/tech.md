@@ -2,7 +2,7 @@
 
 ## Language & Runtime
 
-- **Python** `>= 3.10` (uses `tomllib`, so 3.11+ preferred for the installer).
+- **Python** `>= 3.14` (both `pyproject.toml` and the conda env require it).
 - Packaged with **setuptools** via `pyproject.toml` (`build-backend = setuptools.build_meta`).
 - Distributed as a console script: `cwl-ica = cwl_ica.utils.cli:main`.
 

@@ -7,12 +7,6 @@ ARG GITHUB_ACTIONS_GROUP_NAME="docker"
 ARG GITHUB_ACTIONS_GROUP_ID="121"
 ARG CONDA_ENV_NAME="cwl-ica"
 ARG YQ_VERSION="v4.35.2"
-ARG ICAV2_CLI_VERSION="2.27.0"
-ARG ICAV2_PLUGINS_CLI_VERSION="v2.27.0"
-ARG ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION="3.12"
-ARG ICAV2_PLUGINS_CLI_CONDA_ENV_NAME="python3.12"
-ARG CWL_UTILS_REPO_PATH="https://github.com/alexiswl/cwl-utils"
-ARG CWL_UTILS_REPO_BRANCH="bugfix/auto-return-input-array-schema-type"
 
 ARG MINIFORGE_NAME="Miniforge3"
 ARG MINIFORGE_VERSION="24.3.0-0"
@@ -44,7 +38,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
         libssl-dev \
         wget \
         autoconf \
-        busybox \
         bzip2 \
         ca-certificates \
         git \
@@ -102,14 +95,6 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
       rm -rf aws/ awscliv2.zip \
     ) && \
     ( \
-      echo "Installing ICAv2 CLI" 1>&2 && \
-      wget --quiet \
-        --output-document "/dev/stdout" \
-        "https://stratus-documentation-us-east-1-public.s3.amazonaws.com/cli/${ICAV2_CLI_VERSION}/ica-linux-${TARGETPLATFORM#linux/}.zip" | \
-      busybox unzip -p - "linux-${TARGETPLATFORM#linux/}/icav2" > "/usr/local/bin/icav2" && \
-      chmod +x "/usr/local/bin/icav2" \
-    ) && \
-    ( \
       echo "Adding user groups" 1>&2 && \
       addgroup \
         --gid "${GITHUB_ACTIONS_GROUP_ID}" \
@@ -153,40 +138,8 @@ RUN ( \
 ENV CONDA_PREFIX="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}"
 ENV CONDA_DEFAULT_ENV="${CONDA_ENV_NAME}"
 
-RUN ( \
-      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
-      echo "Creating ${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME} environment for icav2 cli plugins" 1>&2 && \
-      conda create --yes \
-        --name "${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}" \
-        python="${ICAV2_PLUGINS_CLI_CONDA_PYTHON_VERSION}" && \
-      echo "Installing ICAv2 CLI Plugins" 1>&2 && \
-      wget --quiet \
-        --output-document "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
-        "https://github.com/umccr/icav2-cli-plugins/releases/download/${ICAV2_PLUGINS_CLI_VERSION}/icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
-      unzip -qq "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" && \
-      PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${ICAV2_PLUGINS_CLI_CONDA_ENV_NAME}/bin:${PATH}" \
-      bash "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}/install.sh" "--no-autocompletion" && \
-      rm -rf "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}" "icav2-plugins-cli--${ICAV2_PLUGINS_CLI_VERSION}.zip" \
-    )
-
 # Add conda env to path
 ENV PATH="/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin:${PATH}"
-# Set ICAv2 CLI plugins home
-ENV ICAV2_CLI_PLUGINS_HOME="/home/${GITHUB_ACTIONS_USER_NAME}/.icav2-cli-plugins/"
-
-# Add cwl-utils (with cwl-inputs-schema-gen) to cwl-ica environment
-RUN ( \
-      cd "/home/${GITHUB_ACTIONS_USER_NAME}" && \
-      echo "Cloning cwl-utils" 1>&2 && \
-      git clone --branch "${CWL_UTILS_REPO_BRANCH}" "${CWL_UTILS_REPO_PATH}" "cwl-utils" && \
-      echo "Installing cwl-utils" 1>&2 && \
-      ( \
-        cd 'cwl-utils' && \
-        "/home/${GITHUB_ACTIONS_USER_NAME}/.conda/envs/${CONDA_ENV_NAME}/bin/pip" install . \
-      ) && \
-      echo "Cleaning up" 1>&2 && \
-      rm -rf cwl-utils \
-    )
 
 # Set entrypoint
 CMD "cwl-ica"

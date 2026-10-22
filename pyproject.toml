@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cwl-ica"
-version = "v1.7"
+version = "v2.0.0"
 authors = [
   { name="Alexis Lucattini", email="alexis.lucattini@umccr.org" },
 ]
 description = "cwl-ica"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
@@ -20,7 +20,7 @@ classifiers = [
 dependencies = [
   # Requirements created by pip-reqs
   "beautifulsoup4 >= 4.12.2, < 5",
-  "cwl_utils >= 0.38, < 1",
+  "cwl_utils >= 0.41, < 1",
   "deepdiff >= 6.7.1, < 7",
   "docopt >= 0.6.2, < 1",
   "in_place >= 1.0.0, < 2",
