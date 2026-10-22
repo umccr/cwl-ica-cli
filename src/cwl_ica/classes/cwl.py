@@ -23,8 +23,8 @@ import json
 
 # Utils
 from ..utils.globals import (
-    ICAV1_CWLTOOL_VERSION,
-    ICAV1_CWLTOOL_CONDA_ENV_NAME,
+    ICAV2_CWLTOOL_VERSION,
+    ICAV2_CWLTOOL_CONDA_ENV_NAME,
     LATEST_CWLTOOL_CONDA_ENV_NAME,
     LATEST_CWLTOOL_VERSION)
 from ..utils.logging import get_logger
@@ -200,7 +200,7 @@ class CWL:
         _return_code, _stdout, _stderr = run_subprocess_proc(
             [
                  "conda", "run",
-                 "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
+                 "--name", ICAV2_CWLTOOL_CONDA_ENV_NAME,
                  "cwltool", "--no-doc-cache", "--pack", self.cwl_file_path
 
             ],
@@ -221,13 +221,13 @@ class CWL:
         """
 
         if environ.get("GIT_COMMIT_ID", None) is not None:
-            logger.info("Not running cwltool --validate with ICAv1 cwltool version "
+            logger.info("Not running cwltool --validate with pinned ICAv2 cwltool version "
                         "in the interests of time on GitHub Actions")
         else:
             _return_code, _stdout, _stderr = run_subprocess_proc(
                 [
                     "conda", "run",
-                    "--name", ICAV1_CWLTOOL_CONDA_ENV_NAME,
+                    "--name", ICAV2_CWLTOOL_CONDA_ENV_NAME,
                     "cwltool", "--no-doc-cache", "--validate", str(cwl_file_path)
 
                 ],
@@ -235,8 +235,8 @@ class CWL:
 
             # cwltool validation failed
             if not _return_code == 0:
-                logger.error(f"cwltool validate failed when run in conda environment {ICAV1_CWLTOOL_CONDA_ENV_NAME} "
-                             f"with cwltool version {ICAV1_CWLTOOL_VERSION}")
+                logger.error(f"cwltool validate failed when run in conda environment {ICAV2_CWLTOOL_CONDA_ENV_NAME} "
+                             f"with cwltool version {ICAV2_CWLTOOL_VERSION}")
                 raise CWLValidationError
 
         _return_code, _stdout, _stderr = run_subprocess_proc(

@@ -25,7 +25,8 @@
 ## Environment / Installation
 
 - Installed into a **conda** environment named `cwl-ica` (plus a second env
-  `cwltool-icav1` pinned to `cwltool 3.0.20201203173111` for ICAv1 compatibility).
+  `cwltool-icav2` pinned to `cwltool 3.0.20201203173111`, used to pack/validate CWL for
+  ICAv2 pipeline registration with the cwltool version ICA expects).
 - Use `./install.sh` (requires `conda >= 4.9.0`, `jq`, and one of `node`/`nodejs`/`docker`,
   plus `rsync`, bash 4+, and `greadlink` on macOS).
   - `-y/--yes` create/update the conda env without prompting.

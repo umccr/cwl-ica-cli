@@ -14,6 +14,7 @@ set -euo pipefail
 # GLOBALS
 ###########
 CWL_ICA_CONDA_ENV_NAME="cwl-ica"
+CWLTOOL_ICAV2_CONDA_ENV_NAME="cwltool-icav2"
 REQUIRED_CONDA_VERSION="4.9.0"
 STABLE_YARN_VERSION="stable"
 
@@ -380,6 +381,7 @@ fi
 #########################
 
 update_conda_env "${CWL_ICA_CONDA_ENV_NAME}" "${yes}"
+update_conda_env "${CWLTOOL_ICAV2_CONDA_ENV_NAME}" "${yes}"
 
 # Now we can obtain the env prefix which is where we will place our
 conda_cwl_ica_env_prefix="$(get_conda_env_prefix)"

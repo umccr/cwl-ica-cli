@@ -7,7 +7,7 @@ cwl-ica-cli/
 ├── pyproject.toml              # Package metadata, deps, console-script entrypoint
 ├── install.sh                  # Conda-based installer (+ version/cwltool substitution)
 ├── cwl-ica-conda-env.yaml      # Main conda env spec (cwl-ica)
-├── cwltool-icav1-conda-env.yaml# Secondary env pinned for ICAv1 cwltool
+├── cwltool-icav2-conda-env.yaml# Secondary env pinned to cwltool 3.0.20201203173111
 ├── Dockerfile
 ├── autocompletion/             # bash/zsh completions + dynamic helper scripts
 │   ├── bash/  zsh/  helpers/  templates/  run-autocompletion.sh
