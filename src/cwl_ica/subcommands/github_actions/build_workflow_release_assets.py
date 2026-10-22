@@ -33,7 +33,6 @@ import json
 import os
 from os import environ
 import re
-from datetime import datetime, timezone
 from argparse import ArgumentError
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from urllib.parse import urldefrag
@@ -1240,14 +1239,31 @@ Environment Variables
             )
         )
 
-        # Derive the pipeline name and version from the workflow object.
-        # Name is the workflow name; version is '<version>__<UTC YYYYMMDDHHMMSS>'.
-        # The 4-digit-year UTC stamp joined by '__' matches the git tag convention
-        # (e.g. dragen-wgts-dna-pipeline/4.4.6__20260505001558).
+        # Derive the pipeline name and version from the git tag (GITHUB_TAG) rather than
+        # regenerating a timestamp with datetime.now(). The tag is '<name>/<version>__<UTC
+        # YYYYMMDDHHMMSS>' (e.g. dragen-wgts-dna-pipeline/4.4.6__20261022071139); the
+        # pipeline version is the segment after the '/'. Generating a fresh timestamp here
+        # caused the pipeline version to drift from the release tag by the wall-clock time
+        # taken for the job to reach this step (e.g. tag ...071139 vs pipeline ...071356).
         pipeline_name = self.cwl_obj.name
-        pipeline_version = (
-            f"{self.cwl_obj.version}__{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
-        )
+        pipeline_version = self.github_tag[1].split("/", 1)[-1]
+
+        # Sanity-check that the tag matches the workflow object we built the zip from,
+        # so a mismatched tag/workflow combination fails loudly rather than registering a
+        # pipeline under the wrong name/version.
+        expected_version_prefix = f"{self.cwl_obj.version}__"
+        if not self.github_tag[1].split("/", 1)[0] == pipeline_name:
+            logger.error(
+                f"GITHUB_TAG name '{self.github_tag[1].split('/', 1)[0]}' does not match "
+                f"the workflow name '{pipeline_name}'"
+            )
+            raise ArgumentError
+        if not pipeline_version.startswith(expected_version_prefix):
+            logger.error(
+                f"GITHUB_TAG version '{pipeline_version}' does not match the expected "
+                f"workflow version prefix '{expected_version_prefix}'"
+            )
+            raise ArgumentError
 
         pipeline_ids_by_project_by_tenant = {}
         icav2_bundles_by_tenant_by_project = {}
