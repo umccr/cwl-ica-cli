@@ -15,14 +15,18 @@ from ruamel.yaml import CommentedMap
 # CWL Utils
 from cwl_utils.parser.latest import \
     WorkflowInputParameter, \
-    WorkflowOutputParameter, \
-    shortname
+    WorkflowOutputParameter
 
 from cwl_utils.parser import \
     Workflow, \
     WorkflowStep, \
     CommandLineTool, \
     load_document_by_uri
+
+# schema-salad runtime
+# 'shortname' was previously re-exported from cwl_utils.parser.latest but newer
+# cwl_utils versions only expose it via schema_salad.runtime.
+from schema_salad.runtime import shortname
 
 # Local utils
 from .cwl_utils_typing_helpers import (

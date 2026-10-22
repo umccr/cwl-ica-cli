@@ -7,15 +7,14 @@ Suite of unions for type helping
 from typing import Union
 
 from cwl_utils.parser.cwl_v1_0 import (
-    RecordSchema as RecordSchema_v1_0,
+    CWLRecordSchema as RecordSchema_v1_0,
     OutputEnumSchema as OutputEnumSchema_v1_0,
     InputEnumSchema as InputEnumSchema_v1_0,
     OutputArraySchema as OutputArraySchema_v1_0,
     InputArraySchema as InputArraySchema_v1_0,
     OutputRecordSchema as OutputRecordSchema_v1_0,
     InputRecordSchema as InputRecordSchema_v1_0,
-    ArraySchema as ArraySchema_v1_0,
-    EnumSchema as EnumSchema_v1_0
+    CWLArraySchema as ArraySchema_v1_0
 )
 
 from cwl_utils.parser.cwl_v1_0 import (
@@ -35,15 +34,14 @@ from cwl_utils.parser.cwl_v1_0 import (
 )
 
 from cwl_utils.parser.cwl_v1_1 import (
-    RecordSchema as RecordSchema_v1_1,
+    CWLRecordSchema as RecordSchema_v1_1,
     OutputEnumSchema as OutputEnumSchema_v1_1,
     InputEnumSchema as InputEnumSchema_v1_1,
     OutputArraySchema as OutputArraySchema_v1_1,
     InputArraySchema as InputArraySchema_v1_1,
     OutputRecordSchema as OutputRecordSchema_v1_1,
     InputRecordSchema as InputRecordSchema_v1_1,
-    ArraySchema as ArraySchema_v1_1,
-    EnumSchema as EnumSchema_v1_1
+    CWLArraySchema as ArraySchema_v1_1
 )
 
 from cwl_utils.parser.cwl_v1_1 import (
@@ -68,15 +66,14 @@ from cwl_utils.parser.cwl_v1_1 import (
 )
 
 from cwl_utils.parser.cwl_v1_2 import (
-    RecordSchema as RecordSchema_v1_2,
+    CWLRecordSchema as RecordSchema_v1_2,
     OutputEnumSchema as OutputEnumSchema_v1_2,
     InputEnumSchema as InputEnumSchema_v1_2,
     OutputArraySchema as OutputArraySchema_v1_2,
     InputArraySchema as InputArraySchema_v1_2,
     OutputRecordSchema as OutputRecordSchema_v1_2,
     InputRecordSchema as InputRecordSchema_v1_2,
-    ArraySchema as ArraySchema_v1_2,
-    EnumSchema as EnumSchema_v1_2
+    CWLArraySchema as ArraySchema_v1_2
 )
 
 from cwl_utils.parser.cwl_v1_2 import (
@@ -149,9 +146,8 @@ ArraySchemaType = Union[
 ]
 
 EnumSchemaType = Union[
-    EnumSchema_v1_0,
-    EnumSchema_v1_1,
-    EnumSchema_v1_2
+    InputEnumSchemaType,
+    OutputEnumSchemaType
 ]
 
 

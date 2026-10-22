@@ -16,7 +16,7 @@ import json
 
 # CWL Utils
 from cwl_utils.parser.latest import \
-    RecordSchema
+    CWLRecordSchema
 
 # Utils
 from ..utils.cwl_helper_utils import split_cwl_id_to_path_and_fragment
@@ -47,7 +47,7 @@ class CWLSchema(CWL):
         with open(self.cwl_file_path, "r") as cwl_h:
             yaml_obj = yaml.load(cwl_h)
 
-        self.cwl_obj = RecordSchema(yaml_obj).type_
+        self.cwl_obj = CWLRecordSchema(yaml_obj).type_
 
     def validate_object(self):
         """
@@ -113,7 +113,7 @@ class CWLSchema(CWL):
         :return:
         """
 
-        self.cwl_obj = RecordSchema(
+        self.cwl_obj = CWLRecordSchema(
             type_="record",
             fields=[]
         )
