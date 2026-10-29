@@ -237,6 +237,28 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
     # Collect all the workflow objects
     all_workflow_paths = collect_objects_by_print_deps(cwl_obj.cwl_file_path)
 
+    # cwltool --print-deps misses schemas referenced only via the top-level workflow's
+    # SchemaDefRequirement (output / intermediate record types), so resolve the workflow's
+    # schemas directly from the parsed CWL object and union them (plus their transitive
+    # schema imports) into the files we copy into the temp dir.
+    schema_paths = add_additional_schemas_to_schema_list_recursively(
+        list(
+            map(
+                lambda schema_path: join_run_path_from_caller_path(cwl_obj.cwl_file_path, schema_path),
+                get_schemas(cwl_obj)
+            )
+        )
+    )
+
+    # Collect the set of already-resolved paths to avoid copying any file twice
+    collected_paths = set(
+        map(lambda collected_path: collected_path.absolute().resolve(), all_workflow_paths)
+    )
+    for schema_path in schema_paths:
+        if schema_path.absolute().resolve() not in collected_paths:
+            all_workflow_paths.append(schema_path)
+            collected_paths.add(schema_path.absolute().resolve())
+
     # Create a temporary directory
     output_tempdir_obj = TemporaryDirectory(delete=False)
     output_tempdir = Path(output_tempdir_obj.name) / output_zip_path.stem
@@ -251,8 +273,8 @@ def zip_workflow(cwl_obj: CWLWorkflow, output_zip_path: Path):
         # Get the new path
         new_path = output_tempdir.joinpath(cwl_path.absolute().resolve().relative_to(get_cwl_ica_repo_path()))
 
-        # Create a directory for this file
-        new_path.parent.mkdir(parents=True, exist_ok=False)
+        # Create a directory for this file (may already exist if a sibling was copied first)
+        new_path.parent.mkdir(parents=True, exist_ok=True)
 
         # And copy over contents of the file
         shutil.copy2(cwl_path, new_path)
