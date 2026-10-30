@@ -38,7 +38,7 @@ from tempfile import TemporaryDirectory, NamedTemporaryFile
 from urllib.parse import urldefrag
 from zipfile import ZipFile
 from time import sleep
-from ruamel.yaml import CommentedSeq, YAML
+from ruamel.yaml import YAML
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict, cast
 from mdutils import MdUtils
@@ -70,7 +70,7 @@ from ...utils.gh_helpers import (
 )
 from ...utils.globals import ICAV2_DEFAULT_BASE_URL
 from ...utils.icav2_gh_helpers import (
-    read_config_yaml, write_config_yaml, get_icav2_config_yaml_path,
+    read_config_yaml,
     get_project_id_from_project_name, get_project_name_from_project_id,
     get_tenant_access_token, get_pipeline_name_version_from_pipeline_id
 )
@@ -86,7 +86,7 @@ from ...utils.subprocess_handler import run_subprocess_proc
 # Classes
 from ...classes.command import Command
 from ...classes.cwl_workflow import CWLWorkflow
-from ...classes.icav2_bunch_classes import Bunch, BunchVersion, Bundle
+from ...classes.icav2_bunch_classes import Bunch
 
 # Set logger
 logger = get_logger()
@@ -132,10 +132,6 @@ Environment Variables
         self.release_url = None  # type: Optional[str]
         self.is_draft_release = None  # type: Optional[bool]
 
-        # ICAv2 assets
-        self.bundle_tenants = None  # type: Optional[List[str]]
-        self.bundle_objs = None  # type: Optional[List[Bundle]]
-
         # Release assets
         self.zipped_workflow_path = None  # type: Optional[Path]
         self.packed_workflow_path = None  # type: Optional[Path]
@@ -157,7 +153,6 @@ Environment Variables
 
         # Icav2
         self.pipeline_ids_by_project_by_tenant = None  # type: Optional[Dict]
-        self.icav2_bundles_by_tenant = None  # type: Optional[Dict]
 
         # Check args
         self.check_args()
@@ -258,7 +253,7 @@ Environment Variables
         * Add artifacts to a PR branch (pictures for the markdown object)
         * Create the commit for the dockstore workflow
         * Create the commit used for the images in the PR
-        * Generate the v2 configuration yaml PR - generates pipelines and bundles (separate PR)
+        * Create and release the v2 pipeline(s) for each configured tenant / project
         * Now build the markdown file object
         * Then edit the release using the GH API
         :return:
@@ -278,8 +273,8 @@ Environment Variables
         # Commit and Create release artifacts branch
         self.create_and_commit_to_release_artifacts()
 
-        # Generate bundles for icav2
-        self.create_and_commit_v2_bundles()
+        # Create and release icav2 pipeline(s)
+        self.create_and_release_v2_pipelines()
 
         # Fast-forward tags
         self.fast_forward_tags()
@@ -519,61 +514,36 @@ Environment Variables
         else:
             self.md_file_obj.new_header(level=2, title="ICAv2", add_table_of_contents='n')
 
-            pipeline_project_dict: Dict
-            for tenant_name, tenant_bundle_list in self.icav2_bundles_by_tenant.items():
+            for tenant_name, pipeline_ids_by_project in self.pipeline_ids_by_project_by_tenant.items():
                 self.md_file_obj.new_header(level=3, title=f"Tenant: {tenant_name}", add_table_of_contents='n')
 
-                self.md_file_obj.new_paragraph("**Bundles Generated**")
+                self.md_file_obj.new_paragraph("**Pipelines Generated**")
 
-                for bundle_id in tenant_bundle_list:
-                    bundle_obj = next(
-                        filter(
-                            lambda bundle_obj_iter: bundle_obj_iter.bundle_id == bundle_id,
-                            self.bundle_objs
-                        )
+                for pipeline_project_id, pipeline_id in pipeline_ids_by_project.items():
+                    pipeline_name, pipeline_version = get_pipeline_name_version_from_pipeline_id(
+                        pipeline_id, get_tenant_access_token(tenant_name)
                     )
 
-                    # Header Is the Bundle Name
+                    # Header Is the Pipeline Name
                     self.md_file_obj.new_header(
                         level=4,
-                        title=f"Bundle Name: {bundle_obj.bundle_name} / Bundle Version {bundle_obj.bundle_version}",
+                        title=f"Pipeline Name: {pipeline_name} / Pipeline Version {pipeline_version}",
                         add_table_of_contents='n'
                     )
 
-                    self.md_file_obj.new_paragraph(f"> Description\n {bundle_obj.bundle_description}\n")
-                    self.md_file_obj.new_paragraph(f"> Version Description\n {bundle_obj.bundle_version_description}\n")
-
-                    pipeline_name, pipeline_version = get_pipeline_name_version_from_pipeline_id(
-                        bundle_obj.bundle_pipeline_id, get_tenant_access_token(tenant_name)
+                    # Standard pipeline link - can be shared with other projects
+                    pipeline_url = (
+                        f"https://ica.illumina.com/ica/projects/{pipeline_project_id}/pipelines/{pipeline_id}"
                     )
 
                     self.md_file_obj.new_list([
-                        f"**Bundle ID**:           {bundle_id}",
-                        f"[**Bundle Link**]({bundle_obj.bundle_url})",
-                        f"**Pipeline Project ID**: {bundle_obj.pipeline_project_id}",
-                        f"**Pipeline Project Name**: {get_project_name_from_project_id(tenant_name, bundle_obj.pipeline_project_id)}",
-                        f"**Pipeline ID**: {bundle_obj.bundle_pipeline_id}",
+                        f"**Pipeline ID**: {pipeline_id}",
                         f"**Pipeline Name**: {pipeline_name}",
                         f"**Pipeline Version**: {pipeline_version}",
+                        f"**Pipeline Project ID**: {pipeline_project_id}",
+                        f"**Pipeline Project Name**: {get_project_name_from_project_id(tenant_name, pipeline_project_id)}",
+                        f"[**Pipeline Link**]({pipeline_url})",
                     ])
-
-                    if not len(bundle_obj.projects) == 0:
-                        self.md_file_obj.new_line("\n**Projects**\n")
-
-                        self.md_file_obj.new_list(
-                            bundle_obj.projects
-                        )
-
-                    if not len(bundle_obj.bunch_datasets) == 0:
-                        self.md_file_obj.new_line("\n**Datasets**\n")
-                        self.md_file_obj.new_list(
-                            list(
-                                map(
-                                    lambda dataset_obj: dataset_obj.dataset_name,
-                                    bundle_obj.bunch_datasets
-                                )
-                            )
-                        )
 
     def add_visual_section(self):
         """
@@ -1198,15 +1168,15 @@ Environment Variables
             logger.error(f"Stderr: {git_commit_stderr}")
             raise ChildProcessError
 
-    def create_and_commit_v2_bundles(self):
+    def create_and_release_v2_pipelines(self):
         """
-        This will create a bundle object from a bunch
+        This will create and release an ICAv2 pipeline for each configured tenant / project.
 
-        The bundle object will be written back to the icav2 configuration yaml if a bunch exists for this workflow.
-
-        We need a PR to accept the bundle configuration that was generated and the projects it was added to.
-
-        In future, the bundle generation will trigger validation data workflows
+        Bunches (read from the icav2 configuration yaml) are used only to determine which
+        tenants / projects this workflow should be registered into; one pipeline is created
+        per project-name per tenant and released. The resulting pipeline ids are stored in
+        self.pipeline_ids_by_project_by_tenant for the markdown report, which renders a
+        standard pipeline link that can be shared with other projects.
         :return:
         """
         # Iterate through bunches - see if any contain this cwl file path
@@ -1266,7 +1236,6 @@ Environment Variables
             raise ArgumentError
 
         pipeline_ids_by_project_by_tenant = {}
-        icav2_bundles_by_tenant_by_project = {}
 
         # Iterate over tenants
         for tenant_name in tenants:
@@ -1287,7 +1256,6 @@ Environment Variables
             )
 
             pipeline_ids_by_project_by_tenant[tenant_name] = {}
-            icav2_bundles_by_tenant_by_project[tenant_name] = []
 
             for pipeline_project_name in pipeline_project_names_in_tenant:
                 pipeline_project_id = cast(
@@ -1332,111 +1300,3 @@ Environment Variables
                 pipeline_ids_by_project_by_tenant[tenant_name][pipeline_project_id] = pipeline_id
 
         self.pipeline_ids_by_project_by_tenant = pipeline_ids_by_project_by_tenant
-
-        # Create bundles
-        bundle_objs = []
-
-        for bunch in bunches_filtered:
-            # Make a bundle for each bunch that contains the cwl file path
-            # May be multiple, reference bunches, validation bunches etc.
-
-            # Get latest bunch version
-            latest_bunch_version: BunchVersion = bunch.bunch_versions[-1]
-
-            pipeline_project_id = get_project_id_from_project_name(bunch.tenant_name, bunch.pipeline_project_name)
-
-            bundle_obj = latest_bunch_version.generate_bundle_from_bunch_version(
-                pipeline_commit_id=self.github_tag[1],
-                pipeline_release_url=self.release_url,
-                pipeline_id=pipeline_ids_by_project_by_tenant[bunch.tenant_name][pipeline_project_id],
-                pipeline_checksum=self.cwl_obj.md5sum,
-                pipeline_project_id=pipeline_project_id,
-                tenant_access_token=get_tenant_access_token(bunch.tenant_name),
-            )
-
-            bundle_objs.append(
-                bundle_obj
-            )
-
-            icav2_bundles_by_tenant_by_project[bunch.tenant_name].append(bundle_obj.bundle_id)
-
-        self.icav2_bundles_by_tenant = icav2_bundles_by_tenant_by_project
-        self.bundle_objs = bundle_objs
-
-        # Write out bunch objects to icav2 configuration yaml
-        config_yaml_obj = read_config_yaml()
-
-        if "bundles" not in config_yaml_obj.keys():
-            bundles_list_dict = CommentedSeq()
-            config_yaml_obj.yaml_set_comment_before_after_key(
-                key="bundles",
-                before="\nList of generated bundles"
-            )
-        else:
-            bundles_list_dict = config_yaml_obj.get("bundles")
-
-        # Append new bundle objs to list
-        for bundle in bundle_objs:
-            bundles_list_dict.append(bundle.to_dict())
-
-        config_yaml_obj["bundles"] = bundles_list_dict
-
-        write_config_yaml(config_yaml_obj)
-
-        # Allow the file system to catch up on changes
-        sleep(3)
-
-        # Add / commit file
-        git_add_command = [
-            "git", "add", get_icav2_config_yaml_path()
-        ]
-
-        git_add_returncode, git_add_stdout, git_add_stderr = run_subprocess_proc(
-            git_add_command,
-            capture_output=True
-        )
-
-        if not git_add_returncode == 0:
-            logger.error(f"Got a non-zero exit code when running git add")
-            logger.error(f"Stdout: {git_add_stdout}")
-            logger.error(f"Stderr: {git_add_stderr}")
-            raise ChildProcessError
-
-        # Check if there are any differences
-        git_diff_command = [
-            "git", "diff", "--name-only", "--cached", "--quiet"
-        ]
-
-        git_diff_returncode, git_diff_stdout, git_diff_stderr = run_subprocess_proc(
-            git_diff_command,
-            capture_output=True
-        )
-
-        if git_diff_returncode not in [0, 1]:
-            logger.error(f"Got a non-zero exit code when running git diff")
-            logger.error(f"Stdout: {git_diff_stdout}")
-            logger.error(f"Stderr: {git_diff_stderr}")
-            raise ChildProcessError
-
-        if git_diff_returncode == 0:
-            logger.info("No bundle configurations to commit - skipping")
-            return
-
-        # Exit code 1 when using --quiet parameter means changes have been found
-
-        # Now commit
-        git_commit_command = [
-            "git", "commit",
-            "-m", f"Updated config/icav2.yaml to include new bundles"
-        ]
-
-        git_commit_returncode, git_commit_stdout, git_commit_stderr = run_subprocess_proc(
-            git_commit_command,
-            capture_output=True
-        )
-
-        if not git_commit_returncode == 0:
-            logger.error(f"Got a non-zero exit code when running git commit")
-            logger.error(f"Stdout: {git_commit_stdout}")
-            logger.error(f"Stderr: {git_commit_stderr}")
-            raise ChildProcessError
