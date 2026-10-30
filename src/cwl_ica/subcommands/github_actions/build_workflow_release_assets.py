@@ -113,7 +113,7 @@ Environment Variables
     GITHUB_REPOSITORY     This repository path (umccr/cwl-ica)
     GITHUB_TOKEN:         Secret GitHub token, used by gh cli to push release assets
     GITHUB_TAG:           The GitHub tag(s) that triggered this workflow
-    ICAV2_ACCESS_TOKEN_<TENANT_NAME>    The icav2 access token for each given tenant, used to generate pipelines / bundles in each desired tenant
+    ICAV2_ACCESS_TOKEN_<TENANT_NAME>    The icav2 access token for each given tenant, used to generate pipelines in each desired tenant
     """
 
     DEFAULT_OUTPUT_PATH = "cwl-ica-catalogue.md"
@@ -336,7 +336,7 @@ Environment Variables
         Please see <this url> for a detailed description of this workflow
         :return:
         """
-        # Edit GitHub release with md-path, that contains the bundle objects and dockstore links
+        # Edit GitHub release with md-path, that contains the pipeline objects and dockstore links
         gh_edit_release_command = [
             "gh", "release", "edit",
             self.github_tag[1],
