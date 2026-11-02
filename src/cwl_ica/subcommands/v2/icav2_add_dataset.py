@@ -76,7 +76,6 @@ Description:
     A dataset is designed to be 'completely immutable'. Any modification to files or folders of existing datasets will
     render the dataset useless.
     It is for this reason that one should make datasets in very small units.
-    Bunch versions can use a list of datasets.
 
     For each dataset, the following attributes will be stored (for reproducibility purposes).
     * dataset_tenant_name (the name of the tenant)
