@@ -26,13 +26,6 @@ from wrapica.project_data import (
     get_project_data_obj_by_id, 
     is_data_id_format
 )
-from wrapica.bundle import (
-    generate_empty_bundle as wrapica_generate_empty_bundle,
-    add_pipeline_to_bundle as wrapica_add_pipeline_to_bundle,
-    add_data_to_bundle as wrapica_add_data_to_bundle,
-    release_bundle as wrapica_release_bundle,
-    link_bundle_to_project as wrapica_link_bundle_to_project
-)
 
 # Local Utils
 from .errors import ProjectV2NotFoundError, BunchNotFoundError
@@ -92,7 +85,7 @@ def add_tenant_to_config_yaml(tenant_name: str):
         data["tenants"] = CommentedSeq()
         data.yaml_set_comment_before_after_key(
             key="tenants",
-            before="\nList of tenants that datasets / bunches / bundles can be attached to"
+            before="\nList of tenants that datasets / bunches can be attached to"
         )
 
     data.yaml_set_comment_before_after_key(
@@ -332,7 +325,7 @@ def add_project_to_config_yaml(tenant_name: str, project_name: str, project_id: 
         data["projects"] = CommentedSeq()
         data.yaml_set_comment_before_after_key(
             key="projects",
-            before="\nList of projects a bundle can be attached to"
+            before="\nList of projects a pipeline can be attached to"
         )
 
     data.yaml_set_comment_before_after_key(
@@ -472,104 +465,6 @@ def get_bunch_attributes_from_input_yaml(input_yaml_path: Path) -> CommentedMap:
         data: CommentedMap = yaml_obj.load(yaml_h)
 
     return data
-
-
-def add_pipeline_to_bundle(bundle_id: str, pipeline_id: str, icav2_access_token: str):
-    """
-    Given a bundle id and a pipeline id, add the pipeline to the bundle
-    :param bundle_id:
-    :param pipeline_id:
-    :param icav2_access_token:
-    :return:
-    """
-    # Set the environment variables that wrapica authenticates against
-    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
-    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
-
-    wrapica_add_pipeline_to_bundle(bundle_id, pipeline_id)
-
-
-def generate_empty_bundle(
-    bundle_name: str,
-    bundle_version: str,
-    bundle_description: str,
-    bundle_version_description: str,
-    region_id: str,
-    categories: List[str],
-    pipeline_release_url: str,
-    icav2_access_token: str
-) -> str:
-    """
-    Generate an empty bundle
-    :param bundle_name:
-    :param bundle_version:
-    :param bundle_description:
-    :param bundle_version_description:
-    :param region_id:
-    :param categories:
-    :param pipeline_release_url:
-    :param icav2_access_token:
-    :return: The bundle id
-    """
-    # Set the environment variables that wrapica authenticates against
-    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
-    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
-
-    bundle_obj = wrapica_generate_empty_bundle(
-        bundle_name=bundle_name,
-        bundle_version=bundle_version,
-        short_description=bundle_description,
-        version_comment=bundle_version_description,
-        region_id=region_id,
-        categories=categories,
-        pipeline_release_url=pipeline_release_url
-    )
-
-    return str(bundle_obj.id)
-
-
-def add_data_to_bundle(bundle_id, data_id, icav2_access_token: str):
-    """
-    Given a bundle id and a data id, add the data id to the bundle
-    :param bundle_id:
-    :param data_id:
-    :param icav2_access_token:
-    :return:
-    """
-    # Set the environment variables that wrapica authenticates against
-    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
-    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
-
-    wrapica_add_data_to_bundle(bundle_id, data_id)
-
-
-def release_bundle(bundle_id: str, icav2_access_token: str):
-    """
-    Release a bundle
-    :param bundle_id:
-    :param icav2_access_token:
-    :return:
-    """
-    # Set the environment variables that wrapica authenticates against
-    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
-    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
-
-    wrapica_release_bundle(bundle_id)
-
-
-def add_bundle_to_project(project_id: str, bundle_id: str, icav2_access_token: str):
-    """
-    Add a bundle to a project
-    :param project_id:
-    :param bundle_id:
-    :param icav2_access_token:
-    :return:
-    """
-    # Set the environment variables that wrapica authenticates against
-    os.environ["ICAV2_BASE_URL"] = ICAV2_DEFAULT_BASE_URL
-    os.environ["ICAV2_ACCESS_TOKEN"] = icav2_access_token
-
-    wrapica_link_bundle_to_project(project_id, bundle_id)
 
 
 def get_projects_from_v2_config_yaml() -> List[Dict]:

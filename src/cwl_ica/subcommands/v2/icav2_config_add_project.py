@@ -32,7 +32,7 @@ class ICAv2AddProject(Command):
                                         (--project-id=<project_id>)
 
 Description:
-    The project to add. This is used by the bundle release asset GH actions to generate workflow objects.
+    The project to add. This is used by the release asset GH actions to generate workflow objects.
     This command adds the project to config/icav2.yaml
 
 Options:

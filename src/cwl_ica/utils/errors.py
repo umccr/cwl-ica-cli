@@ -373,11 +373,6 @@ class InvalidDataItem(Exception):
     pass
 
 
-class InvalidBunchVersionName(Exception):
-    """
-    Raise error if the data item in ICAv2 is not was we expected
-    """
-    pass
 
 
 class ProjectV2NotFoundError(Exception):
