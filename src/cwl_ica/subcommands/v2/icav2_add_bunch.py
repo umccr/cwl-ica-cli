@@ -257,7 +257,7 @@ Example:
             input_yaml_path = Path(input_yaml_arg)
         else:
             input_yaml_path = None
-        # Get workflow path and datasets from input yaml
+        # Get bunch attributes from input yaml
         if input_yaml_path is not None:
             input_yaml_data = get_bunch_attributes_from_input_yaml(input_yaml_path)
         else:

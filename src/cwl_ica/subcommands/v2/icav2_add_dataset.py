@@ -55,7 +55,6 @@ class ICAv2AddDataset(Command):
 
 Description:
     Add a dataset to icav2 configurations file.
-    The dataset can then be added to bunches.
 
     The input yaml has the following keys:
       * tenant_name: <str> Name of the tenant
