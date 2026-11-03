@@ -192,15 +192,20 @@ class CWL:
 
         return validation_passing, warning_count
 
-    def run_cwltool_pack(self, packed_file: NamedTemporaryFile):
+    def run_cwltool_pack(self, packed_file: NamedTemporaryFile, conda_env_name: str = ICAV2_CWLTOOL_CONDA_ENV_NAME):
         """
-        Pack command with cwlutils
+        Pack command with cwlutils.
+
+        Defaults to the pinned ICAv2 cwltool env (needed so validation packs match the
+        cwltool version ICA expects). Callers that only need a pack to render / inspect
+        (e.g. building the workflow graph) may pass the latest cwltool env so the pack is
+        consumed by the same cwltool version that reads it back.
         :return:
         """
         _return_code, _stdout, _stderr = run_subprocess_proc(
             [
                  "conda", "run",
-                 "--name", ICAV2_CWLTOOL_CONDA_ENV_NAME,
+                 "--name", conda_env_name,
                  "cwltool", "--no-doc-cache", "--pack", self.cwl_file_path
 
             ],
