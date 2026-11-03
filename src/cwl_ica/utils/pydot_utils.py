@@ -25,6 +25,7 @@ from .cwl_helper_utils import get_fragment_from_cwl_id, split_cwl_id_to_path_and
 from .subprocess_handler import run_subprocess_proc
 from .logging import get_logger
 from .repo import get_cwl_ica_repo_path
+from .globals import LATEST_CWLTOOL_CONDA_ENV_NAME
 from ..classes.cwl import CWL
 from .miscell import get_name_version_tuple_from_cwl_file_path, get_items_dir_from_cwl_file_path, \
     get_blob_url_to_markdown_file_from_cwl_path
@@ -196,11 +197,16 @@ def build_cwl_dot(cwl_item: CWL, dot_out_path: Path):
     :return:
     """
 
-    # First pack the cwl file (adds consistency in the dot object)
+    # First pack the cwl file (adds consistency in the dot object).
+    # Pack with the latest cwltool env (not the pinned ICAv2 env): '--print-dot' below is
+    # run by the latest cwltool, and the pinned ICAv2 cwltool emits packs with dangling,
+    # fragment-less schema '$import' references (cwltool/cwltool#2167) that the latest
+    # cwltool cannot re-parse even after the repair step. Packing with the same cwltool
+    # that renders the graph keeps the packed document self-consistent.
     cwl_packed_temp_file = NamedTemporaryFile(delete=False)
-    cwl_item.run_cwltool_pack(cwl_packed_temp_file)
+    cwl_item.run_cwltool_pack(cwl_packed_temp_file, conda_env_name=LATEST_CWLTOOL_CONDA_ENV_NAME)
 
-    # Work around cwltool/cwltool#2167: packing complex workflows can leave dangling
+    # Work around cwltool/cwltool#2167: packing complex workflows can still leave dangling
     # intra-document schema '$import' references that cwltool cannot re-parse. Inline
     # the missing record definitions before handing the packed file to --print-dot.
     try:
