@@ -19,14 +19,14 @@ from wrapica.region import get_regions
 # Utils
 from ...utils.icav2_gh_helpers import (
     get_bunch_attributes_from_input_yaml, get_bunch_names,
-    get_bunch_from_bunch_name, get_dataset_from_dataset_name,
+    get_bunch_from_bunch_name,
     read_config_yaml, write_config_yaml
 )
 from ...utils.logging import get_logger
 from ...utils.errors import CheckArgumentError
 
 # Classes
-from ...classes.icav2_bunch_classes import Dataset, Bunch
+from ...classes.icav2_bunch_classes import Bunch
 from ...classes.command import Command
 from ...utils.repo import get_cwl_ica_repo_path
 
@@ -43,40 +43,26 @@ class ICAv2AddBunch(Command):
                                       [--bunch-description=<bunch_description>]
                                       [--bunch-region-id=<bunch_region_id>]
                                       [--bunch-region-city-name=<bunch_city_name>]
-                                      [--bunch-version=<bunch_version>]
-                                      [--bunch-version-description=<bunch_version_description>]
                                       [--pipeline-project-name=<project_name>]
                                       [--workflow-path=<workflow_path>]
-                                      [--dataset=<dataset_name>]...
                                       [--username=<username>]
                                       [--project=<project_name]...
                                       [--category=<category>]...
 
 Description:
     Create a bunch.
-    A bunch is a list of datasets plus a workflow.
-    A bunch is a precursor to a bundle (created in ICAv2 when a workflow tag is pushed for a workflow)
-
-    When a tag is pushed,
-    For each bunch containing that workflow version,
-    a new bundle is created with the following syntax for the latest version of that bunch.
-    <bunch_name>__<utc_timestamp>
-    And the bundleVersion is set to <bunch_version>.
+    A bunch is a workflow plus the projects and categories the workflow pipeline is to be linked to.
 
     The input yaml has the following keys:
-      * tenant_name: <str>  The name of the tenant that the bundle belongs to
+      * tenant_name: <str>  The name of the tenant that the bunch belongs to
       * bunch_name: <str> Name of the bunch
       * bunch_description: <str> A short description of the bunch.
       * bunch_region_id | bunch_region_city_name: <str> The region the bunch resides in
-      * bunch_version: <str> Semantic version of this bunch
-      * bunch_version_description: <str> A short description of this bunch version
       * workflow_path: <str> The relative workflow path
       * pipeline_project_name: <str> The project where the pipeline is pushed to
-      * datasets: <List[str]>
-        * Where each element is the name of a dataset (that has been initialised with icav2-add-dataset)
-      * projects: <List[Project]> List of projects to push the bundle to
+      * projects: <List[Project]> List of projects to push the pipeline to
         * - project_name: ""  # Must match project_name in projects icav2 configuration file.
-      * categories: <List[category]> List of categories to specify for the bundle.
+      * categories: <List[category]> List of categories to specify for the pipeline.
         * - category
 
     A bunch will store the following metadata in the icav2 config yaml file:
@@ -85,41 +71,13 @@ Description:
     * pipeline_project_name: <str> The project name to push the bunch to
     * bunch_region_id: <str> The region id that this bunch belongs to
     * bunch_region_city_name: <str> The region city name that this bunch belongs to
-    * versions: <List[Dict]>
-      - For each version
-      * version: <str> semantic version
-      * version_description: <str> version description
-      * datasets: <List[Dict]>
-        - For each dataset
-        * dataset_name: <str> Name of the dataset
-        * dataset_description: <str> A short description of the dataset
-        * dataset_creation_time: <str> Creation time of the dataset in YYYYMMDDTHHMMSSZ format
-        * dataset_id_hash: <str> The hash id of the dataset
 
-    If two workflow versions use the same dataset list, separate bunches will need to be created for each workflow version.
-    If a new workflow version is created, an entirely new bunch will need to be created for that new workflow version.
-
-    If a bunch already exists, but the datasets need updating, just the versions attribute will be appended with a new datasets list when a user runs the add-bunch command.
-    The bunch version name will need to be different to existing bunch versions for a given bunch.
-
-    Only the most recent version of a bunch will be used for creating a bundle.
+    If a bunch with the same name already exists in the icav2 config yaml file, it is left unchanged.
 
     If an attribute is defined on the CLI AND in the input.yaml, the attribute on the CLI will take preference.
     In the event, the said attribute is an array, the attribute will be a union of the CLI and input yaml attributes.
 
-    In order to create a new bunch version, please use this add-bunch command.
-    Just the bunch-name parameter is required for bunch specific parameters, no need to provide the following parameters:
-      * bunch-description
-      * bunch-region-id
-      * bunch-region-city-name
-      * pipeline-project-name
-      * workflow-path
-      * projects
-      * categories
-
     When the pipeline is generated via GitHub actions, if two bunches have the same workflow path and the same pipeline project, they will share a pipeline id.
-    This is intentional so that a validation bundle and a production bundle can use the same workflow id, and share the same reference dataset,
-    but only the validation bundle contains the validation data.
 
 Options:
     --input-yaml=<input_yaml>                                Optional: The path to the input yaml used to generate a bunch.
@@ -134,19 +92,14 @@ Options:
     --bunch-region-city-name=<bunch_region_city_name>        Optional: The region city name (or use bunch_region_id), only required if multiple regions available
     --pipeline-project-name=<pipeline_project_name>          Optional: The name of the project you wish to push the pipeline to.
     --workflow-path=<workflow_path>                          Optional: The path to the workflow
-    --project=<project>                                      Optional: Projects to link bundle to, specify multiple times for multiple projects.
-    --category=<category>                                    Optional: Category to add to the bundle, specify multiple times for multiple categories
+    --project=<project>                                      Optional: Projects to link the pipeline to, specify multiple times for multiple projects.
+    --category=<category>                                    Optional: Category to add to the pipeline, specify multiple times for multiple categories
     --username=<username>                                    Optional: The cwl-ica username (assume CWL_ICA_DEFAULT_USER is in env var)
-
-    The following parameters are required via either the input-yaml OR via the CLI to generate a new bunch version:
-    --bunch-version=<bunch_version>                          Optional: The semantic version of this bunch (will be carried into bundle)
-    --bunch-version-description=<bunch_version_description>  Optional: A description of this bunch version
-    --dataset=<dataset>                                      Optional: Datasets, specify multiple times for multiple datasets
 
 Environment:
     CWL_ICA_DEFAULT_USER  Optional, should be set if in cwl-ica conda env
-    ICAV2_BASE_URL        Required for validating datasets and regions
-    ICAV2_ACCESS_TOKEN    Required for validating datasets and regions
+    ICAV2_BASE_URL        Required for validating regions
+    ICAV2_ACCESS_TOKEN    Required for validating regions
 
 Example:
     cwl-ica icav2-add-bunch --input-yaml /path/to/input.yaml
@@ -163,12 +116,8 @@ Example:
         self.bunch_description: Optional[str] = None
         self.pipeline_project_name: Optional[str] = None
         self.workflow_path: Optional[Path] = None
-        self.bunch_version: Optional[str] = None
-        self.bunch_version_description: Optional[str] = None
         self.bunch_region_id: Optional[str] = None
         self.bunch_region_city_name: Optional[str] = None
-        self.dataset_name_list: Optional[List[str]] = None
-        self.dataset_list: Optional[List[Dataset]] = None
         self.username: Optional[str] = None
         self.project_list: Optional[str] = None
         self.category_list: Optional[str] = None
@@ -308,7 +257,7 @@ Example:
             input_yaml_path = Path(input_yaml_arg)
         else:
             input_yaml_path = None
-        # Get workflow path and datasets from input yaml
+        # Get bunch attributes from input yaml
         if input_yaml_path is not None:
             input_yaml_data = get_bunch_attributes_from_input_yaml(input_yaml_path)
         else:
@@ -352,33 +301,10 @@ Example:
         )
 
         self.check_arg_in_input_yaml_and_cli(
-            "--bunch-version",
-            input_yaml_data,
-            required=True,
-            arg_type=str
-        )
-
-        self.check_arg_in_input_yaml_and_cli(
-            "--bunch-version-description",
-            input_yaml_data,
-            required=True,
-            arg_type=str
-        )
-
-        self.check_arg_in_input_yaml_and_cli(
             "--pipeline-project-name",
             input_yaml_data,
             required=True,
             arg_type=str
-        )
-
-        self.check_arg_in_input_yaml_and_cli(
-            "--dataset",
-            input_yaml_data,
-            required=False,
-            arg_type=List,
-            attr_name="dataset_name_list",
-            yaml_key="datasets"
         )
 
         self.check_arg_in_input_yaml_and_cli(
@@ -414,14 +340,6 @@ Example:
             yaml_key="categories"
         )
 
-        # Convert dataset names to datasets
-        self.dataset_list = list(
-            map(
-                lambda dataset_name: get_dataset_from_dataset_name(dataset_name),
-                self.dataset_name_list
-            )
-        )
-
         if self.bunch_region_id is None or self.bunch_region_city_name is None:
             self.set_bunch_region_attributes()
 
@@ -429,13 +347,7 @@ Example:
         if self.bunch_name in get_bunch_names():
             # Iterate over bunch name
             self.bunch = get_bunch_from_bunch_name(self.bunch_name)
-
-            # Generate bunch version
-            self.bunch.generate_bunch_version(
-                version=self.bunch_version,
-                version_description=self.bunch_version_description,
-                datasets=self.dataset_list
-            )
+            logger.warning(f"Bunch {self.bunch_name} already exists, leaving it unchanged")
 
         else:
             # Ensure the following parameters exist
@@ -480,9 +392,6 @@ Example:
                 bunch_region_city_name=self.bunch_region_city_name,
                 projects=self.project_list,
                 categories=self.category_list,
-                version=self.bunch_version,
-                version_description=self.bunch_version_description,
-                datasets=self.dataset_list,
             )
 
     def __call__(self):
@@ -493,7 +402,7 @@ Example:
             config_data["bunches"] = CommentedSeq()
             config_data.yaml_set_comment_before_after_key(
                 key="bunches",
-                before="\nList of bunches / bunch versions that are precursors to bundles\n"
+                before="\nList of bunches\n"
             )
 
         config_data.yaml_set_comment_before_after_key(
